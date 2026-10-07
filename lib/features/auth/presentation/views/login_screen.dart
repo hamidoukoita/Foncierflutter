@@ -35,9 +35,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (ok) {
       final user = ref.read(authProvider).user;
       if (user?.isAgent == true || user?.isSociete == true) {
-        context.go('/agent');
+        context.go('/agent/dashboard');
       } else {
-        context.go('/prospect');
+        context.go('/prospect/dashboard');
       }
     }
   }

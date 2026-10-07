@@ -45,7 +45,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       );
       final user = ref.read(authProvider).user;
       if (user != null) {
-        context.go('/prospect');
+        context.go('/prospect/dashboard');
       } else {
         context.go('/login');
       }

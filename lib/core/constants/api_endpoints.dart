@@ -23,8 +23,7 @@ class ApiEndpoints {
   static const String projetsConstruction = '/projets-construction';
   static String projetsByAcquereur(int id) =>
       '/projets-construction/acquereur/$id';
-  static String projetsBySociete(int id) =>
-      '/projets-construction/societe/$id';
+  static String projetsBySociete(int id) => '/projets-construction/societe/$id';
   static const String modelesMaison = '/modeles-maison';
 
   // Société / agents

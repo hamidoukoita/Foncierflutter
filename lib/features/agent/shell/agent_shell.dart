@@ -6,12 +6,12 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/control
 
 /// Shell agent / société promotrice.
 class AgentShell extends ConsumerWidget {
-  const AgentShell({super.key});
+  final StatefulNavigationShell navigationShell;
+
+  const AgentShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).user;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
@@ -26,33 +26,27 @@ class AgentShell extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                user?.fullName ?? 'Agent',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.primaryBlueAnthracite,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                user?.societeNom ?? 'Société non renseignée',
-                style: const TextStyle(color: AppColors.primaryOcre, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Socle agent prêt.\nÀ brancher : dashboard KPI, réservations, RDV.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.grey500),
-              ),
-            ],
+      body: navigationShell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (index) {
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.grid_view_outlined),
+            selectedIcon: Icon(Icons.grid_view),
+            label: 'Vue d\'ensemble',
           ),
-        ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: 'Visites',
+          ),
+        ],
       ),
     );
   }

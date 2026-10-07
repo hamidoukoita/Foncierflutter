@@ -30,6 +30,12 @@ class AppTextStyles {
         color: AppColors.primaryBlueAnthracite,
       );
 
+  static TextStyle get price => GoogleFonts.quicksand(
+        fontSize: 22,
+        fontWeight: FontWeight.bold,
+        color: AppColors.primaryOcre,
+      );
+
   // Body Texts (Inter)
   static TextStyle get bodyLarge => GoogleFonts.inter(
         fontSize: 16,

@@ -20,7 +20,8 @@ class AuthRepository {
         (data) => AuthUser.fromJson(data as Map<String, dynamic>),
       );
       if (!parsed.success || parsed.data == null) {
-        throw ApiException(parsed.message.isEmpty ? 'Connexion impossible.' : parsed.message);
+        throw ApiException(
+            parsed.message.isEmpty ? 'Connexion impossible.' : parsed.message);
       }
       final user = parsed.data!;
       if (user.token.isEmpty) {
@@ -37,15 +38,17 @@ class AuthRepository {
 
   Future<AuthUser> registerAcquereur(RegisterAcquereurRequest request) async {
     try {
-      final res =
-          await _api.post(ApiEndpoints.registerAcquereur, data: request.toJson());
+      final res = await _api.post(ApiEndpoints.registerAcquereur,
+          data: request.toJson());
       final body = res.data as Map<String, dynamic>;
       final parsed = ApiResponse.fromJson(
         body,
         (data) => AuthUser.fromJson(data as Map<String, dynamic>),
       );
       if (!parsed.success || parsed.data == null) {
-        throw ApiException(parsed.message.isEmpty ? 'Inscription impossible.' : parsed.message);
+        throw ApiException(parsed.message.isEmpty
+            ? 'Inscription impossible.'
+            : parsed.message);
       }
       final user = parsed.data!;
       if (user.token.isNotEmpty) {

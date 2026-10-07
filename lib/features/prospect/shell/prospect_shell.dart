@@ -7,12 +7,12 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/control
 /// Shell acquéreur / prospect — point d'entrée après login.
 /// Les features (catalogue, réservations…) se branchent ici.
 class ProspectShell extends ConsumerWidget {
-  const ProspectShell({super.key});
+  final StatefulNavigationShell navigationShell;
+
+  const ProspectShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider).user;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
@@ -27,43 +27,42 @@ class ProspectShell extends ConsumerWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Bonjour ${user?.prenom ?? ''}',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.primaryBlueAnthracite,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Espace acquéreur — socle prêt.\nProchaine étape : brancher le catalogue programmes.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.grey500),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Rôle : ${user?.role ?? '—'} · ${user?.telephone ?? ''}',
-                style: const TextStyle(fontSize: 12, color: AppColors.grey500),
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (index) {
+          navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          );
+        },
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Accueil'),
-          NavigationDestination(icon: Icon(Icons.grid_view_outlined), label: 'Lots'),
-          NavigationDestination(icon: Icon(Icons.bookmark_outline), label: 'Réservations'),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profil'),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: 'Cités & Plan',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bookmark_outline),
+            selectedIcon: Icon(Icons.bookmark),
+            label: 'Reservations',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.grid_view_outlined),
+            selectedIcon: Icon(Icons.grid_view),
+            label: 'Parcelles',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.location_on_outlined),
+            selectedIcon: Icon(Icons.location_on),
+            label: 'Mes Visites',
+          ),
         ],
-        onDestinationSelected: (_) {},
       ),
     );
   }

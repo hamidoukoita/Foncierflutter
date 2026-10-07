@@ -39,7 +39,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!mounted) return;
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscription enregistrée. Connectez-vous si besoin.')),
+        const SnackBar(
+            content:
+                Text('Inscription enregistrée. Connectez-vous si besoin.')),
       );
       final user = ref.read(authProvider).user;
       if (user != null) {
@@ -65,20 +67,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               TextFormField(
                 controller: _prenom,
                 decoration: const InputDecoration(labelText: 'Prénom *'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Obligatoire' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Obligatoire' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _nom,
                 decoration: const InputDecoration(labelText: 'Nom *'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Obligatoire' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Obligatoire' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _phone,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(labelText: 'Téléphone *'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Obligatoire' : null,
+                validator: (v) =>
+                    v == null || v.trim().isEmpty ? 'Obligatoire' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -90,7 +95,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
               if (auth.error != null) ...[
                 const SizedBox(height: 16),
-                Text(auth.error!, style: const TextStyle(color: AppColors.errorRed)),
+                Text(auth.error!,
+                    style: const TextStyle(color: AppColors.errorRed)),
               ],
               const SizedBox(height: 24),
               PrimaryButton(

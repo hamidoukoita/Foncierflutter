@@ -97,12 +97,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     labelText: 'Mot de passe',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                      icon: Icon(
+                          _obscure ? Icons.visibility_off : Icons.visibility),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Mot de passe obligatoire';
+                    if (v == null || v.isEmpty)
+                      return 'Mot de passe obligatoire';
                     return null;
                   },
                 ),
@@ -113,11 +115,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.errorRed.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                      border: Border.all(
+                          color: AppColors.errorRed.withOpacity(0.3)),
                     ),
                     child: Text(
                       auth.error!,
-                      style: const TextStyle(color: AppColors.errorRed, fontSize: 13),
+                      style: const TextStyle(
+                          color: AppColors.errorRed, fontSize: 13),
                     ),
                   ),
                 ],

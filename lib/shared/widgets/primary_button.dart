@@ -19,9 +19,13 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isSecondary ? AppColors.white : AppColors.primaryOcre;
-    final textColor = isSecondary ? AppColors.primaryBlueAnthracite : AppColors.white;
-    final border = isSecondary ? BorderSide(color: AppColors.borderLight, width: 1.5) : BorderSide.none;
+    final backgroundColor =
+        isSecondary ? AppColors.white : AppColors.primaryOcre;
+    final textColor =
+        isSecondary ? AppColors.primaryBlueAnthracite : AppColors.white;
+    final border = isSecondary
+        ? BorderSide(color: AppColors.borderLight, width: 1.5)
+        : BorderSide.none;
 
     return SizedBox(
       width: double.infinity,

@@ -6,7 +6,7 @@ class AppColors {
   // Primary Colors
   static const Color primaryOcre = Color(0xFFE5801A);
   static const Color primaryBlueAnthracite = Color(0xFF1A2840);
-  
+
   // Secondary Colors
   static const Color successGreen = Color(0xFF2E7D32);
   static const Color backgroundOffWhite = Color(0xFFF8F6F2);
@@ -21,6 +21,8 @@ class AppColors {
   static const Color borderLight = Color(0xFFE2DDD5);
 
   // Status Colors
-  static const Color errorRed = Color(0xFFD32F2F);
+  static const Color errorRed = Color(0xFFDC2626); // Alerte/Litige
   static const Color warningYellow = Color(0xFFFBC02D);
+  static const Color ambreReservation24h =
+      Color(0xFFD97706); // Ambre Réservation 24h
 }

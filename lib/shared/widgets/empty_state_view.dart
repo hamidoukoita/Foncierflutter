@@ -49,7 +49,8 @@ class EmptyStateView extends StatelessWidget {
                 icon: const Icon(Icons.refresh, color: AppColors.primaryOcre),
                 label: Text(
                   "Réessayer",
-                  style: AppTextStyles.buttonText.copyWith(color: AppColors.primaryOcre),
+                  style: AppTextStyles.buttonText
+                      .copyWith(color: AppColors.primaryOcre),
                 ),
               ),
             ]

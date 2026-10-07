@@ -21,7 +21,8 @@ class ProgrammeFoncier {
     return ProgrammeFoncier(
       id: (json['id'] as num?)?.toInt() ?? 0,
       nom: json['nom'] as String? ?? '',
-      localisation: json['localisation'] as String? ?? json['adresse'] as String?,
+      localisation:
+          json['localisation'] as String? ?? json['adresse'] as String?,
       statut: json['statut'] as String?,
       superficieTotale: (json['superficieTotale'] as num?)?.toDouble(),
       lotsTotal: (json['lotsTotal'] as num?)?.toInt(),

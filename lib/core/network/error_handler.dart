@@ -30,7 +30,8 @@ class ErrorHandler {
         final parts = (data['errors'] as List)
             .map((e) {
               if (e is Map) {
-                return e['defaultMessage']?.toString() ?? e['message']?.toString();
+                return e['defaultMessage']?.toString() ??
+                    e['message']?.toString();
               }
               return e?.toString();
             })
@@ -45,15 +46,20 @@ class ErrorHandler {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        message = 'Délai dépassé. Vérifiez votre connexion ou l’URL du serveur.';
+        message =
+            'Délai dépassé. Vérifiez votre connexion ou l’URL du serveur.';
         break;
       case DioExceptionType.connectionError:
         message =
             'Impossible de joindre le serveur. Vérifiez que le backend tourne et l’URL (${e.requestOptions.baseUrl}).';
         break;
       case DioExceptionType.badResponse:
-        if (status == 401) message = message.isEmpty ? 'Identifiants incorrects ou session expirée.' : message;
-        if (status == 403) message = message.isEmpty ? 'Accès refusé.' : message;
+        if (status == 401)
+          message = message.isEmpty
+              ? 'Identifiants incorrects ou session expirée.'
+              : message;
+        if (status == 403)
+          message = message.isEmpty ? 'Accès refusé.' : message;
         break;
       default:
         break;

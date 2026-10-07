@@ -62,14 +62,11 @@ class AuthUser {
       role.toUpperCase().contains('ACQUEREUR') ||
       role.toUpperCase().contains('PROSPECT');
 
-  bool get isAgent =>
-      role.toUpperCase().contains('AGENT');
+  bool get isAgent => role.toUpperCase().contains('AGENT');
 
-  bool get isSociete =>
-      role.toUpperCase().contains('SOCIETE');
+  bool get isSociete => role.toUpperCase().contains('SOCIETE');
 
-  bool get isAdmin =>
-      role.toUpperCase().contains('ADMIN');
+  bool get isAdmin => role.toUpperCase().contains('ADMIN');
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(

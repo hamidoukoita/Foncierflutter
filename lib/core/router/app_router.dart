@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/login_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/register_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/programme_detail_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lot_detail_screen.dart';
+
 import 'package:flutter_mobile_prospect_agent/features/prospect/shell/prospect_shell.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shell/agent_shell.dart';
 
@@ -55,6 +58,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(
+        path: '/prospect/programmes/:id',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return ProgrammeDetailScreen(programmeId: id);
+        },
+      ),
+      GoRoute(
+        path: '/prospect/lots/:id',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return LotDetailScreen(lotId: id);
+        },
+      ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ProspectShell(navigationShell: navigationShell);

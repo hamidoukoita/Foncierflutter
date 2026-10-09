@@ -18,6 +18,8 @@ class BienFoncierModel extends Equatable {
   final String? numeroIlotLotissement;
   final int? programmeId;
   final String? programmeNom;
+  final String? localisation;
+  final String? imageUrl;
 
   // Champs spécifiques à la ParcelleIndividuelle
   final String? numeroTitreFoncier;
@@ -44,6 +46,8 @@ class BienFoncierModel extends Equatable {
     this.numeroIlotLotissement,
     this.programmeId,
     this.programmeNom,
+    this.localisation,
+    this.imageUrl,
     this.numeroTitreFoncier,
     this.murCloture,
     this.eauSomapep,
@@ -70,6 +74,8 @@ class BienFoncierModel extends Equatable {
       numeroIlotLotissement: json['numeroIlotLotissement'] as String?,
       programmeId: json['programmeId'] as int?,
       programmeNom: json['programmeNom'] as String?,
+      localisation: _firstText(json, const ['lieu', 'localisation', 'adresse', 'programmeLieu']),
+      imageUrl: _firstText(json, const ['imageUrl', 'urlImage', 'photoUrl', 'imagePrincipale']),
       numeroTitreFoncier: json['numeroTitreFoncier'] as String?,
       murCloture: json['murCloture'] as bool?,
       eauSomapep: json['eauSomapep'] as bool?,
@@ -96,6 +102,8 @@ class BienFoncierModel extends Equatable {
         'numeroIlotLotissement': numeroIlotLotissement,
         'programmeId': programmeId,
         'programmeNom': programmeNom,
+        'localisation': localisation,
+        'imageUrl': imageUrl,
         'numeroTitreFoncier': numeroTitreFoncier,
         'murCloture': murCloture,
         'eauSomapep': eauSomapep,
@@ -122,6 +130,8 @@ class BienFoncierModel extends Equatable {
         numeroIlotLotissement,
         programmeId,
         programmeNom,
+        localisation,
+        imageUrl,
         numeroTitreFoncier,
         murCloture,
         eauSomapep,
@@ -130,4 +140,12 @@ class BienFoncierModel extends Equatable {
         societeId,
         societeNom,
       ];
+}
+
+String? _firstText(Map<String, dynamic> json, List<String> keys) {
+  for (final key in keys) {
+    final value = json[key];
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+  }
+  return null;
 }

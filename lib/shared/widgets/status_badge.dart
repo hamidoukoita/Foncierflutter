@@ -24,8 +24,8 @@ class StatusBadge extends StatelessWidget {
         label = 'Libre';
         break;
       case LotStatus.reserve:
-        bgColor = AppColors.warningYellow.withOpacity(0.15);
-        textColor = AppColors.warningYellow;
+        bgColor = AppColors.warningAmber.withOpacity(0.15);
+        textColor = AppColors.warningAmber;
         label = 'Réservé';
         break;
       case LotStatus.vendu:

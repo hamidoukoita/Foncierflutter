@@ -48,7 +48,7 @@ class ReservationModel extends Equatable {
         : DateTime.now();
 
     return ReservationModel(
-      id: json['id'] as int,
+      id: (json['id'] as num?)?.toInt() ?? 0,
       numeroDossier: json['numeroDossier'] as String? ?? '',
       dateReservation: dateRes,
       // Si le backend ne l'envoie pas, on applique la règle locale de 24h
@@ -60,15 +60,15 @@ class ReservationModel extends Equatable {
       dateTraitement: json['dateTraitement'] != null
           ? DateTime.parse(json['dateTraitement'])
           : null,
-      bienId: json['bienId'] as int?,
+      bienId: (json['bienId'] as num?)?.toInt(),
       bienReference: json['bienReference'] as String?,
       bienDesignation: json['bienDesignation'] as String?,
       programmeNom: json['programmeNom'] as String?,
       montant: (json['montant'] as num?)?.toDouble(),
-      acquereurId: json['acquereurId'] as int?,
+      acquereurId: (json['acquereurId'] as num?)?.toInt(),
       acquereurNom: json['acquereurNom'] as String?,
       acquereurTelephone: json['acquereurTelephone'] as String?,
-      agentId: json['agentId'] as int?,
+      agentId: (json['agentId'] as num?)?.toInt(),
       agentNom: json['agentNom'] as String?,
     );
   }

@@ -3,15 +3,18 @@ import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dar
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/providers/repository_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/programme_foncier.dart';
 
 class ProspectDashboardState {
+  final List<ProgrammeFoncier> programmes;
   final List<BienFoncierModel> catalogue;
   final List<ReservationModel> mesReservations;
   final bool isLoading;
   final String? error;
-  final String filtreType; // 'TOUT', 'LOTS', 'PARCELLES'
+  final String filtreType;
 
   const ProspectDashboardState({
+    this.programmes = const [],
     this.catalogue = const [],
     this.mesReservations = const [],
     this.isLoading = false,
@@ -19,7 +22,22 @@ class ProspectDashboardState {
     this.filtreType = 'TOUT',
   });
 
+  List<BienFoncierModel> get catalogueFiltree {
+    if (filtreType == 'TOUT') return catalogue;
+    return catalogue.where((b) {
+      final type = (b.typeBien ?? '').toUpperCase();
+      if (filtreType == 'LOT_PROGRAMME' || filtreType == 'LOTS') {
+        return type.contains('LOT') || b.numeroLot != null;
+      }
+      if (filtreType == 'PARCELLE_INDIVIDUELLE' || filtreType == 'PARCELLES') {
+        return type.contains('PARCELLE') || b.numeroTitreFoncier != null;
+      }
+      return true;
+    }).toList();
+  }
+
   ProspectDashboardState copyWith({
+    List<ProgrammeFoncier>? programmes,
     List<BienFoncierModel>? catalogue,
     List<ReservationModel>? mesReservations,
     bool? isLoading,
@@ -28,6 +46,7 @@ class ProspectDashboardState {
     bool clearError = false,
   }) {
     return ProspectDashboardState(
+      programmes: programmes ?? this.programmes,
       catalogue: catalogue ?? this.catalogue,
       mesReservations: mesReservations ?? this.mesReservations,
       isLoading: isLoading ?? this.isLoading,
@@ -39,29 +58,32 @@ class ProspectDashboardState {
 
 class ProspectDashboardNotifier extends AsyncNotifier<ProspectDashboardState> {
   @override
-  Future<ProspectDashboardState> build() async {
-    return _fetchData();
-  }
+  Future<ProspectDashboardState> build() async => _fetchData();
 
   Future<ProspectDashboardState> _fetchData() async {
-    final authState = ref.read(authProvider);
-    final user = authState.user;
-    if (user == null) {
-      throw Exception('Utilisateur non connecté');
-    }
+    final user = ref.read(authProvider).user;
+    if (user == null) throw Exception('Utilisateur non connecté');
 
     final bienRepo = ref.read(bienFoncierRepositoryProvider);
-    final resRepo = ref.read(reservationRepositoryProvider);
+    final reservationRepo = ref.read(reservationRepositoryProvider);
+    final programmeRepo = ref.read(programmeRepositoryProvider);
 
     try {
-      final parcelles = await bienRepo.getParcelles();
-      final lots = await bienRepo.getLotsProgrammes();
-      final reservations = await resRepo.getReservationsByAcquereur(user.id);
+      final results = await Future.wait<dynamic>([
+        programmeRepo.getAll(),
+        bienRepo.getParcelles(),
+        bienRepo.getLotsProgrammes(),
+        reservationRepo.getReservationsByAcquereur(user.id),
+      ]);
 
-      final catalogue = [...lots, ...parcelles];
+      final programmes = results[0] as List<ProgrammeFoncier>;
+      final parcelles = results[1] as List<BienFoncierModel>;
+      final lots = results[2] as List<BienFoncierModel>;
+      final reservations = results[3] as List<ReservationModel>;
 
       return ProspectDashboardState(
-        catalogue: catalogue,
+        programmes: programmes,
+        catalogue: [...lots, ...parcelles],
         mesReservations: reservations,
       );
     } catch (e) {
@@ -70,20 +92,19 @@ class ProspectDashboardNotifier extends AsyncNotifier<ProspectDashboardState> {
   }
 
   Future<void> refresh() async {
+    final previousFilter = state.valueOrNull?.filtreType ?? 'TOUT';
     state = const AsyncValue.loading();
     try {
       final data = await _fetchData();
-      state = AsyncValue.data(
-          data.copyWith(filtreType: state.valueOrNull?.filtreType));
+      state = AsyncValue.data(data.copyWith(filtreType: previousFilter));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
   }
 
   void setFiltreType(String type) {
-    if (state.value != null) {
-      state = AsyncValue.data(state.value!.copyWith(filtreType: type));
-    }
+    final current = state.valueOrNull;
+    if (current != null) state = AsyncValue.data(current.copyWith(filtreType: type));
   }
 
   Future<bool> reserverBien(int bienId) async {
@@ -91,11 +112,10 @@ class ProspectDashboardNotifier extends AsyncNotifier<ProspectDashboardState> {
     if (user == null) return false;
 
     try {
-      final resRepo = ref.read(reservationRepositoryProvider);
-      await resRepo.reserverBien(bienId, user.id);
+      await ref.read(reservationRepositoryProvider).reserverBien(bienId, user.id);
       await refresh();
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }

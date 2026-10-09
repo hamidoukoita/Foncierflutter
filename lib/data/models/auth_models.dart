@@ -1,4 +1,4 @@
-/// Miroir de ApiResponse<T> côté Spring Boot.
+/// Miroir de `ApiResponse<T>` côté Spring Boot.
 class ApiResponse<T> {
   final bool success;
   final String message;

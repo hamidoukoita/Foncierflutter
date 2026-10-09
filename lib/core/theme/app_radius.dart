@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// Rayons partagés pour conserver des cartes et contrôles cohérents.
 class AppRadius {
   AppRadius._();
 
-  static const double sm = 4.0;
-  static const double md = 8.0;
-  static const double lg = 12.0;
-  static const double xl = 16.0;
+  static const double sm = 6.0;
+  static const double md = 12.0;
+  static const double lg = 16.0;
+  static const double xl = 18.0;
   static const double xxl = 24.0;
   static const double round = 999.0;
 
@@ -17,6 +18,7 @@ class AppRadius {
   static const BorderRadius radiusRound =
       BorderRadius.all(Radius.circular(round));
 
-  static final BorderRadius card = BorderRadius.circular(lg);
-  static final BorderRadius button = BorderRadius.circular(md);
+  static const BorderRadius card = BorderRadius.all(Radius.circular(xl));
+  static const BorderRadius button = BorderRadius.all(Radius.circular(md));
+  static const BorderRadius input = BorderRadius.all(Radius.circular(14));
 }

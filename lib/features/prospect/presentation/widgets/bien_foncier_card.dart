@@ -126,20 +126,34 @@ class BienFoncierCard extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          child: CachedNetworkImage(
-            imageUrl: 'https://via.placeholder.com/400x200.png?text=Foncier+',
-            height: 160,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            placeholder: (context, url) =>
-                const Center(child: CircularProgressIndicator()),
-            errorWidget: (context, url, error) => Container(
-              height: 160,
-              color: AppColors.grey300,
-              child: const Icon(Icons.image_not_supported,
-                  color: AppColors.grey500),
-            ),
-          ),
+          child: bien.imageUrl != null && bien.imageUrl!.trim().isNotEmpty
+              ? CachedNetworkImage(
+                  imageUrl: bien.imageUrl!,
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    height: 160,
+                    color: AppColors.backgroundOffWhite,
+                    child: const Center(
+                      child: Icon(Icons.landscape_rounded,
+                          color: AppColors.successGreen, size: 36),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    height: 160,
+                    color: AppColors.backgroundOffWhite,
+                    child: const Icon(Icons.landscape_rounded,
+                        color: AppColors.successGreen, size: 36),
+                  ),
+                )
+              : Container(
+                  height: 160,
+                  width: double.infinity,
+                  color: AppColors.constructionMint,
+                  child: const Icon(Icons.landscape_rounded,
+                      color: AppColors.constructionGreen, size: 44),
+                ),
         ),
         Positioned(
           top: AppSpacing.sm,

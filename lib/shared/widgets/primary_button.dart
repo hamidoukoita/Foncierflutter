@@ -33,11 +33,11 @@ class PrimaryButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: textColor,
-          elevation: isSecondary ? 0 : 4,
-          shadowColor: AppColors.primaryOcre.withOpacity(0.4),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          padding: const EdgeInsets.symmetric(vertical: 13),
           shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.radiusMd,
+            borderRadius: AppRadius.button,
             side: border,
           ),
         ),

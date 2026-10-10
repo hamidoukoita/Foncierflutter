@@ -3,6 +3,9 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/control
 import 'package:flutter_mobile_prospect_agent/data/repositories/bien_foncier_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/reservation_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/rendez_vous_repository.dart';
+import 'package:flutter_mobile_prospect_agent/data/repositories/creneau_repository.dart';
+import 'package:flutter_mobile_prospect_agent/data/repositories/media_repository.dart';
+import 'package:flutter_mobile_prospect_agent/data/repositories/plan_masse_repository.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/data/programme_repository.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/data/lot_programme_repository.dart';
 
@@ -24,4 +27,16 @@ final programmeRepositoryProvider = Provider<ProgrammeRepository>((ref) {
 
 final lotProgrammeRepositoryProvider = Provider<LotProgrammeRepository>((ref) {
   return LotProgrammeRepository(ref.watch(apiClientProvider));
+});
+
+final creneauRepositoryProvider = Provider<CreneauRepository>((ref) {
+  return CreneauRepository(ref.watch(apiClientProvider));
+});
+
+final planMasseRepositoryProvider = Provider<PlanMasseRepository>((ref) {
+  return PlanMasseRepository(ref.watch(apiClientProvider));
+});
+
+final mediaRepositoryProvider = Provider<MediaRepository>((ref) {
+  return MediaRepository(ref.watch(apiClientProvider));
 });

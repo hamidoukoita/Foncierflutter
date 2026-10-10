@@ -103,8 +103,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty)
+                    if (v == null || v.isEmpty) {
                       return 'Mot de passe obligatoire';
+                    }
                     return null;
                   },
                 ),
@@ -113,10 +114,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.errorRed.withOpacity(0.08),
+                      color: AppColors.errorRed.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: AppColors.errorRed.withOpacity(0.3)),
+                          color: AppColors.errorRed.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       auth.error!,

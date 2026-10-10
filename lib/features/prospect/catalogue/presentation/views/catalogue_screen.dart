@@ -287,7 +287,7 @@ class _SearchBar extends StatelessWidget {
           hintText: 'Rechercher une zone (Kati, Safo, Sanankoroba…)',
           hintStyle: TextStyle(
             fontSize: 13,
-            color: AppColors.grey500.withOpacity(0.9),
+            color: AppColors.grey500.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
           prefixIcon: const Icon(Icons.search_rounded,

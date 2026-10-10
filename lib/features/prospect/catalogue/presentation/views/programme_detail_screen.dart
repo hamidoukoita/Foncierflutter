@@ -5,6 +5,10 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/lot_programme.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/programme_foncier.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/controllers/catalogue_provider.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/hero_media.dart';
 
 /// Détail d'une cité / programme — maquette Figma « Détails cité ».
 class ProgrammeDetailScreen extends ConsumerWidget {
@@ -12,10 +16,24 @@ class ProgrammeDetailScreen extends ConsumerWidget {
 
   const ProgrammeDetailScreen({super.key, required this.programmeId});
 
+  /// Équipements réellement dessinés sur le plan (aucune donnée inventée).
+  static List<PlanElement> _commodites(PlanMasse? plan) {
+    if (plan == null) return const [];
+    final vus = <String>{};
+    final out = <PlanElement>[];
+    for (final e in plan.elements) {
+      if (!e.visible || e.isRoute || e.type == 'ESPACE_VERT') continue;
+      if (vus.add('${e.type}|${e.nom ?? ''}')) out.add(e);
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final progAsync = ref.watch(programmeDetailProvider(programmeId));
     final lotsAsync = ref.watch(lotsByProgrammeProvider(programmeId));
+    final mediasAsync = ref.watch(programmeMediasProvider(programmeId));
+    final planAsync = ref.watch(planMasseProvider(programmeId));
 
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
@@ -55,9 +73,11 @@ class ProgrammeDetailScreen extends ConsumerWidget {
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
                       SliverToBoxAdapter(
-                        child: _HeroHeader(
+                        child: HeroMedia(
+                          medias: mediasAsync.valueOrNull ?? const [],
+                          loading: mediasAsync.isLoading,
+                          height: 230,
                           onBack: () => context.pop(),
-                          seed: programme.id,
                         ),
                       ),
                       SliverToBoxAdapter(
@@ -152,17 +172,23 @@ class ProgrammeDetailScreen extends ConsumerWidget {
                                 ],
                               ),
                               const SizedBox(height: 18),
-                              const _SectionTitle('Commodités aux alentours'),
-                              const SizedBox(height: 10),
-                              const _CommoditesGrid(),
-                              const SizedBox(height: 18),
+                              if (_commodites(planAsync.valueOrNull).isNotEmpty) ...[
+                                const _SectionTitle('Commodités du lotissement'),
+                                const SizedBox(height: 10),
+                                _CommoditesGrid(items: _commodites(planAsync.valueOrNull)),
+                                const SizedBox(height: 18),
+                              ],
                               const _SectionTitle('Plan de masse du lotissement'),
                               const SizedBox(height: 10),
                               _PlanPreview(
-                                seed: programme.id,
+                                lots: lotsAvecGeometrie(lots),
+                                elements: planAsync.valueOrNull?.elements
+                                        .where((e) => e.visible)
+                                        .toList() ??
+                                    const [],
                                 lotsCount: lots.length,
                                 onOpenPlan: () =>
-                                    _showLotsSheet(context, lots, programme),
+                                    context.push('/prospect/programmes/$programmeId/plan'),
                               ),
                               const SizedBox(height: 24),
                             ],
@@ -220,7 +246,7 @@ class ProgrammeDetailScreen extends ConsumerWidget {
                         height: 48,
                         child: ElevatedButton(
                           onPressed: () =>
-                              _showLotsSheet(context, lots, programme),
+                              context.push('/prospect/programmes/$programmeId/lots'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryOcre,
                             foregroundColor: Colors.white,
@@ -245,268 +271,6 @@ class ProgrammeDetailScreen extends ConsumerWidget {
       ),
     );
   }
-
-  void _showLotsSheet(
-    BuildContext context,
-    List<LotProgramme> lots,
-    ProgrammeFoncier programme,
-  ) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.55,
-          minChildSize: 0.35,
-          maxChildSize: 0.9,
-          builder: (_, controller) {
-            return Column(
-              children: [
-                const SizedBox(height: 10),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.grey300,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Lots — ${programme.nom}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 16,
-                            color: AppColors.primaryBlueAnthracite,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${lots.length}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
-                Expanded(
-                  child: lots.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'Aucun lot disponible.',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        )
-                      : ListView.separated(
-                          controller: controller,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: lots.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
-                          itemBuilder: (_, i) {
-                            final lot = lots[i];
-                            return Material(
-                              color: AppColors.backgroundOffWhite,
-                              borderRadius: BorderRadius.circular(12),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: () {
-                                  Navigator.pop(ctx);
-                                  context.push('/prospect/lots/${lot.id}');
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        width: 40,
-                                        height: 40,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          color: AppColors.white,
-                                          borderRadius: BorderRadius.circular(10),
-                                          border: Border.all(
-                                              color: AppColors.borderLight),
-                                        ),
-                                        child: Text(
-                                          lot.numeroLot ?? '${i + 1}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 12,
-                                            color: AppColors.primaryBlueAnthracite,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              lot.displayRef,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 14,
-                                                color: AppColors
-                                                    .primaryBlueAnthracite,
-                                              ),
-                                            ),
-                                            Text(
-                                              [
-                                                if (lot.superficie != null)
-                                                  '${lot.superficie!.toStringAsFixed(0)} m²',
-                                                if (lot.statut != null) lot.statut!,
-                                              ].join(' • '),
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (lot.prix != null)
-                                        Text(
-                                          _formatPrice(lot.prix!),
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 12,
-                                            color: AppColors.primaryOcre,
-                                          ),
-                                        ),
-                                      const Icon(Icons.chevron_right_rounded,
-                                          color: AppColors.grey400),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  static String _formatPrice(double v) {
-    final s = v.toStringAsFixed(0);
-    final chars = s.split('').reversed.toList();
-    final out = <String>[];
-    for (var i = 0; i < chars.length; i++) {
-      if (i > 0 && i % 3 == 0) out.add(' ');
-      out.add(chars[i]);
-    }
-    return '${out.reversed.join()} FCFA';
-  }
-}
-
-class _HeroHeader extends StatelessWidget {
-  final VoidCallback onBack;
-  final int seed;
-
-  const _HeroHeader({required this.onBack, required this.seed});
-
-  @override
-  Widget build(BuildContext context) {
-    final top = MediaQuery.of(context).padding.top;
-    return SizedBox(
-      height: 220 + top,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.mapDeepGreen,
-                  AppColors.mapCanvas,
-                  AppColors.mapField,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-          CustomPaint(painter: _ParcelOverlayPainter(seed: seed)),
-          Positioned(
-            top: top + 8,
-            left: 12,
-            child: Material(
-              color: Colors.white.withOpacity(0.92),
-              shape: const CircleBorder(),
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: onBack,
-                child: const SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ParcelOverlayPainter extends CustomPainter {
-  final int seed;
-  _ParcelOverlayPainter({required this.seed});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stroke = Paint()
-      ..color = const Color(0xFF2ECC71).withOpacity(0.85)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final fill = Paint()
-      ..color = const Color(0xFF2ECC71).withOpacity(0.12)
-      ..style = PaintingStyle.fill;
-
-    final cols = 5;
-    final rows = 4;
-    final pad = 16.0;
-    final cellW = (size.width - pad * 2) / cols;
-    final cellH = (size.height - pad * 2) / rows;
-    for (var r = 0; r < rows; r++) {
-      for (var c = 0; c < cols; c++) {
-        final dx = ((seed + r * 3 + c) % 5) * 2.0;
-        final rect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            pad + c * cellW + 3,
-            pad + r * cellH + 3 + dx,
-            cellW - 8,
-            cellH - 10,
-          ),
-          const Radius.circular(3),
-        );
-        canvas.drawRRect(rect, fill);
-        canvas.drawRRect(rect, stroke);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ParcelOverlayPainter oldDelegate) =>
-      oldDelegate.seed != seed;
 }
 
 class _IdentityCard extends StatelessWidget {
@@ -762,15 +526,28 @@ class _VrdChip extends StatelessWidget {
   }
 }
 
-class _CommoditesGrid extends StatelessWidget {
-  const _CommoditesGrid();
+IconData _iconePourElement(String type) {
+  switch (type) {
+    case 'MOSQUEE':
+      return Icons.mosque_outlined;
+    case 'EGLISE':
+      return Icons.church_outlined;
+    case 'ECOLE':
+      return Icons.school_outlined;
+    case 'MARCHE':
+      return Icons.storefront_outlined;
+    case 'COMMERCE':
+      return Icons.shopping_bag_outlined;
+    case 'EQUIPEMENT_PUBLIC':
+      return Icons.account_balance_outlined;
+    default:
+      return Icons.place_outlined;
+  }
+}
 
-  static const _items = [
-    (Icons.local_hospital_outlined, 'Centre de santé', 'À proximité'),
-    (Icons.school_outlined, 'Groupe scolaire', 'À proximité'),
-    (Icons.storefront_outlined, 'Grand Marché', 'À proximité'),
-    (Icons.mosque_outlined, 'Lieu de culte', 'À proximité'),
-  ];
+class _CommoditesGrid extends StatelessWidget {
+  final List<PlanElement> items;
+  const _CommoditesGrid({required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -781,7 +558,7 @@ class _CommoditesGrid extends StatelessWidget {
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       childAspectRatio: 2.4,
-      children: _items
+      children: items
           .map(
             (e) => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -799,7 +576,7 @@ class _CommoditesGrid extends StatelessWidget {
                       color: AppColors.backgroundOffWhite,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(e.$1, size: 18, color: AppColors.primaryOcre),
+                    child: Icon(_iconePourElement(e.type), size: 18, color: AppColors.primaryOcre),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -808,7 +585,7 @@ class _CommoditesGrid extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          e.$2,
+                          e.affichage,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -817,9 +594,9 @@ class _CommoditesGrid extends StatelessWidget {
                             color: AppColors.primaryBlueAnthracite,
                           ),
                         ),
-                        Text(
-                          e.$3,
-                          style: const TextStyle(
+                        const Text(
+                          'Dans le lotissement',
+                          style: TextStyle(
                             fontSize: 10,
                             color: AppColors.primaryOcre,
                             fontWeight: FontWeight.w600,
@@ -838,67 +615,73 @@ class _CommoditesGrid extends StatelessWidget {
 }
 
 class _PlanPreview extends StatelessWidget {
-  final int seed;
+  final List<PlanLotShape> lots;
+  final List<PlanElement> elements;
   final int lotsCount;
   final VoidCallback onOpenPlan;
 
   const _PlanPreview({
-    required this.seed,
+    required this.lots,
+    required this.elements,
     required this.lotsCount,
     required this.onOpenPlan,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: SizedBox(
-        height: 160,
-        width: double.infinity,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.mapFieldLight,
-                    AppColors.mapCanvas,
-                    AppColors.mapDeepGreen,
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
-            CustomPaint(painter: _ParcelOverlayPainter(seed: seed + 7)),
-            Positioned(
-              right: 12,
-              bottom: 12,
-              child: Material(
-                color: Colors.white.withOpacity(0.95),
-                borderRadius: BorderRadius.circular(20),
-                child: InkWell(
-                  onTap: onOpenPlan,
-                  borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: lots.isEmpty ? null : onOpenPlan,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 180,
+          width: double.infinity,
+          color: const Color(0xFFEFEBE0),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (lots.isEmpty)
+                const Center(
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: EdgeInsets.all(20),
                     child: Text(
-                      lotsCount > 0
-                          ? 'Voir le plan ($lotsCount lots) ›'
-                          : 'Voir le plan ›',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryBlueAnthracite,
+                      'Le plan de masse n\'a pas encore été publié par la société.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: PlanMiniature(lots: lots, elements: elements, showLabels: false),
+                ),
+              if (lots.isNotEmpty)
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: Material(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(20),
+                    child: InkWell(
+                      onTap: onOpenPlan,
+                      borderRadius: BorderRadius.circular(20),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        child: Text(
+                          'Voir le plan ›',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlueAnthracite,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

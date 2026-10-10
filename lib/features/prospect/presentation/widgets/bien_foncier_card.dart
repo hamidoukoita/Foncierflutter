@@ -11,11 +11,15 @@ class BienFoncierCard extends StatelessWidget {
   final VoidCallback onReserver;
   final VoidCallback onPrendreRdv;
 
+  /// Ouvre la fiche détaillée du bien.
+  final VoidCallback? onTap;
+
   const BienFoncierCard({
     super.key,
     required this.bien,
     required this.onReserver,
     required this.onPrendreRdv,
+    this.onTap,
   });
 
   @override
@@ -31,7 +35,7 @@ class BienFoncierCard extends StatelessWidget {
       badgeColor = AppColors.errorRed;
     }
 
-    return Container(
+    final card = Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -39,7 +43,7 @@ class BienFoncierCard extends StatelessWidget {
         border: Border.all(color: AppColors.borderLight),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           )
@@ -80,7 +84,7 @@ class BienFoncierCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                if (bien.statut == 'DISPONIBLE')
+                if (bien.peutEtreReserve)
                   Row(
                     children: [
                       Expanded(
@@ -93,7 +97,7 @@ class BienFoncierCard extends StatelessWidget {
                               borderRadius: AppRadius.button,
                             ),
                           ),
-                          child: const Text('Réserver 24h'),
+                          child: const Text('Réserver'),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -119,6 +123,9 @@ class BienFoncierCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap == null) return card;
+    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: card);
   }
 
   Widget _buildImage(Color badgeColor, String badgeText) {

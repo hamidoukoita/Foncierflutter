@@ -19,6 +19,17 @@ class ApiEndpoints {
   static const String reservations = '/reservations';
   static const String rendezVous = '/rendez-vous';
 
+  // Biens (vue polymorphique), créneaux de visite et médias
+  static String bienById(int id) => '/biens-fonciers/$id';
+  static const String creneaux = '/creneaux';
+  static String planMasseByProgramme(int programmeId) =>
+      '/plans-masse/programme/$programmeId';
+  static String planElements(int planMasseId) =>
+      '/plans-masse-elements/plan-masse/$planMasseId';
+  static String mediasByProgramme(int programmeId) =>
+      '/medias/programme/$programmeId';
+  static String mediasByBien(int bienId) => '/medias/bien/$bienId';
+
   // Construction
   static const String projetsConstruction = '/projets-construction';
   static String projetsByAcquereur(int id) =>

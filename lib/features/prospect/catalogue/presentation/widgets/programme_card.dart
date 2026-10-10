@@ -44,7 +44,7 @@ class ProgrammeCard extends StatelessWidget {
             border: Border.all(color: AppColors.borderLight),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlueAnthracite.withOpacity(0.04),
+                color: AppColors.primaryBlueAnthracite.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -241,7 +241,7 @@ class _Thumb extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.25),
+                  color: Colors.black.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Icon(Icons.map_outlined,
@@ -262,7 +262,7 @@ class _PlanGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.18)
+      ..color = Colors.white.withValues(alpha: 0.18)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
     const step = 14.0;
@@ -272,7 +272,7 @@ class _PlanGridPainter extends CustomPainter {
     for (double y = 0; y < size.height; y += step) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
-    final fill = Paint()..color = Colors.white.withOpacity(0.12);
+    final fill = Paint()..color = Colors.white.withValues(alpha: 0.12);
     final r = RRect.fromRectAndRadius(
       Rect.fromLTWH(size.width * 0.2, size.height * 0.25, size.width * 0.35,
           size.height * 0.35),

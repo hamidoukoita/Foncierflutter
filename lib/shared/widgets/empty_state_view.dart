@@ -10,12 +10,12 @@ class EmptyStateView extends StatelessWidget {
   final VoidCallback? onRetry;
 
   const EmptyStateView({
-    Key? key,
+    super.key,
     required this.title,
     required this.message,
     required this.icon,
     this.onRetry,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

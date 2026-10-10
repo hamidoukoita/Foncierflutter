@@ -39,7 +39,7 @@ class ReservationCard extends StatelessWidget {
         border: Border.all(color: borderColor, width: 2),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           )
@@ -118,7 +118,7 @@ class ReservationCard extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),

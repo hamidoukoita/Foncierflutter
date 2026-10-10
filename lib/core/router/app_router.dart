@@ -5,6 +5,8 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/control
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/login_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/register_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/programme_detail_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lots_list_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/screens/plan_masse_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lot_detail_screen.dart';
 
 import 'package:flutter_mobile_prospect_agent/features/prospect/shell/prospect_shell.dart';
@@ -16,6 +18,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/scr
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_cites_plan_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_reservations_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_parcelles_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_parcelle_detail_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_mes_visites_screen.dart';
 
 /// Notifier pour forcer le refresh du router quand l'auth change.
@@ -63,6 +66,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = int.parse(state.pathParameters['id']!);
           return ProgrammeDetailScreen(programmeId: id);
+        },
+      ),
+      GoRoute(
+        path: '/prospect/programmes/:id/plan',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          final lot = int.tryParse(state.uri.queryParameters['lot'] ?? '');
+          return PlanMasseScreen(programmeId: id, initialLotId: lot);
+        },
+      ),
+      GoRoute(
+        path: '/prospect/programmes/:id/lots',
+        builder: (context, state) =>
+            LotsListScreen(programmeId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/prospect/parcelles/:id',
+        builder: (context, state) {
+          final id = int.parse(state.pathParameters['id']!);
+          return ProspectParcelleDetailScreen(parcelleId: id);
         },
       ),
       GoRoute(

@@ -30,6 +30,9 @@ class BienFoncierModel extends Equatable {
   final int? societeId;
   final String? societeNom;
 
+  /// true = le bien accepte plusieurs réservations actives en parallèle (réglé par la société promotrice).
+  final bool? reservationMultiple;
+
   const BienFoncierModel({
     required this.id,
     required this.reference,
@@ -55,7 +58,23 @@ class BienFoncierModel extends Equatable {
     this.voieBitumee,
     this.societeId,
     this.societeNom,
+    this.reservationMultiple,
   });
+
+  bool get isLot =>
+      (typeBien ?? '').toUpperCase().contains('LOT') || numeroLot != null;
+
+  /// Libellé affichable : « Lot 12 · Îlot B » ou « Parcelle A-12 ».
+  String get designation => isLot
+      ? 'Lot ${numeroLot ?? reference}${numeroIlot != null ? ' · Îlot $numeroIlot' : ''}'
+      : (reference.isNotEmpty ? reference : 'Parcelle #$id');
+
+  bool get isDisponible => statut.toUpperCase() == 'DISPONIBLE';
+  bool get isReserve => statut.toUpperCase() == 'RESERVER';
+
+  /// Réservable si disponible, ou déjà réservé mais ouvert aux réservations multiples.
+  bool get peutEtreReserve =>
+      isDisponible || (isReserve && reservationMultiple == true);
 
   factory BienFoncierModel.fromJson(Map<String, dynamic> json) {
     return BienFoncierModel(
@@ -83,6 +102,7 @@ class BienFoncierModel extends Equatable {
       voieBitumee: json['voieBitumee'] as bool?,
       societeId: json['societeId'] as int?,
       societeNom: json['societeNom'] as String?,
+      reservationMultiple: json['reservationMultiple'] as bool?,
     );
   }
 
@@ -111,6 +131,7 @@ class BienFoncierModel extends Equatable {
         'voieBitumee': voieBitumee,
         'societeId': societeId,
         'societeNom': societeNom,
+        'reservationMultiple': reservationMultiple,
       };
 
   @override
@@ -139,6 +160,7 @@ class BienFoncierModel extends Equatable {
         voieBitumee,
         societeId,
         societeNom,
+        reservationMultiple,
       ];
 }
 

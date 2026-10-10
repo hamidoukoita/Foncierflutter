@@ -1,15 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/reservation_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
-class ProspectReservationsScreen extends ConsumerWidget {
+class ProspectReservationsScreen extends ConsumerStatefulWidget {
   const ProspectReservationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProspectReservationsScreen> createState() => _ProspectReservationsScreenState();
+}
+
+class _ProspectReservationsScreenState extends ConsumerState<ProspectReservationsScreen> {
+  /// TOUTES | EN_ATTENTE | CONFIRMER | REFUSER
+  String _filtre = 'TOUTES';
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(mesReservationsProvider);
 
     return Scaffold(
@@ -18,21 +28,14 @@ class ProspectReservationsScreen extends ConsumerWidget {
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.primaryOcre),
         ),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('$e', textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => ref.invalidate(mesReservationsProvider),
-                child: const Text('Réessayer'),
-              ),
-            ],
-          ),
+        error: (e, _) => EmptyStateView(
+          icon: Icons.cloud_off_rounded,
+          title: 'Réservations indisponibles',
+          message: ErrorHandler.messageOf(e),
+          onRetry: () => ref.invalidate(mesReservationsProvider),
         ),
-        data: (list) {
-          if (list.isEmpty) {
+        data: (all) {
+          if (all.isEmpty) {
             return const EmptyStateView(
               icon: Icons.bookmark_outline,
               title: 'Mes réservations',
@@ -40,41 +43,52 @@ class ProspectReservationsScreen extends ConsumerWidget {
                   'Aucune réservation pour le moment.\nParcourez les programmes pour réserver un lot.',
             );
           }
+
+          final sorted = [...all]..sort((a, b) => b.dateReservation.compareTo(a.dateReservation));
+          final list = _filtre == 'TOUTES' ? sorted : sorted.where((r) => r.statut == _filtre).toList();
+          int count(String s) => all.where((r) => r.statut == s).length;
+
           return RefreshIndicator(
             color: AppColors.primaryOcre,
             onRefresh: () async => ref.invalidate(mesReservationsProvider),
-            child: ListView.builder(
+            child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-              itemCount: list.length + 1,
-              itemBuilder: (context, i) {
-                if (i == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '${list.length} dossier${list.length > 1 ? 's' : ''}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
+              children: [
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    _chip('Toutes (${all.length})', 'TOUTES'),
+                    _chip('En attente (${count('EN_ATTENTE')})', 'EN_ATTENTE'),
+                    _chip('Confirmées (${count('CONFIRMER')})', 'CONFIRMER'),
+                    _chip('Refusées (${count('REFUSER')})', 'REFUSER'),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                if (list.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 48),
+                    child: EmptyStateView(
+                      icon: Icons.bookmark_outline,
+                      title: 'Aucun dossier',
+                      message: 'Aucune réservation ne correspond à ce filtre.',
                     ),
-                  );
-                }
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: ReservationCard(reservation: list[i - 1]),
-                );
-              },
+                  )
+                else
+                  for (final ReservationModel r in list) ReservationCard(reservation: r),
+              ],
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _chip(String label, String value) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: _filtre == value,
+      selectedColor: AppColors.primaryOcre.withValues(alpha: 0.2),
+      onSelected: (_) => setState(() => _filtre = value),
     );
   }
 }

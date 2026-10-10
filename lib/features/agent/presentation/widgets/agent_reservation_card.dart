@@ -34,7 +34,7 @@ class AgentReservationCard extends StatelessWidget {
         border: Border.all(color: AppColors.borderLight),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.05),
+            color: AppColors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           )

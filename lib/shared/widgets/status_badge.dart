@@ -9,7 +9,7 @@ enum LotStatus { libre, reserve, vendu, litige }
 class StatusBadge extends StatelessWidget {
   final LotStatus status;
 
-  const StatusBadge({Key? key, required this.status}) : super(key: key);
+  const StatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
@@ -19,22 +19,22 @@ class StatusBadge extends StatelessWidget {
 
     switch (status) {
       case LotStatus.libre:
-        bgColor = AppColors.successGreen.withOpacity(0.15);
+        bgColor = AppColors.successGreen.withValues(alpha: 0.15);
         textColor = AppColors.successGreen;
         label = 'Libre';
         break;
       case LotStatus.reserve:
-        bgColor = AppColors.warningAmber.withOpacity(0.15);
+        bgColor = AppColors.warningAmber.withValues(alpha: 0.15);
         textColor = AppColors.warningAmber;
         label = 'Réservé';
         break;
       case LotStatus.vendu:
-        bgColor = AppColors.errorRed.withOpacity(0.15);
+        bgColor = AppColors.errorRed.withValues(alpha: 0.15);
         textColor = AppColors.errorRed;
         label = 'Vendu';
         break;
       case LotStatus.litige:
-        bgColor = AppColors.black.withOpacity(0.15);
+        bgColor = AppColors.black.withValues(alpha: 0.15);
         textColor = AppColors.black;
         label = 'Suspendu';
         break;

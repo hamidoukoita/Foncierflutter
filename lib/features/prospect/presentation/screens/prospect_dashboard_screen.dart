@@ -522,7 +522,7 @@ class _FoncierBrandMarkPainter extends CustomPainter {
     }) {
       final fill = Paint()..color = color;
       canvas.drawPath(outline, fill);
-      canvas.drawRect(body, Paint()..color = color.withOpacity(0.9));
+      canvas.drawRect(body, Paint()..color = color.withValues(alpha: 0.9));
       final windowPaint = Paint()..color = AppColors.white;
       for (final window in windows) {
         canvas.drawRect(window, windowPaint);
@@ -661,7 +661,7 @@ class _HeroBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.primaryBlueAnthracite,
         borderRadius: AppRadius.radiusXl,
-        border: Border.all(color: AppColors.grey700.withOpacity(0.6)),
+        border: Border.all(color: AppColors.grey700.withValues(alpha: 0.6)),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -698,7 +698,7 @@ class _HeroBanner extends StatelessWidget {
                 Text(
                   'Des parcelles, des lots et des programmes\nfonciers partout au Mali.',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.white.withOpacity(0.96),
+                    color: AppColors.white.withValues(alpha: 0.96),
                     fontSize: 11,
                     height: 1.35,
                   ),
@@ -997,7 +997,7 @@ class _AnnouncementCard extends StatelessWidget {
                       )
                     else if (fallbackInfo != null)
                       Text(
-                        '${fallbackInfo} lots',
+                        '$fallbackInfo lots',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                           fontWeight: FontWeight.w600,
@@ -1073,7 +1073,7 @@ class _ArtworkPlaceholder extends StatelessWidget {
         child: Icon(
           isProgramme ? Icons.grid_view_rounded : Icons.landscape_rounded,
           size: 27,
-          color: AppColors.white.withOpacity(0.92),
+          color: AppColors.white.withValues(alpha: 0.92),
         ),
       ),
     );
@@ -1098,7 +1098,7 @@ class _TerrainArtworkPainter extends CustomPainter {
 
     if (isProgramme) {
       final road = Paint()
-        ..color = AppColors.mapRoad.withOpacity(0.92)
+        ..color = AppColors.mapRoad.withValues(alpha: 0.92)
         ..style = PaintingStyle.stroke
         ..strokeWidth = size.width * 0.075;
       final roadPath = Path()
@@ -1108,9 +1108,9 @@ class _TerrainArtworkPainter extends CustomPainter {
         ..lineTo(size.width * 0.98, size.height * 0.25);
       canvas.drawPath(roadPath, road);
 
-      final parcel = Paint()..color = AppColors.mapParcel.withOpacity(0.88);
+      final parcel = Paint()..color = AppColors.mapParcel.withValues(alpha: 0.88);
       final line = Paint()
-        ..color = AppColors.white.withOpacity(0.74)
+        ..color = AppColors.white.withValues(alpha: 0.74)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.0;
       for (var row = 0; row < 3; row++) {
@@ -1133,7 +1133,7 @@ class _TerrainArtworkPainter extends CustomPainter {
       }
     } else {
       final rows = Paint()
-        ..color = AppColors.white.withOpacity(0.24)
+        ..color = AppColors.white.withValues(alpha: 0.24)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2;
       for (var i = 0; i < 5; i++) {
@@ -1147,7 +1147,7 @@ class _TerrainArtworkPainter extends CustomPainter {
           );
         canvas.drawPath(path, rows);
       }
-      final patch = Paint()..color = AppColors.mapFieldLight.withOpacity(0.5);
+      final patch = Paint()..color = AppColors.mapFieldLight.withValues(alpha: 0.5);
       canvas.drawOval(
         Rect.fromCenter(
           center: Offset(size.width * 0.26, size.height * 0.27),

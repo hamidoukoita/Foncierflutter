@@ -30,7 +30,7 @@ class LotCard extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         leading: CircleAvatar(
           backgroundColor: disponible
-              ? AppColors.successGreen.withOpacity(0.15)
+              ? AppColors.successGreen.withValues(alpha: 0.15)
               : AppColors.grey300,
           child: Icon(
             Icons.grid_view_rounded,
@@ -53,8 +53,8 @@ class LotCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
             color: disponible
-                ? AppColors.successGreen.withOpacity(0.12)
-                : AppColors.primaryOcre.withOpacity(0.12),
+                ? AppColors.successGreen.withValues(alpha: 0.12)
+                : AppColors.primaryOcre.withValues(alpha: 0.12),
             borderRadius: AppRadius.radiusSm,
           ),
           child: Text(

@@ -24,6 +24,20 @@ class BienFoncierRepository {
     throw Exception(apiResponse.message);
   }
 
+  /// Détail d'un bien (vue polymorphique lot / parcelle) : GET /biens-fonciers/{id}.
+  Future<BienFoncierModel> getById(int id) async {
+    final response =
+        await _apiClient.get<Map<String, dynamic>>('/biens-fonciers/$id');
+    final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+      response.data!,
+      (data) => data as Map<String, dynamic>,
+    );
+    if (apiResponse.success && apiResponse.data != null) {
+      return BienFoncierModel.fromJson(apiResponse.data!);
+    }
+    throw Exception(apiResponse.message.isEmpty ? 'Bien introuvable' : apiResponse.message);
+  }
+
   Future<List<BienFoncierModel>> getLotsProgrammes() async {
     final response =
         await _apiClient.get<Map<String, dynamic>>('/lots-programmes');

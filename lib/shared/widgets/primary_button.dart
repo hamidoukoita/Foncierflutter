@@ -10,12 +10,12 @@ class PrimaryButton extends StatelessWidget {
   final bool isSecondary;
 
   const PrimaryButton({
-    Key? key,
+    super.key,
     required this.text,
     this.onPressed,
     this.isLoading = false,
     this.isSecondary = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

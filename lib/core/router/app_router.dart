@@ -69,6 +69,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
           return AgentRoutes.dashboard;
         }
+
         return '/prospect/dashboard';
       }
       return null;

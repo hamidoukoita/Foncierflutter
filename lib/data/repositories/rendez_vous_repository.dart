@@ -46,7 +46,7 @@ class RendezVousRepository {
   Future<RendezVousModel> creer({
     required int acquereurId,
     required int bienId,
-    required int creneauId,
+    int? creneauId,
     required DateTime date,
     required String typeRDV,
     String? lieu,
@@ -60,7 +60,7 @@ class RendezVousRepository {
         if (lieu != null && lieu.trim().isNotEmpty) 'lieu': lieu.trim(),
         'acquereurId': acquereurId,
         'bienId': bienId,
-        'creneauId': creneauId,
+        if (creneauId != null) 'creneauId': creneauId,
       },
     );
     final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
@@ -121,5 +121,16 @@ class RendezVousRepository {
       return RendezVousModel.fromJson(apiResponse.data!);
     }
     throw Exception(apiResponse.message);
+  }
+
+  /// Annule le rendez-vous de l'acquéreur (PATCH /rendez-vous/{id}/annuler).
+  Future<void> annuler(int rendezVousId) async {
+    final response = await _apiClient
+        .patch<Map<String, dynamic>>('/rendez-vous/$rendezVousId/annuler');
+    final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+      response.data!,
+      (data) => data as Map<String, dynamic>,
+    );
+    if (!apiResponse.success) throw Exception(apiResponse.message);
   }
 }

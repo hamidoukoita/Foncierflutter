@@ -4,17 +4,20 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/lot_programme.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/programme_foncier.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/controllers/catalogue_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/rdv_booking_sheet.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
-import 'package:flutter_mobile_prospect_agent/shared/widgets/hero_media.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/reservation_rule_banner.dart';
 
-/// Détail d'un lot : visuels (photos / 360°), identité, caractéristiques, règle de réservation, actions.
+/// Détail d'un lot : même gabarit que la cité et la parcelle.
 class LotDetailScreen extends ConsumerStatefulWidget {
   final int lotId;
 
@@ -26,6 +29,7 @@ class LotDetailScreen extends ConsumerStatefulWidget {
 
 class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
   bool _reserving = false;
+  bool _annulant = false;
 
   Future<void> _reserver(LotProgramme lot) async {
     setState(() => _reserving = true);
@@ -42,282 +46,209 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
     if (mounted) setState(() => _reserving = false);
   }
 
+  Future<void> _annuler(ReservationModel r) async {
+    setState(() => _annulant = true);
+    final ok = await annulerReservationAvecConfirmation(context, ref, r);
+    if (ok) ref.invalidate(lotDetailProvider(widget.lotId));
+    if (mounted) setState(() => _annulant = false);
+  }
+
+  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(lotDetailProvider(widget.lotId));
     final mediasAsync = ref.watch(mediasBienProvider(widget.lotId));
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundOffWhite,
-      body: async.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
-        error: (e, _) => SafeArea(
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded), onPressed: () => context.pop()),
-              ),
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(ErrorHandler.messageOf(e), textAlign: TextAlign.center),
-                  ),
+    return async.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.backgroundOffWhite,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+      ),
+      error: (e, _) => Scaffold(
+        backgroundColor: AppColors.backgroundOffWhite,
+        appBar: AppBar(),
+        body: EmptyStateView(
+          icon: Icons.cloud_off_rounded,
+          title: 'Lot introuvable',
+          message: ErrorHandler.messageOf(e),
+          onRetry: () => ref.invalidate(lotDetailProvider(widget.lotId)),
+        ),
+      ),
+      data: (lot) {
+        final programmeId = lot.programmeId;
+        final ProgrammeFoncier? programme =
+            programmeId != null ? ref.watch(programmeDetailProvider(programmeId)).valueOrNull : null;
+        final fam = familleDeStatut(lot.statut);
+        final maReservation = maReservationEnAttente(ref.watch(mesReservationsProvider).valueOrNull, lot.id);
+        final numero = (lot.numeroLot ?? '').isNotEmpty ? lot.numeroLot! : '${lot.id}';
+        final titre = numero.toLowerCase().startsWith('lot') ? numero : 'Lot $numero';
+        final hasPlan = programmeId != null && PlanGeometry.parse(lot.geometryJson)?.isPolygon == true;
+        final prixM2 = (lot.superficie != null && lot.prix != null && lot.superficie! > 0)
+            ? lot.prix! / lot.superficie!
+            : null;
+
+        return DetailPage(
+          title: titre,
+          medias: mediasAsync.valueOrNull ?? const [],
+          mediasLoading: mediasAsync.isLoading,
+          onBack: () => context.pop(),
+          onRefresh: () async {
+            ref.invalidate(lotDetailProvider(widget.lotId));
+            ref.invalidate(mediasBienProvider(widget.lotId));
+          },
+          bottomBar: DetailActionBar(
+            actions: [
+              if (maReservation != null)
+                DetailButton(
+                  label: 'Annuler ma réservation',
+                  icon: Icons.close_rounded,
+                  danger: true,
+                  loading: _annulant,
+                  onPressed: () => _annuler(maReservation),
+                )
+              else if (lot.peutEtreReserve)
+                DetailButton(
+                  label: 'Réserver ce lot',
+                  icon: Icons.bookmark_add_outlined,
+                  loading: _reserving,
+                  onPressed: () => _reserver(lot),
+                ),
+              DetailButton(
+                label: 'Prendre RDV',
+                icon: Icons.event_available_outlined,
+                color: AppColors.primaryBlueAnthracite,
+                onPressed: () => RdvBookingSheet.show(
+                  context,
+                  bienId: lot.id,
+                  societeId: programme?.societeId,
+                  bienLabel: titre,
+                  societeNom: programme?.societeNom,
+                  chantierLabel: lot.programmeNom,
                 ),
               ),
             ],
           ),
-        ),
-        data: (lot) {
-          final programmeId = lot.programmeId;
-          final ProgrammeFoncier? programme =
-              programmeId != null ? ref.watch(programmeDetailProvider(programmeId)).valueOrNull : null;
-          final fam = familleDeStatut(lot.statut);
-          final color = couleurFamille(fam);
-          final hasPlan = programmeId != null && PlanGeometry.parse(lot.geometryJson)?.isPolygon == true;
-          final numero = (lot.numeroLot ?? '').isNotEmpty ? lot.numeroLot! : '${lot.id}';
-
-          return Column(
-            children: [
-              Expanded(
-                child: CustomScrollView(
-                  slivers: [
-                    DetailSliverAppBar(
-                      title: 'Lot $numero',
-                      medias: mediasAsync.valueOrNull ?? const [],
-                      loading: mediasAsync.isLoading,
-                      onBack: () => context.pop(),
+          children: [
+            DetailHeader(
+              title: titre,
+              statusLabel: libelleFamille(fam),
+              statusColor: couleurFamille(fam),
+              subtitle: lot.programmeNom,
+              subtitleIcon: Icons.apartment_rounded,
+              onSubtitleTap: programmeId == null ? null : () => context.push('/prospect/programmes/$programmeId'),
+              tags: [
+                if ((lot.reference ?? '').isNotEmpty) 'RÉF : ${lot.reference}',
+                if ((lot.numeroIlot ?? '').isNotEmpty) 'ÎLOT : ${lot.numeroIlot}',
+              ],
+            ),
+            StatStrip(
+              items: [
+                StatItem(Icons.square_foot_rounded, lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—', 'surface'),
+                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(lot.prix), 'prix de vente', highlight: true),
+                if (prixM2 != null) StatItem(Icons.calculate_outlined, CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
+              ],
+            ),
+            DetailSection(
+              title: 'Caractéristiques du lot',
+              child: InfoRows(
+                rows: [
+                  ('Surface', lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—'),
+                  if (lot.facade != null) ('Façade', '${_n(lot.facade!)} m'),
+                  if (lot.profondeur != null) ('Profondeur', '${_n(lot.profondeur!)} m'),
+                  if ((lot.numeroIlot ?? '').isNotEmpty) ('Îlot', lot.numeroIlot!),
+                  ('Statut', libelleFamille(fam)),
+                ],
+              ),
+            ),
+            if (programme != null)
+              DetailSection(
+                title: 'Viabilisation',
+                child: FeatureRow(
+                  tiles: [
+                    FeatureTile(
+                      icon: Icons.water_drop_outlined,
+                      title: 'Eau potable',
+                      subtitle: programme.eauSomapep == true ? 'Raccordé' : 'Non raccordé',
+                      ok: programme.eauSomapep == true,
                     ),
-                    SliverToBoxAdapter(
-                      child:
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _card(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Lot $numero',
-                                        style: const TextStyle(
-                                            fontSize: 21,
-                                            fontWeight: FontWeight.w900,
-                                            color: AppColors.primaryBlueAnthracite),
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                                      decoration: BoxDecoration(
-                                        color: color.withValues(alpha: 0.14),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: Text(libelleFamille(fam),
-                                          style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 12)),
-                                    ),
-                                  ],
-                                ),
-                                if (lot.programmeNom != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(lot.programmeNom!,
-                                      style: const TextStyle(
-                                          color: AppColors.primaryOcre, fontWeight: FontWeight.w700, fontSize: 13)),
-                                ],
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    if ((lot.reference ?? '').isNotEmpty) _tag('RÉF : ${lot.reference}'),
-                                    if ((lot.numeroIlot ?? '').isNotEmpty) _tag('ÎLOT : ${lot.numeroIlot}'),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    if (lot.superficie != null)
-                                      _pill(Icons.square_foot_rounded, '${_n(lot.superficie!)} m²',
-                                          AppColors.backgroundOffWhite, AppColors.primaryBlueAnthracite),
-                                    if (lot.prix != null)
-                                      _pill(Icons.sell_outlined, CurrencyFormatter.fcfa(lot.prix),
-                                          const Color(0xFFFFF1C9), const Color(0xFF8A5A00)),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          _card(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Caractéristiques du lot',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.primaryBlueAnthracite)),
-                                const SizedBox(height: 12),
-                                _line('Surface', lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—'),
-                                if (lot.facade != null) _line('Façade', '${_n(lot.facade!)} m'),
-                                if (lot.profondeur != null) _line('Profondeur', '${_n(lot.profondeur!)} m'),
-                                if (lot.superficie != null && lot.prix != null && lot.superficie! > 0)
-                                  _line('Prix au m²', CurrencyFormatter.fcfa(lot.prix! / lot.superficie!)),
-                                if ((lot.numeroIlot ?? '').isNotEmpty) _line('Îlot', lot.numeroIlot!),
-                                if (programme != null) ...[
-                                  _line('Eau potable (SOMAPEP)', programme.eauSomapep == true ? 'Raccordé' : 'Non raccordé'),
-                                  _line('Électricité (EDM)', programme.electriciteEdm == true ? 'Disponible' : 'Non raccordé'),
-                                  _line('Voirie', programme.voirieBitumee == true ? 'Bitumée' : 'Non bitumée'),
-                                ],
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          ReservationRuleBanner(
-                              reservationMultiple: lot.reservationMultiple, isReserve: lot.isReserve),
-                          if (hasPlan) ...[
-                            const SizedBox(height: 12),
-                            OutlinedButton.icon(
-                              onPressed: () =>
-                                  context.push('/prospect/programmes/$programmeId/plan?lot=${lot.id}'),
-                              icon: const Icon(Icons.map_outlined, size: 18),
-                              label: const Text('Voir ce lot sur le plan de masse'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.primaryBlueAnthracite,
-                                side: const BorderSide(color: AppColors.borderLight),
-                                minimumSize: const Size.fromHeight(46),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              ),
-                            ),
-                          ],
-                          if (!lot.peutEtreReserve) ...[
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: AppColors.grey100,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Text('Ce lot n\'est pas réservable pour le moment.',
-                                  style: TextStyle(color: AppColors.grey600)),
-                            ),
-                          ],
-                        ],
-                      ),
+                    FeatureTile(
+                      icon: Icons.bolt_outlined,
+                      title: 'Réseau EDM',
+                      subtitle: programme.electriciteEdm == true ? 'Disponible' : 'Non raccordé',
+                      ok: programme.electriciteEdm == true,
                     ),
+                    FeatureTile(
+                      icon: Icons.alt_route_rounded,
+                      title: 'Voirie',
+                      subtitle: programme.voirieBitumee == true ? 'Bitumée' : 'Non bitumée',
+                      ok: programme.voirieBitumee == true,
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  border: Border(top: BorderSide(color: AppColors.borderLight)),
-                ),
-                child: Row(
-                  children: [
-                    if (lot.peutEtreReserve) ...[
-                      Expanded(
-                        child: _action(
-                          _reserving ? 'Réservation…' : 'Réserver ce lot',
-                          AppColors.primaryOcre,
-                          _reserving ? null : () => _reserver(lot),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                    ],
-                    Expanded(
-                      child: _action(
-                        'Prendre RDV',
-                        AppColors.primaryBlueAnthracite,
-                        () => RdvBookingSheet.show(
-                          context,
-                          bienId: lot.id,
-                          societeId: programme?.societeId,
-                          bienLabel: '${lot.displayRef}${lot.programmeNom != null ? ' · ${lot.programmeNom}' : ''}',
-                        ),
-                      ),
-                    ),
-                  ],
+            if (maReservation != null) ...[
+              const SizedBox(height: 14),
+              _MaReservationBanner(numeroDossier: maReservation.numeroDossier),
+            ],
+            const SizedBox(height: 14),
+            ReservationRuleBanner(reservationMultiple: lot.reservationMultiple, isReserve: lot.isReserve),
+            if (hasPlan) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () => context.push('/prospect/programmes/$programmeId/plan?lot=${lot.id}'),
+                icon: const Icon(Icons.map_outlined, size: 18),
+                label: const Text('Voir ce lot sur le plan de masse'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primaryBlueAnthracite,
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: AppColors.borderLight),
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
             ],
-          );
-        },
+            if (!lot.peutEtreReserve) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(color: AppColors.grey100, borderRadius: BorderRadius.circular(14)),
+                child: const Text('Ce lot n\'est pas réservable pour le moment.',
+                    style: TextStyle(color: AppColors.grey600)),
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MaReservationBanner extends StatelessWidget {
+  final String numeroDossier;
+  const _MaReservationBanner({required this.numeroDossier});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.ambreReservation24h.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.ambreReservation24h.withOpacity(0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_top_rounded, color: AppColors.ambreReservation24h),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Votre réservation (dossier $numeroDossier) est en attente de la société. Vous pouvez l\'annuler à tout moment.',
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF9A5B00), height: 1.35),
+            ),
+          ),
+        ],
       ),
     );
   }
-
-  Widget _action(String text, Color bg, VoidCallback? onTap) => SizedBox(
-        height: 48,
-        child: ElevatedButton(
-          onPressed: onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: bg,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          ),
-          child: Text(text, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
-        ),
-      );
-
-  Widget _card({required Widget child}) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: child,
-      );
-
-  Widget _tag(String t) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: AppColors.backgroundOffWhite,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.borderLight),
-        ),
-        child: Text(t,
-            style: const TextStyle(
-                fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.primaryBlueAnthracite)),
-      );
-
-  Widget _pill(IconData i, String t, Color bg, Color fg) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(i, size: 16, color: fg),
-            const SizedBox(width: 6),
-            Text(t, style: TextStyle(color: fg, fontWeight: FontWeight.w800, fontSize: 13.5)),
-          ],
-        ),
-      );
-
-  Widget _line(String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: const TextStyle(color: AppColors.grey500, fontSize: 13)),
-            Flexible(
-              child: Text(value,
-                  textAlign: TextAlign.right, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-            ),
-          ],
-        ),
-      );
-
-  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 }

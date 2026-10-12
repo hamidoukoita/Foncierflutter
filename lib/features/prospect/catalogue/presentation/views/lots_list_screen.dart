@@ -8,6 +8,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/controllers/catalogue_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
 /// « Lots du programme » : liste filtrable (Tous / Disponibles / Réservés / Vendus).
@@ -61,16 +62,19 @@ class _LotsListScreenState extends ConsumerState<LotsListScreen> {
 
           return Column(
             children: [
-              SizedBox(
-                height: 48,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-                  children: [
-                    _chip('Tous', null),
-                    _chip('Disponibles (${count(LotFamille.libre)})', LotFamille.libre),
-                    _chip('Réservés (${count(LotFamille.reserve)})', LotFamille.reserve),
-                    _chip('Vendus (${count(LotFamille.vendu)})', LotFamille.vendu),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: AppFilterBar<LotFamille?>(
+                  selected: _filtre,
+                  onChanged: (v) => setState(() => _filtre = v),
+                  options: [
+                    const AppFilterOption<LotFamille?>(null, 'Tous'),
+                    AppFilterOption<LotFamille?>(LotFamille.libre, 'Disponibles (${count(LotFamille.libre)})',
+                        color: couleurFamille(LotFamille.libre)),
+                    AppFilterOption<LotFamille?>(LotFamille.reserve, 'Réservés (${count(LotFamille.reserve)})',
+                        color: couleurFamille(LotFamille.reserve)),
+                    AppFilterOption<LotFamille?>(LotFamille.vendu, 'Vendus (${count(LotFamille.vendu)})',
+                        color: couleurFamille(LotFamille.vendu)),
                   ],
                 ),
               ),
@@ -98,27 +102,6 @@ class _LotsListScreenState extends ConsumerState<LotsListScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _chip(String label, LotFamille? f) {
-    final on = _filtre == f;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: on,
-        showCheckmark: false,
-        selectedColor: AppColors.primaryOcre,
-        backgroundColor: Colors.white,
-        side: BorderSide(color: on ? AppColors.primaryOcre : AppColors.borderLight),
-        labelStyle: TextStyle(
-          color: on ? Colors.white : AppColors.primaryBlueAnthracite,
-          fontWeight: FontWeight.w700,
-          fontSize: 12.5,
-        ),
-        onSelected: (_) => setState(() => _filtre = f),
       ),
     );
   }
@@ -188,7 +171,7 @@ class _LotCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                         decoration: BoxDecoration(
-                          color: color.withValues(alpha: 0.14),
+                          color: color.withOpacity(0.14),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(libelleFamille(fam),

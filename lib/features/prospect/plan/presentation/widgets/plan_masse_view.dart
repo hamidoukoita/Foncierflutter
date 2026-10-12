@@ -297,16 +297,16 @@ class PlanMassePainter extends CustomPainter {
 
     if (actif) {
       canvas.drawPath(path.shift(const Offset(0, 3)),
-          Paint()..color = Colors.black.withValues(alpha: 0.12)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+          Paint()..color = Colors.black.withOpacity(0.12)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
     }
-    canvas.drawPath(path, Paint()..color = color.withValues(alpha: actif ? 1 : 0.2));
+    canvas.drawPath(path, Paint()..color = color.withOpacity(actif ? 1 : 0.2));
     canvas.drawPath(
       path,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeJoin = StrokeJoin.round
-        ..color = Colors.white.withValues(alpha: actif ? 1 : 0.4),
+        ..color = Colors.white.withOpacity(actif ? 1 : 0.4),
     );
 
     if (isSel) {

@@ -8,6 +8,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/res
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/bien_foncier_card.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/rdv_booking_sheet.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
 /// Onglet « Parcelles » : parcelles individuelles, recherche et filtre par statut.
@@ -74,31 +75,22 @@ class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScree
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                TextField(
+                AppSearchField(
                   controller: _search,
+                  hint: 'Rechercher une parcelle, un titre foncier…',
                   onChanged: (v) => setState(() => _query = v),
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher une parcelle, un titre foncier…',
-                    prefixIcon: const Icon(Icons.search, color: AppColors.searchIcon),
-                    filled: true,
-                    fillColor: AppColors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.borderLight),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.borderLight),
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _chip('Toutes (${parcelles.length})', 'TOUTES'),
-                    _chip('Disponibles (${parcelles.where((b) => b.isDisponible).length})', 'DISPONIBLES'),
-                    _chip('Réservées (${parcelles.where((b) => b.isReserve).length})', 'RESERVEES'),
+                AppFilterBar<String>(
+                  padding: EdgeInsets.zero,
+                  selected: _filtre,
+                  onChanged: (v) => setState(() => _filtre = v),
+                  options: [
+                    AppFilterOption('TOUTES', 'Toutes (${parcelles.length})'),
+                    AppFilterOption('DISPONIBLES', 'Disponibles (${parcelles.where((b) => b.isDisponible).length})',
+                        color: AppColors.successGreen),
+                    AppFilterOption('RESERVEES', 'Réservées (${parcelles.where((b) => b.isReserve).length})',
+                        color: const Color(0xFFE5A96A)),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -127,6 +119,8 @@ class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScree
                         bienId: b.id,
                         societeId: b.societeId,
                         bienLabel: b.designation,
+                        societeNom: b.societeNom,
+                        chantierLabel: b.localisation,
                       ),
                     ),
               ],
@@ -134,15 +128,6 @@ class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScree
           );
         },
       ),
-    );
-  }
-
-  Widget _chip(String label, String value) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: _filtre == value,
-      selectedColor: AppColors.primaryOcre.withValues(alpha: 0.2),
-      onSelected: (_) => setState(() => _filtre = value),
     );
   }
 }

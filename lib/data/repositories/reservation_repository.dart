@@ -63,4 +63,14 @@ class ReservationRepository {
     }
     throw Exception(apiResponse.message);
   }
+
+  /// Annule la réservation de l'acquéreur (PATCH /reservations/{id}/annuler) — réservation en attente uniquement.
+  Future<void> annuler(int reservationId) async {
+    final response = await _apiClient.patch<Map<String, dynamic>>('/reservations/$reservationId/annuler');
+    final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+      response.data!,
+      (data) => data as Map<String, dynamic>,
+    );
+    if (!apiResponse.success) throw Exception(apiResponse.message);
+  }
 }

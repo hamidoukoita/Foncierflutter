@@ -33,6 +33,7 @@ class PlanMasseRepository {
     if (planId == null) return null;
 
     var elements = <PlanElement>[];
+    String? elementsError;
     try {
       final res = await _api.get<Map<String, dynamic>>(ApiEndpoints.planElements(planId));
       final parsed = ApiResponse<List<dynamic>>.fromJson(
@@ -45,9 +46,10 @@ class PlanMasseRepository {
           .where((e) => e.visible)
           .toList()
         ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
-    } catch (_) {
-      // Les lots restent affichables sans les éléments décoratifs.
+    } catch (e) {
+      // Les lots restent affichables, mais on signale que routes/équipements manquent.
+      elementsError = ErrorHandler.messageOf(e);
     }
-    return PlanMasse(id: planId, description: description, elements: elements);
+    return PlanMasse(id: planId, description: description, elements: elements, elementsError: elementsError);
   }
 }

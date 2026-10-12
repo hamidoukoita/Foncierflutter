@@ -81,48 +81,18 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
           return Column(
             children: [
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    HeroMedia(
+                child: CustomScrollView(
+                  slivers: [
+                    DetailSliverAppBar(
+                      title: 'Lot $numero',
                       medias: mediasAsync.valueOrNull ?? const [],
                       loading: mediasAsync.isLoading,
-                      height: 240,
                       onBack: () => context.pop(),
-                      overlay: Align(
-                        alignment: Alignment.bottomLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Lot $numero',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.w900,
-                                  shadows: [Shadow(blurRadius: 8, color: Colors.black54)],
-                                ),
-                              ),
-                              if (lot.superficie != null)
-                                Text(
-                                  '${_n(lot.superficie!)} m²',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    shadows: [Shadow(blurRadius: 8, color: Colors.black54)],
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
                     ),
+                    SliverToBoxAdapter(
+                      child:
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -240,6 +210,7 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
                           ],
                         ],
                       ),
+                    ),
                     ),
                   ],
                 ),

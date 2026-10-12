@@ -13,15 +13,22 @@ class PlanGeometry {
   bool get isLine => type == 'LINE' && points.length >= 2;
   bool get isPoint => type == 'POINT' && points.isNotEmpty;
 
+  static double? _num(Object? v) {
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v);
+    return null;
+  }
+
   static PlanGeometry? parse(String? raw) {
     if (raw == null || raw.trim().isEmpty) return null;
     try {
-      final j = jsonDecode(raw);
+      var j = jsonDecode(raw);
+      if (j is String) j = jsonDecode(j); // JSON double-encodé
       if (j is! Map) return null;
       final type = (j['type'] ?? 'POLYGON').toString().toUpperCase();
       if (type == 'POINT') {
-        final x = (j['x'] as num?)?.toDouble();
-        final y = (j['y'] as num?)?.toDouble();
+        final x = _num(j['x']);
+        final y = _num(j['y']);
         if (x == null || y == null) return null;
         return PlanGeometry('POINT', [Offset(x, y)]);
       }
@@ -29,8 +36,9 @@ class PlanGeometry {
       if (list is! List) return null;
       final pts = <Offset>[];
       for (final p in list) {
-        if (p is Map && p['x'] is num && p['y'] is num) {
-          pts.add(Offset((p['x'] as num).toDouble(), (p['y'] as num).toDouble()));
+        if (p is Map) {
+          final x = _num(p['x']), y = _num(p['y']);
+          if (x != null && y != null) pts.add(Offset(x, y));
         }
       }
       if (pts.isEmpty) return null;
@@ -142,7 +150,10 @@ class PlanMasse {
   final String? description;
   final List<PlanElement> elements;
 
-  const PlanMasse({required this.id, this.description, this.elements = const []});
+  /// Message si les éléments (routes, équipements…) n'ont pas pu être chargés.
+  final String? elementsError;
+
+  const PlanMasse({required this.id, this.description, this.elements = const [], this.elementsError});
 }
 
 /// Statut d'un lot (backend) ramené à 4 familles pour les couleurs et filtres.
@@ -159,13 +170,13 @@ LotFamille familleDeStatut(String? statut) {
 Color couleurFamille(LotFamille f) {
   switch (f) {
     case LotFamille.libre:
-      return const Color(0xFF2E7D32);
+      return const Color(0xFF4A7A56);
     case LotFamille.reserve:
-      return const Color(0xFFE5801A);
+      return const Color(0xFFE5A96A);
     case LotFamille.vendu:
-      return const Color(0xFFD73535);
+      return const Color(0xFFC64B4B);
     case LotFamille.indisponible:
-      return const Color(0xFF94A3B8);
+      return const Color(0xFF73808F);
   }
 }
 

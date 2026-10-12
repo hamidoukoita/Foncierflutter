@@ -13,9 +13,9 @@ class PlanLotShape {
 
   /// « L.104 » à partir du numéro de lot.
   String get etiquette {
-    final n = (lot.numeroLot ?? '').trim();
-    if (n.isEmpty) return 'L.${lot.id}';
-    return n.toLowerCase().startsWith('l') ? n : 'L.$n';
+    final n = (lot.numeroLot ?? '').trim().replaceFirst(RegExp(r'^Lot\s*N°\s*', caseSensitive: false), '');
+    if (n.isEmpty) return 'L ${lot.id}';
+    return 'L $n';
   }
 }
 
@@ -38,7 +38,7 @@ Rect _bounds(List<PlanLotShape> lots, List<PlanElement> elements, double pad) {
     add(e.geometry.bounds);
   }
   final base = r ?? const Rect.fromLTWH(0, 0, 100, 100);
-  return base.inflate(pad);
+  return base.inflate(pad).expandToInclude(Rect.fromLTRB(base.left - pad, base.top - pad, base.right + pad, base.bottom + pad + 30));
 }
 
 /// Plan de masse interactif : zoom / déplacement, lots colorés par statut, tap pour sélectionner.
@@ -188,19 +188,28 @@ class PlanMassePainter extends CustomPainter {
     this.transparentBackground = false,
   });
 
+  // Couleurs identiques au Studio plan de masse du web.
+  static const _bg = Color(0xFFF8F7F2);
+  static const _navy = Color(0xFF1A2B4C);
+
   @override
   void paint(Canvas canvas, Size size) {
     if (!transparentBackground) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(24)),
-        Paint()..color = const Color(0xFFEFEBE0),
-      );
+      canvas.drawRect(Offset.zero & size, Paint()..color = _bg);
     }
     canvas.save();
     canvas.translate(-bounds.left, -bounds.top);
 
-    for (final e in elements) {
-      _paintElement(canvas, e);
+    final tries = [...elements]..sort((a, b) => a.zIndex.compareTo(b.zIndex));
+    // Même ordre que le web : zones vertes, routes, équipements, puis lots par-dessus.
+    for (final e in tries) {
+      if (e.type == 'ESPACE_VERT') _paintGreen(canvas, e);
+    }
+    for (final e in tries) {
+      if (e.isRoute) _paintRoad(canvas, e);
+    }
+    for (final e in tries) {
+      if (e.type != 'ESPACE_VERT' && !e.isRoute) _paintPoi(canvas, e);
     }
     for (final s in lots) {
       _paintLot(canvas, s);
@@ -208,60 +217,75 @@ class PlanMassePainter extends CustomPainter {
     canvas.restore();
   }
 
-  void _paintElement(Canvas canvas, PlanElement e) {
+  void _paintGreen(Canvas canvas, PlanElement e) {
     final g = e.geometry;
-    if (e.isRoute && g.isLine) {
-      final path = Path()..moveTo(g.points.first.dx, g.points.first.dy);
-      for (final p in g.points.skip(1)) {
-        path.lineTo(p.dx, p.dy);
-      }
-      final goudron = e.type == 'ROUTE_GOUDRONNEE';
-      final paint = Paint()
-        ..color = goudron ? const Color(0xFF8E9AAF) : const Color(0xFFC9A36B)
+    if (g.points.length < 3) return;
+    final path = Path()..addPolygon(g.points, true);
+    canvas.drawPath(path, Paint()..color = const Color(0xFFA9C59A));
+    canvas.drawPath(
+      path,
+      Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 18
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round;
-      canvas.drawPath(path, paint);
-      // Axe pointillé
-      _dashed(
-        canvas,
-        path,
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.75)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-        dash: 10,
-        gap: 8,
-      );
-      return;
+        ..strokeWidth = 1.5
+        ..color = const Color(0xFF4A7A56),
+    );
+  }
+
+  void _paintRoad(Canvas canvas, PlanElement e) {
+    final g = e.geometry;
+    if (g.points.length < 2) return;
+    final path = Path()..moveTo(g.points.first.dx, g.points.first.dy);
+    for (final p in g.points.skip(1)) {
+      path.lineTo(p.dx, p.dy);
     }
-    if (g.isPolygon) {
-      final vert = e.type == 'ESPACE_VERT';
-      final path = Path()..addPolygon(g.points, true);
-      canvas.drawPath(path, Paint()..color = vert ? const Color(0xFFB7D8A6) : const Color(0xFFF6E3A1));
-      canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5
-          ..color = vert ? const Color(0xFF4A7A56) : const Color(0xFFD9B44A),
-      );
-      if (showLabels) {
-        _text(canvas, e.affichage, g.centroid, 16, const Color(0xFF1A2B4C), maxWidth: g.bounds.width);
-      }
-    } else if (g.isPoint) {
-      final c = g.points.first;
-      canvas.drawCircle(c, 15, Paint()..color = Colors.white);
-      canvas.drawCircle(
-        c,
-        15,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..color = const Color(0xFF1A2B4C),
-      );
-      if (showLabels) _text(canvas, e.affichage, c.translate(0, 28), 15, const Color(0xFF1A2B4C), maxWidth: 140);
+    final goudron = e.type == 'ROUTE_GOUDRONNEE';
+    final paint = Paint()
+      ..color = goudron ? const Color(0xFF334155) : const Color(0xFFA9773F)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 16
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    if (goudron) {
+      canvas.drawPath(path, paint);
+    } else {
+      _dashed(canvas, path, paint..strokeCap = StrokeCap.butt, dash: 10, gap: 8);
+    }
+  }
+
+  void _paintPoi(Canvas canvas, PlanElement e) {
+    final g = e.geometry;
+    final c = g.isPoint ? g.points.first : g.centroid;
+    canvas.drawCircle(c, 18, Paint()..color = Colors.white);
+    canvas.drawCircle(
+      c,
+      18,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..color = _navy,
+    );
+    _icon(canvas, _poiIcon(e.type), c, 20, _navy);
+    if (showLabels && (e.nom ?? '').trim().isNotEmpty) {
+      _text(canvas, e.nom!.trim(), c.translate(0, 32), 15, _navy, bold: true, maxWidth: 160);
+    }
+  }
+
+  static IconData _poiIcon(String type) {
+    switch (type) {
+      case 'MOSQUEE':
+        return Icons.mosque_outlined;
+      case 'EGLISE':
+        return Icons.church_outlined;
+      case 'ECOLE':
+        return Icons.school_outlined;
+      case 'MARCHE':
+        return Icons.storefront_outlined;
+      case 'COMMERCE':
+        return Icons.shopping_bag_outlined;
+      case 'EQUIPEMENT_PUBLIC':
+        return Icons.local_hospital_outlined;
+      default:
+        return Icons.place_outlined;
     }
   }
 
@@ -269,18 +293,23 @@ class PlanMassePainter extends CustomPainter {
     final actif = filtre == null || s.famille == filtre;
     final color = couleurFamille(s.famille);
     final path = Path()..addPolygon(s.geometry.points, true);
+    final isSel = s.lot.id == selectedLotId;
 
-    canvas.drawPath(path, Paint()..color = color.withValues(alpha: actif ? 1 : 0.22));
+    if (actif) {
+      canvas.drawPath(path.shift(const Offset(0, 3)),
+          Paint()..color = Colors.black.withValues(alpha: 0.12)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+    }
+    canvas.drawPath(path, Paint()..color = color.withValues(alpha: actif ? 1 : 0.2));
     canvas.drawPath(
       path,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeJoin = StrokeJoin.round
-        ..color = Color.lerp(color, Colors.black, 0.35)!.withValues(alpha: actif ? 1 : 0.25),
+        ..color = Colors.white.withValues(alpha: actif ? 1 : 0.4),
     );
 
-    if (s.lot.id == selectedLotId) {
+    if (isSel) {
       _dashed(
         canvas,
         path,
@@ -296,28 +325,33 @@ class PlanMassePainter extends CustomPainter {
     if (showLabels && actif) {
       final b = s.geometry.bounds;
       final m = math.min(b.width, b.height);
-      if (m >= 34) {
-        final fs = (m * 0.26).clamp(14.0, 38.0);
-        final c = s.geometry.centroid;
-        _text(canvas, s.etiquette, c.translate(0, -fs * 0.55), fs, Colors.white, bold: true, maxWidth: b.width);
-        if (s.lot.superficie != null && m >= 60) {
-          _text(canvas, '${s.lot.superficie!.toStringAsFixed(0)} m²', c.translate(0, fs * 0.6), fs * 0.62,
-              Colors.white.withValues(alpha: 0.92),
-              maxWidth: b.width);
-        }
+      if (m >= 22) {
+        final fs = math.min(18.0, m * 0.42);
+        _text(canvas, s.etiquette, s.geometry.centroid, fs, _navy, bold: true, maxWidth: b.width, heavy: true);
       }
     }
   }
 
+  void _icon(Canvas canvas, IconData icon, Offset center, double size, Color color) {
+    final tp = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(fontSize: size, fontFamily: icon.fontFamily, package: icon.fontPackage, color: color),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
+  }
+
   void _text(Canvas canvas, String text, Offset center, double size, Color color,
-      {bool bold = false, double? maxWidth}) {
+      {bool bold = false, double? maxWidth, bool heavy = false}) {
     final tp = TextPainter(
       text: TextSpan(
         text: text,
         style: TextStyle(
           fontSize: size,
           color: color,
-          fontWeight: bold ? FontWeight.w800 : FontWeight.w700,
+          fontWeight: heavy ? FontWeight.w900 : (bold ? FontWeight.w800 : FontWeight.w700),
         ),
       ),
       textAlign: TextAlign.center,

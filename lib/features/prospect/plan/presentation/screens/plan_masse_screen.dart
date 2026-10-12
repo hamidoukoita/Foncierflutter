@@ -111,13 +111,33 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
                   ],
                 ),
               ),
+              if (planAsync.valueOrNull?.elementsError != null || planAsync.hasError)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, size: 16, color: AppColors.warningAmber),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Routes et équipements indisponibles (${planAsync.valueOrNull?.elementsError ?? planAsync.error}).',
+                          style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => ref.invalidate(planMasseProvider(widget.programmeId)),
+                        child: const Text('Réessayer'),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: ColoredBox(
-                      color: const Color(0xFFEFEBE0),
+                      color: const Color(0xFFF8F7F2),
                       child: PlanMasseView(
                         lots: shapes,
                         elements: elements,

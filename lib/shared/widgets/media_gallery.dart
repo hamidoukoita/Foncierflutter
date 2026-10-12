@@ -98,7 +98,7 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.black.withOpacity(0.6),
+                    color: AppColors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -135,7 +135,7 @@ class _VisiteTile extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primaryOcre.withOpacity(0.12),
+              color: AppColors.primaryOcre.withValues(alpha: 0.12),
               borderRadius: AppRadius.radiusMd,
             ),
             child: Icon(

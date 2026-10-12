@@ -42,6 +42,10 @@ class AppColors {
   static const Color mapField = Color(0xFF5C9C4A);
   static const Color mapFieldLight = Color(0xFF9DC96A);
 
+  // Espace agent : vignettes sans photo et texte secondaire sur fond anthracite
+  static const Color placeholderSurface = Color(0xFFEDE9E2);
+  static const Color onDarkMuted = Color(0xFFB8C1D3);
+
   // Nuances neutres
   static const Color grey100 = Color(0xFFF5F5F5);
   static const Color grey200 = Color(0xFFEEEEEE);

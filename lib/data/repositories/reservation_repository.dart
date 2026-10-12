@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/core/constants/api_endpoints.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/api_client.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
@@ -25,12 +26,10 @@ class ReservationRepository {
     throw Exception(apiResponse.message);
   }
 
-  Future<List<ReservationModel>> getReservationsByAgent() async {
-    // Supposons qu'il y a un endpoint pour l'agent, sinon on filtre côté client
-    // Le patch Backend devrait avoir ajouté ce endpoint, ou on utilise getAll()
-    // Pour l'instant on simule avec getAll (ou on utilise le paramètre de l'agent si dispo)
-    final response =
-        await _apiClient.get<Map<String, dynamic>>('/reservations');
+  /// Réservations sous le suivi d'un agent collaborateur.
+  Future<List<ReservationModel>> getReservationsByAgent(int agentId) async {
+    final response = await _apiClient
+        .get<Map<String, dynamic>>(ApiEndpoints.reservationsByAgent(agentId));
     final apiResponse = ApiResponse<List<dynamic>>.fromJson(
       response.data!,
       (data) => data as List<dynamic>,

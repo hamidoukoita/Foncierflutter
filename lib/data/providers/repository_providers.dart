@@ -5,6 +5,7 @@ import 'package:flutter_mobile_prospect_agent/data/repositories/reservation_repo
 import 'package:flutter_mobile_prospect_agent/data/repositories/rendez_vous_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/creneau_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/media_repository.dart';
+import 'package:flutter_mobile_prospect_agent/data/repositories/notification_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/plan_masse_repository.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/data/programme_repository.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/data/lot_programme_repository.dart';
@@ -39,4 +40,8 @@ final planMasseRepositoryProvider = Provider<PlanMasseRepository>((ref) {
 
 final mediaRepositoryProvider = Provider<MediaRepository>((ref) {
   return MediaRepository(ref.watch(apiClientProvider));
+});
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepository(ref.watch(apiClientProvider));
 });

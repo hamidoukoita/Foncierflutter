@@ -73,6 +73,13 @@ class AppTextStyles {
         color: AppColors.textSecondary,
       );
 
+  // Horaires / références techniques (monospace)
+  static TextStyle get mono => GoogleFonts.jetBrainsMono(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primaryBlueAnthracite,
+      );
+
   static TextStyle get buttonText => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w700,

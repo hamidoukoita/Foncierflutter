@@ -72,17 +72,15 @@ class ProgrammeDetailScreen extends ConsumerWidget {
                   child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      SliverToBoxAdapter(
-                        child: HeroMedia(
-                          medias: mediasAsync.valueOrNull ?? const [],
-                          loading: mediasAsync.isLoading,
-                          height: 230,
-                          onBack: () => context.pop(),
-                        ),
+                      DetailSliverAppBar(
+                        title: programme.nom,
+                        medias: mediasAsync.valueOrNull ?? const [],
+                        loading: mediasAsync.isLoading,
+                        onBack: () => context.pop(),
                       ),
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -299,7 +297,7 @@ class _IdentityCard extends StatelessWidget {
           border: Border.all(color: AppColors.borderLight),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryBlueAnthracite.withOpacity(0.06),
+              color: AppColors.primaryBlueAnthracite.withValues(alpha: 0.06),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -636,7 +634,7 @@ class _PlanPreview extends StatelessWidget {
         child: Container(
           height: 180,
           width: double.infinity,
-          color: const Color(0xFFEFEBE0),
+          color: const Color(0xFFF8F7F2),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -661,7 +659,7 @@ class _PlanPreview extends StatelessWidget {
                   right: 12,
                   bottom: 12,
                   child: Material(
-                    color: Colors.white.withOpacity(0.95),
+                    color: Colors.white.withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(20),
                     child: InkWell(
                       onTap: onOpenPlan,

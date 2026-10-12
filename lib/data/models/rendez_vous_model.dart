@@ -56,6 +56,7 @@ class RendezVousModel extends Equatable {
   bool get isEnAttente => statut == 'EN_ATTENTE';
   bool get isAccepte => statut == 'ACCEPTER';
   bool get isRefuse => statut == 'REFUSER';
+  bool get isAnnule => isRefuse && (motifRefus ?? '').toLowerCase().startsWith('annul');
   bool get isChantier => typeRDV == 'CHANTIER';
 
   /// À venir = pas refusé et pas encore passé.

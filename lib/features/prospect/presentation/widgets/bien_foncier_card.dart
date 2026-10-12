@@ -5,6 +5,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 
 class BienFoncierCard extends StatelessWidget {
   final BienFoncierModel bien;
@@ -37,18 +38,8 @@ class BienFoncierCard extends StatelessWidget {
 
     final card = Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.borderLight),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
+      clipBehavior: Clip.antiAlias,
+      decoration: appCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -88,32 +79,11 @@ class BienFoncierCard extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton(
-                          onPressed: onReserver,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryOcre,
-                            foregroundColor: AppColors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.button,
-                            ),
-                          ),
-                          child: const Text('Réserver'),
-                        ),
+                        child: DetailButton(label: 'Réserver', compact: true, onPressed: onReserver),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
-                        child: OutlinedButton(
-                          onPressed: onPrendreRdv,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primaryBlueAnthracite,
-                            side: const BorderSide(
-                                color: AppColors.primaryBlueAnthracite),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppRadius.button,
-                            ),
-                          ),
-                          child: const Text('Prendre RDV'),
-                        ),
+                        child: DetailButton(label: 'Prendre RDV', compact: true, outline: true, onPressed: onPrendreRdv),
                       ),
                     ],
                   ),

@@ -1,94 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/rendez_vous_model.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 
-/// Carte d'un rendez-vous de visite de l'acquéreur.
-class RdvCard extends StatelessWidget {
+/// Carte d'un rendez-vous de visite de l'acquéreur, avec annulation tant qu'il n'est pas passé.
+class RdvCard extends ConsumerStatefulWidget {
   final RendezVousModel rdv;
 
   const RdvCard({super.key, required this.rdv});
 
   @override
+  ConsumerState<RdvCard> createState() => _RdvCardState();
+}
+
+class _RdvCardState extends ConsumerState<RdvCard> {
+  bool _busy = false;
+
+  Future<void> _annuler() async {
+    setState(() => _busy = true);
+    await annulerRendezVousAvecConfirmation(context, ref, widget.rdv.id);
+    if (mounted) setState(() => _busy = false);
+  }
+
+  /// « Matinée » / « Après-midi » d'après l'heure du rendez-vous.
+  static String _periode(DateTime d) => d.hour < 13 ? 'Matinée' : 'Après-midi';
+
+  @override
   Widget build(BuildContext context) {
+    final rdv = widget.rdv;
     final Color color;
-    final String badge;
-    if (rdv.isAccepte) {
+    final String label;
+    if (rdv.isAnnule) {
+      color = AppColors.grey600;
+      label = 'Annulé';
+    } else if (rdv.isAccepte) {
       color = AppColors.successGreen;
-      badge = 'CONFIRMÉ';
+      label = 'Confirmé';
     } else if (rdv.isRefuse) {
       color = AppColors.errorRed;
-      badge = 'REFUSÉ';
+      label = 'Refusé';
     } else {
       color = AppColors.ambreReservation24h;
-      badge = 'EN ATTENTE';
+      label = 'En attente';
     }
-
     final titre = rdv.bienDesignation ?? rdv.bienReference ?? 'Visite';
+    final peutAnnuler = !rdv.isRefuse && rdv.dateRendezVous.isAfter(DateTime.now());
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: color.withValues(alpha: 0.6), width: 1.5),
-        boxShadow: [
-          BoxShadow(color: AppColors.black.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: appCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: Text(titre, style: AppTextStyles.h4)),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: color),
+                  color: AppColors.primaryOcre.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: Text(
-                  badge,
-                  style: AppTextStyles.bodySmall.copyWith(color: color, fontWeight: FontWeight.bold),
+                child: Icon(rdv.isChantier ? Icons.landscape_rounded : Icons.business_rounded,
+                    color: AppColors.primaryOcre),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(titre,
+                        style: const TextStyle(
+                            fontSize: 16.5, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite)),
+                    if ((rdv.programmeNom ?? '').isNotEmpty)
+                      Text(rdv.programmeNom!,
+                          style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                  ],
                 ),
               ),
+              const SizedBox(width: 8),
+              StatusPill(label: label, color: color),
             ],
           ),
-          if (rdv.programmeNom != null) ...[
-            const SizedBox(height: 2),
-            Text(rdv.programmeNom!, style: AppTextStyles.bodyMedium),
-          ],
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 14),
           _row(Icons.event_rounded, DateFormatter.dateLongue(rdv.dateRendezVous)),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
+          _row(Icons.schedule_rounded,
+              '${_periode(rdv.dateRendezVous)} · ${DateFormatter.heure(rdv.dateRendezVous)}'),
+          const SizedBox(height: 6),
           _row(
-            Icons.schedule_rounded,
-            rdv.creneauHeure?.isNotEmpty == true ? rdv.creneauHeure! : DateFormatter.heure(rdv.dateRendezVous),
+            Icons.place_outlined,
+            (rdv.lieu != null && rdv.lieu!.isNotEmpty)
+                ? rdv.lieu!
+                : (rdv.isChantier ? 'Visite sur le terrain' : 'Rendez-vous au siège'),
           ),
-          const SizedBox(height: 4),
-          _row(
-            rdv.isChantier ? Icons.landscape_rounded : Icons.business_rounded,
-            rdv.isChantier ? 'Visite sur le terrain' : 'Rendez-vous au siège',
-          ),
-          if (rdv.lieu != null && rdv.lieu!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            _row(Icons.place_outlined, rdv.lieu!),
-          ],
           if (rdv.agentNom != null && rdv.agentNom!.trim().isNotEmpty) ...[
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             _row(Icons.person_outline_rounded, 'Avec ${rdv.agentNom}'),
           ],
-          if (rdv.isRefuse && rdv.motifRefus != null && rdv.motifRefus!.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Motif : ${rdv.motifRefus}',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.errorRed, fontWeight: FontWeight.w600),
+          if (rdv.isRefuse && !rdv.isAnnule && (rdv.motifRefus ?? '').isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text('Motif : ${rdv.motifRefus}',
+                style: const TextStyle(fontSize: 12.5, color: AppColors.errorRed, fontWeight: FontWeight.w600)),
+          ],
+          if (peutAnnuler) ...[
+            const SizedBox(height: 14),
+            DetailButton(
+              label: 'Annuler le rendez-vous',
+              icon: Icons.close_rounded,
+              danger: true,
+              compact: true,
+              loading: _busy,
+              onPressed: _annuler,
             ),
           ],
         ],
@@ -99,9 +127,12 @@ class RdvCard extends StatelessWidget {
   Widget _row(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondary),
+        Icon(icon, size: 17, color: AppColors.textSecondary),
         const SizedBox(width: 8),
-        Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
+        Expanded(
+          child: Text(text,
+              style: const TextStyle(fontSize: 13.5, color: AppColors.primaryBlueAnthracite, fontWeight: FontWeight.w600)),
+        ),
       ],
     );
   }

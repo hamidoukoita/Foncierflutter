@@ -42,6 +42,11 @@ class ReservationModel extends Equatable {
     this.agentNom,
   });
 
+  bool get isEnAttente => statut == 'EN_ATTENTE';
+
+  /// Annulée par l'acquéreur : le backend la passe à « REFUSER » avec un motif explicite.
+  bool get isAnnulee => statut == 'REFUSER' && (motifRefus ?? '').toLowerCase().startsWith('annul');
+
   factory ReservationModel.fromJson(Map<String, dynamic> json) {
     final dateRes = json['dateReservation'] != null
         ? DateTime.parse(json['dateReservation'])

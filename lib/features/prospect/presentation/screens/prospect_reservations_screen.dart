@@ -5,6 +5,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/reservation_card.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
 class ProspectReservationsScreen extends ConsumerStatefulWidget {
@@ -54,13 +55,15 @@ class _ProspectReservationsScreenState extends ConsumerState<ProspectReservation
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _chip('Toutes (${all.length})', 'TOUTES'),
-                    _chip('En attente (${count('EN_ATTENTE')})', 'EN_ATTENTE'),
-                    _chip('Confirmées (${count('CONFIRMER')})', 'CONFIRMER'),
-                    _chip('Refusées (${count('REFUSER')})', 'REFUSER'),
+                AppFilterBar<String>(
+                  padding: EdgeInsets.zero,
+                  selected: _filtre,
+                  onChanged: (v) => setState(() => _filtre = v),
+                  options: [
+                    AppFilterOption('TOUTES', 'Toutes (${all.length})'),
+                    AppFilterOption('EN_ATTENTE', 'En attente (${count('EN_ATTENTE')})', color: AppColors.ambreReservation24h),
+                    AppFilterOption('CONFIRMER', 'Confirmées (${count('CONFIRMER')})', color: AppColors.successGreen),
+                    AppFilterOption('REFUSER', 'Refusées / annulées (${count('REFUSER')})', color: AppColors.errorRed),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -80,15 +83,6 @@ class _ProspectReservationsScreenState extends ConsumerState<ProspectReservation
           );
         },
       ),
-    );
-  }
-
-  Widget _chip(String label, String value) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: _filtre == value,
-      selectedColor: AppColors.primaryOcre.withValues(alpha: 0.2),
-      onSelected: (_) => setState(() => _filtre = value),
     );
   }
 }

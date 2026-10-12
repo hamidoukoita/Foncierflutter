@@ -22,7 +22,7 @@ class DetailSliverAppBar extends StatefulWidget {
     required this.medias,
     required this.onBack,
     this.loading = false,
-    this.expandedHeight = 250,
+    this.expandedHeight = 280,
   });
 
   @override
@@ -38,6 +38,9 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
     final panos = widget.medias.where((m) => m.isPanorama).toList();
     final visites = widget.medias.where((m) => m.isVisiteVirtuelle).toList();
 
+    final top = MediaQuery.of(context).padding.top;
+    final collapsedH = kToolbarHeight + top;
+
     return SliverAppBar(
       pinned: true,
       expandedHeight: widget.expandedHeight,
@@ -50,12 +53,6 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
       leading: Padding(
         padding: const EdgeInsets.only(left: 12, top: 4, bottom: 4),
         child: _CircleBtn(icon: Icons.arrow_back_ios_new_rounded, onTap: widget.onBack),
-      ),
-      title: Text(
-        widget.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
       ),
       actions: [
         if (visites.isNotEmpty)
@@ -84,68 +81,123 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
           ),
         if (panos.isEmpty && visites.isEmpty) const SizedBox(width: 12),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.parallax,
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (photos.isEmpty)
-              DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryBlueAnthracite, AppColors.mapDeepGreen],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+      flexibleSpace: LayoutBuilder(
+        builder: (context, c) {
+          final span = (widget.expandedHeight - kToolbarHeight).clamp(1.0, 2000.0);
+          final t = ((c.maxHeight - collapsedH) / span).clamp(0.0, 1.0); // 1 = déplié, 0 = replié
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              if (photos.isEmpty)
+                DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.primaryBlueAnthracite, AppColors.mapDeepGreen],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Center(
+                    child: widget.loading
+                        ? const CircularProgressIndicator(color: Colors.white54, strokeWidth: 2)
+                        : Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: Icon(Icons.landscape_rounded, size: 64, color: Colors.white.withOpacity(0.18)),
+                          ),
+                  ),
+                )
+              else
+                PageView.builder(
+                  itemCount: photos.length,
+                  onPageChanged: (i) => setState(() => _page = i),
+                  itemBuilder: (_, i) => CachedNetworkImage(
+                    imageUrl: photos[i].urlAbsolue,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(color: AppColors.grey200),
+                    errorWidget: (_, __, ___) => Container(
+                      color: AppColors.grey200,
+                      child: const Icon(Icons.broken_image_outlined, color: AppColors.grey400, size: 36),
+                    ),
                   ),
                 ),
-                child: Center(
-                  child: widget.loading
-                      ? const CircularProgressIndicator(color: Colors.white54, strokeWidth: 2)
-                      : const Icon(Icons.landscape_rounded, size: 56, color: Colors.white24),
-                ),
-              )
-            else
-              PageView.builder(
-                itemCount: photos.length,
-                onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (_, i) => CachedNetworkImage(
-                  imageUrl: photos[i].urlAbsolue,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) => Container(color: AppColors.grey200),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.grey200,
-                    child: const Icon(Icons.broken_image_outlined, color: AppColors.grey400, size: 36),
-                  ),
-                ),
-              ),
-            // Dégradé haut (lisibilité des boutons) — le bas reste net.
-            IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.center,
-                    colors: [Colors.black.withValues(alpha: 0.45), Colors.transparent],
-                  ),
-                ),
-              ),
-            ),
-            if (photos.length > 1)
-              Positioned(
-                right: 12,
-                bottom: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              // Dégradé haut pour la lisibilité des boutons.
+              IgnorePointer(
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.center,
+                      colors: [Colors.black.withOpacity(0.45), Colors.transparent],
+                    ),
                   ),
-                  child: Text('${_page + 1} / ${photos.length}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
                 ),
               ),
-          ],
-        ),
+              // Replié : la barre devient pleine couleur, le titre apparaît.
+              IgnorePointer(
+                child: ColoredBox(color: AppColors.primaryBlueAnthracite.withOpacity((1 - t).clamp(0.0, 1.0))),
+              ),
+              Positioned(
+                left: 64,
+                right: 120,
+                top: top,
+                height: kToolbarHeight,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Opacity(
+                    opacity: (1 - t * 2.2).clamp(0.0, 1.0),
+                    child: Text(
+                      widget.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+              if (photos.length > 1)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 38,
+                  child: Opacity(
+                    opacity: t,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (var i = 0; i < photos.length; i++)
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: i == _page ? 20 : 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: i == _page ? Colors.white : Colors.white54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              // « Lèvre » arrondie : le contenu se raccorde à l'image sans la recouvrir.
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: -1,
+                height: 28,
+                child: Opacity(
+                  opacity: t,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundOffWhite,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -162,7 +214,7 @@ class _CircleBtn extends StatelessWidget {
     final shape = label == null ? const CircleBorder() : const StadiumBorder();
     return Center(
       child: Material(
-        color: Colors.white.withValues(alpha: 0.95),
+        color: Colors.white.withOpacity(0.95),
         shape: shape,
         elevation: 1,
         child: InkWell(

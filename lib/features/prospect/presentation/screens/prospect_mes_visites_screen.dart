@@ -5,14 +5,23 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/rendez_vous_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/rdv_card.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
 /// Onglet « Mes visites » : demandes de visite de l'acquéreur, à venir puis passées / refusées.
-class ProspectMesVisitesScreen extends ConsumerWidget {
+class ProspectMesVisitesScreen extends ConsumerStatefulWidget {
   const ProspectMesVisitesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProspectMesVisitesScreen> createState() => _ProspectMesVisitesScreenState();
+}
+
+class _ProspectMesVisitesScreenState extends ConsumerState<ProspectMesVisitesScreen> {
+  /// TOUTES | A_VENIR | PASSEES
+  String _filtre = 'TOUTES';
+
+  @override
+  Widget build(BuildContext context) {
     final async = ref.watch(mesVisitesProvider);
 
     return Scaffold(
@@ -48,8 +57,28 @@ class ProspectMesVisitesScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                if (aVenir.isNotEmpty) ..._section('À venir', aVenir),
-                if (autres.isNotEmpty) ..._section('Passées ou refusées', autres),
+                AppFilterBar<String>(
+                  padding: EdgeInsets.zero,
+                  selected: _filtre,
+                  onChanged: (v) => setState(() => _filtre = v),
+                  options: [
+                    AppFilterOption('TOUTES', 'Toutes (${list.length})'),
+                    AppFilterOption('A_VENIR', 'À venir (${aVenir.length})', color: AppColors.successGreen),
+                    AppFilterOption('PASSEES', 'Passées / annulées (${autres.length})', color: AppColors.primaryBlueAnthracite),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                if (_filtre != 'PASSEES' && aVenir.isNotEmpty) ..._section('À venir', aVenir),
+                if (_filtre != 'A_VENIR' && autres.isNotEmpty) ..._section('Passées ou annulées', autres),
+                if ((_filtre == 'A_VENIR' && aVenir.isEmpty) || (_filtre == 'PASSEES' && autres.isEmpty))
+                  const Padding(
+                    padding: EdgeInsets.only(top: 48),
+                    child: EmptyStateView(
+                      icon: Icons.event_busy_outlined,
+                      title: 'Aucune visite',
+                      message: 'Aucune visite ne correspond à ce filtre.',
+                    ),
+                  ),
               ],
             ),
           );
@@ -64,7 +93,7 @@ class ProspectMesVisitesScreen extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: 10, top: 4),
         child: Text(
           '$titre (${items.length})',
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textSecondary),
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primaryBlueAnthracite),
         ),
       ),
       for (final r in items) RdvCard(rdv: r),

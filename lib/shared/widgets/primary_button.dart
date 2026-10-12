@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/app_radius.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -10,12 +9,12 @@ class PrimaryButton extends StatelessWidget {
   final bool isSecondary;
 
   const PrimaryButton({
-    super.key,
+    Key? key,
     required this.text,
     this.onPressed,
     this.isLoading = false,
     this.isSecondary = false,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +34,10 @@ class PrimaryButton extends StatelessWidget {
           foregroundColor: textColor,
           elevation: 0,
           shadowColor: Colors.transparent,
+          minimumSize: const Size.fromHeight(52),
           padding: const EdgeInsets.symmetric(vertical: 13),
           shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.button,
+            borderRadius: BorderRadius.circular(16),
             side: border,
           ),
         ),
@@ -53,7 +53,7 @@ class PrimaryButton extends StatelessWidget {
               )
             : Text(
                 text,
-                style: AppTextStyles.buttonText.copyWith(color: textColor),
+                style: AppTextStyles.buttonText.copyWith(color: textColor, fontSize: 14, fontWeight: FontWeight.w800),
               ),
       ),
     );

@@ -88,6 +88,13 @@ class DetailButton extends StatelessWidget {
   final bool loading;
   final Color? color;
 
+  /// Bouton contouré (action secondaire) ; avec [danger] : contour rouge (annulation).
+  final bool outline;
+  final bool danger;
+
+  /// Hauteur compacte (cartes de liste) ou standard (barres d'actions).
+  final bool compact;
+
   const DetailButton({
     super.key,
     required this.label,
@@ -96,10 +103,45 @@ class DetailButton extends StatelessWidget {
     this.primary = true,
     this.loading = false,
     this.color,
+    this.outline = false,
+    this.danger = false,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final height = compact ? 44.0 : 52.0;
+    if (outline || danger) {
+      final fg = danger ? AppColors.errorRed : (color ?? AppColors.primaryBlueAnthracite);
+      return SizedBox(
+        height: height,
+        child: OutlinedButton(
+          onPressed: loading ? null : onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: fg,
+            backgroundColor: Colors.white,
+            side: BorderSide(color: danger ? AppColors.errorRed.withOpacity(0.55) : AppColors.borderLight, width: 1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (loading)
+                SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: fg))
+              else if (icon != null)
+                Icon(icon, size: 18),
+              if (loading || icon != null) const SizedBox(width: 8),
+              Flexible(
+                child: Text(label,
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final bg = color ?? (primary ? AppColors.primaryOcre : AppColors.primaryBlueAnthracite);
     final child = Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -117,7 +159,7 @@ class DetailButton extends StatelessWidget {
       ],
     );
     return SizedBox(
-      height: 52,
+      height: height,
       child: ElevatedButton(
         onPressed: loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -462,6 +504,114 @@ class FeatureRow extends StatelessWidget {
           Expanded(child: tiles[i]),
         ],
       ],
+    );
+  }
+}
+
+/// Décoration commune de toutes les cartes (listes et sections).
+BoxDecoration appCardDecoration({Color? borderColor}) => _cardDecoration().copyWith(
+      border: Border.all(color: borderColor ?? AppColors.borderLight, width: borderColor == null ? 1 : 1.5),
+    );
+
+/// Option d'une barre de filtres.
+class AppFilterOption<T> {
+  final T value;
+  final String label;
+  final Color? color;
+  const AppFilterOption(this.value, this.label, {this.color});
+}
+
+/// Barre de filtres unique pour toute l'application : pastilles défilantes, sélection pleine.
+class AppFilterBar<T> extends StatelessWidget {
+  final List<AppFilterOption<T>> options;
+  final T selected;
+  final ValueChanged<T> onChanged;
+  final EdgeInsetsGeometry padding;
+
+  const AppFilterBar({
+    super.key,
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: padding,
+        itemCount: options.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final o = options[i];
+          final on = o.value == selected;
+          final color = o.color ?? AppColors.primaryOcre;
+          return Material(
+            color: on ? color : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () => onChanged(o.value),
+              child: Container(
+                height: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: on ? color : AppColors.borderLight),
+                ),
+                child: Text(
+                  o.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: on ? Colors.white : AppColors.primaryBlueAnthracite,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Champ de recherche unique.
+class AppSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final String hint;
+
+  const AppSearchField({super.key, required this.controller, required this.onChanged, required this.hint});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: TextField(
+        controller: controller,
+        onChanged: onChanged,
+        style: const TextStyle(fontSize: 14, color: AppColors.primaryBlueAnthracite),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(fontSize: 13, color: AppColors.grey500.withOpacity(0.9), fontWeight: FontWeight.w500),
+          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.searchIcon, size: 22),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          filled: false,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        ),
+      ),
     );
   }
 }

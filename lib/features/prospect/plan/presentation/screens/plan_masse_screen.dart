@@ -11,6 +11,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
 /// Plan de masse d'une cité : on touche un lot pour voir sa fiche, et on peut le réserver directement
@@ -98,16 +99,19 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
 
           return Column(
             children: [
-              SizedBox(
-                height: 46,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
-                  children: [
-                    _chip('Tous (${shapes.length})', null, AppColors.primaryBlueAnthracite),
-                    for (final f in [LotFamille.libre, LotFamille.reserve, LotFamille.vendu])
-                      _chip('${libelleFamille(f) == 'Disponible' ? 'Libre' : libelleFamille(f)} (${count(f)})', f,
-                          couleurFamille(f)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: AppFilterBar<LotFamille?>(
+                  selected: _filtre,
+                  onChanged: (v) => setState(() => _filtre = v),
+                  options: [
+                    AppFilterOption<LotFamille?>(null, 'Tous (${shapes.length})'),
+                    AppFilterOption<LotFamille?>(LotFamille.libre, 'Libre (${count(LotFamille.libre)})',
+                        color: couleurFamille(LotFamille.libre)),
+                    AppFilterOption<LotFamille?>(LotFamille.reserve, 'Réservé (${count(LotFamille.reserve)})',
+                        color: couleurFamille(LotFamille.reserve)),
+                    AppFilterOption<LotFamille?>(LotFamille.vendu, 'Vendu (${count(LotFamille.vendu)})',
+                        color: couleurFamille(LotFamille.vendu)),
                   ],
                 ),
               ),
@@ -172,30 +176,6 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
       ),
     );
   }
-
-  Widget _chip(String label, LotFamille? f, Color color) {
-    final on = _filtre == f;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: on,
-        showCheckmark: false,
-        selectedColor: color,
-        backgroundColor: Colors.white,
-        side: BorderSide(color: on ? color : AppColors.borderLight),
-        labelStyle: TextStyle(
-          color: on ? Colors.white : AppColors.primaryBlueAnthracite,
-          fontWeight: FontWeight.w700,
-          fontSize: 12.5,
-        ),
-        avatar: f == null || on
-            ? null
-            : CircleAvatar(radius: 5, backgroundColor: color),
-        onSelected: (_) => setState(() => _filtre = f),
-      ),
-    );
-  }
 }
 
 class _LotPanel extends StatelessWidget {
@@ -245,7 +225,7 @@ class _LotPanel extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.14),
+                  color: color.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -280,42 +260,18 @@ class _LotPanel extends StatelessWidget {
             children: [
               if (lot.peutEtreReserve) ...[
                 Expanded(
-                  child: SizedBox(
-                    height: 46,
-                    child: ElevatedButton.icon(
-                      onPressed: reserving ? null : onReserver,
-                      icon: reserving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.bookmark_add_outlined, size: 18),
-                      label: const Text('Réserver', style: TextStyle(fontWeight: FontWeight.w800)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.successGreen,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                    ),
+                  child: DetailButton(
+                    label: 'Réserver',
+                    icon: Icons.bookmark_add_outlined,
+                    color: AppColors.successGreen,
+                    loading: reserving,
+                    onPressed: onReserver,
                   ),
                 ),
                 const SizedBox(width: 10),
               ],
               Expanded(
-                child: SizedBox(
-                  height: 46,
-                  child: ElevatedButton(
-                    onPressed: onDetails,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryOcre,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: const Text('Visualiser les détails', style: TextStyle(fontWeight: FontWeight.w800)),
-                  ),
-                ),
+                child: DetailButton(label: 'Voir les détails', onPressed: onDetails),
               ),
             ],
           ),

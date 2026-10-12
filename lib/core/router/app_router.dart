@@ -52,9 +52,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!isAuth && !loggingIn) return '/login';
       if (isAuth && loggingIn) {
         final user = auth.user;
-        if (user?.isAgent == true || user?.isSociete == true) {
+        if (user?.isAgent == true || user?.isSociete == true)
           return '/agent/dashboard';
-        }
         return '/prospect/dashboard';
       }
       return null;

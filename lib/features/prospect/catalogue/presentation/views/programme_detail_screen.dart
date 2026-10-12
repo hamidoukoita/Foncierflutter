@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/lot_programme.dart';
-import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/programme_foncier.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/controllers/catalogue_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
-import 'package:flutter_mobile_prospect_agent/shared/widgets/hero_media.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
-/// Détail d'une cité / programme — maquette Figma « Détails cité ».
+/// Détail d'une cité / programme.
 class ProgrammeDetailScreen extends ConsumerWidget {
   final int programmeId;
 
@@ -35,492 +37,168 @@ class ProgrammeDetailScreen extends ConsumerWidget {
     final mediasAsync = ref.watch(programmeMediasProvider(programmeId));
     final planAsync = ref.watch(planMasseProvider(programmeId));
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundOffWhite,
-      body: progAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryOcre),
+    return progAsync.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.backgroundOffWhite,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+      ),
+      error: (e, _) => Scaffold(
+        backgroundColor: AppColors.backgroundOffWhite,
+        appBar: AppBar(),
+        body: EmptyStateView(
+          icon: Icons.cloud_off_rounded,
+          title: 'Cité introuvable',
+          message: ErrorHandler.messageOf(e),
+          onRetry: () => ref.invalidate(programmeDetailProvider(programmeId)),
         ),
-        error: (e, _) => SafeArea(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
+      ),
+      data: (programme) {
+        final lots = lotsAsync.valueOrNull ?? <LotProgramme>[];
+        final lotsCount = lots.isNotEmpty ? lots.length : (programme.totalLots ?? 0);
+        final progress = ((programme.avancement ?? 0).clamp(0, 100)) / 100.0;
+        final prix = lots.where((l) => (l.prix ?? 0) > 0).map((l) => l.prix!).toList()..sort();
+        final surfaceHa = programme.superficieTotale != null
+            ? (programme.superficieTotale! / 10000).toStringAsFixed(programme.superficieTotale! >= 10000 ? 0 : 1)
+            : null;
+        final status = _status(programme.statut);
+        final commodites = _commodites(planAsync.valueOrNull);
+
+        return DetailPage(
+          title: programme.nom,
+          medias: mediasAsync.valueOrNull ?? const [],
+          mediasLoading: mediasAsync.isLoading,
+          onBack: () => context.pop(),
+          onRefresh: () async {
+            ref.invalidate(programmeDetailProvider(programmeId));
+            ref.invalidate(lotsByProgrammeProvider(programmeId));
+            ref.invalidate(planMasseProvider(programmeId));
+            ref.invalidate(programmeMediasProvider(programmeId));
+          },
+          bottomBar: DetailActionBar(
+            actions: [
+              DetailButton(
+                label: 'Voir le plan',
+                icon: Icons.map_outlined,
+                color: AppColors.primaryBlueAnthracite,
+                onPressed: () => context.push('/prospect/programmes/$programmeId/plan'),
+              ),
+              DetailButton(
+                label: 'Voir les lots',
+                icon: Icons.grid_view_rounded,
+                onPressed: () => context.push('/prospect/programmes/$programmeId/lots'),
+              ),
+            ],
+          ),
+          children: [
+            DetailHeader(
+              title: programme.nom,
+              statusLabel: status.$1,
+              statusColor: status.$2,
+              subtitle: [
+                if ((programme.lieu ?? '').isNotEmpty) programme.lieu!,
+                if ((programme.societeNom ?? '').isNotEmpty) programme.societeNom!,
+              ].join(' • '),
+              tags: [
+                if ((programme.numeroTitreMere ?? '').isNotEmpty) 'TF MÈRE : ${programme.numeroTitreMere}',
+              ],
+            ),
+            StatStrip(
+              items: [
+                StatItem(Icons.grid_view_rounded, '$lotsCount', 'lots'),
+                if (surfaceHa != null) StatItem(Icons.terrain_outlined, '$surfaceHa ha', 'superficie'),
+                StatItem(
+                  Icons.sell_outlined,
+                  prix.isEmpty ? 'Sur devis' : CurrencyFormatter.fcfa(prix.first),
+                  prix.isEmpty ? 'prix' : 'à partir de',
+                  highlight: true,
+                ),
+              ],
+            ),
+            if ((programme.description ?? '').trim().isNotEmpty)
+              DetailSection(
+                title: 'À propos',
+                child: Text(
+                  programme.description!.trim(),
+                  style: const TextStyle(fontSize: 14, height: 1.5, color: AppColors.primaryBlueAnthracite),
+                ),
+              ),
+            DetailSection(
+              title: 'Avancement des travaux',
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('$e', textAlign: TextAlign.center),
-                  const SizedBox(height: 12),
-                  TextButton(onPressed: () => context.pop(), child: const Text('Retour')),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Progression', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                      Text('${programme.avancement ?? 0}%',
+                          style: const TextStyle(
+                              fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.primaryBlueAnthracite)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      backgroundColor: AppColors.grey200,
+                      color: AppColors.successGreen,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-        ),
-        data: (programme) {
-          final lots = lotsAsync.valueOrNull ?? <LotProgramme>[];
-          final progress = ((programme.avancement ?? 0).clamp(0, 100)) / 100.0;
-
-          return Column(
-            children: [
-              Expanded(
-                child: RefreshIndicator(
-                  color: AppColors.primaryOcre,
-                  onRefresh: () async {
-                    ref.invalidate(programmeDetailProvider(programmeId));
-                    ref.invalidate(lotsByProgrammeProvider(programmeId));
-                  },
-                  child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      DetailSliverAppBar(
-                        title: programme.nom,
-                        medias: mediasAsync.valueOrNull ?? const [],
-                        loading: mediasAsync.isLoading,
-                        onBack: () => context.pop(),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _IdentityCard(
-                                programme: programme,
-                                lotsCount: lots.isNotEmpty
-                                    ? lots.length
-                                    : (programme.totalLots ?? 0),
-                              ),
-                              const SizedBox(height: 14),
-                              _SectionCard(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Expanded(
-                                          child: Text(
-                                            'Avancement des travaux',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          '${programme.avancement ?? 0}%',
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.primaryBlueAnthracite,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: LinearProgressIndicator(
-                                        value: progress,
-                                        minHeight: 8,
-                                        backgroundColor: AppColors.grey200,
-                                        color: AppColors.successGreen,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              const _SectionTitle('Viabilisation du site (VRD)'),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _VrdChip(
-                                      icon: Icons.water_drop_outlined,
-                                      title: 'Eau potable',
-                                      subtitle: programme.eauSomapep == true
-                                          ? 'Raccordé'
-                                          : 'Non raccordé',
-                                      ok: programme.eauSomapep == true,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _VrdChip(
-                                      icon: Icons.bolt_outlined,
-                                      title: 'Réseau EDM',
-                                      subtitle: programme.electriciteEdm == true
-                                          ? 'Poteau posé'
-                                          : 'Non raccordé',
-                                      ok: programme.electriciteEdm == true,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: _VrdChip(
-                                      icon: Icons.alt_route_rounded,
-                                      title: 'Voie bitumée',
-                                      subtitle: programme.voirieBitumee == true
-                                          ? 'Bitume'
-                                          : 'Non bitumée',
-                                      ok: programme.voirieBitumee == true,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 18),
-                              if (_commodites(planAsync.valueOrNull).isNotEmpty) ...[
-                                const _SectionTitle('Commodités du lotissement'),
-                                const SizedBox(height: 10),
-                                _CommoditesGrid(items: _commodites(planAsync.valueOrNull)),
-                                const SizedBox(height: 18),
-                              ],
-                              const _SectionTitle('Plan de masse du lotissement'),
-                              const SizedBox(height: 10),
-                              _PlanPreview(
-                                lots: lotsAvecGeometrie(lots),
-                                elements: planAsync.valueOrNull?.elements
-                                        .where((e) => e.visible)
-                                        .toList() ??
-                                    const [],
-                                lotsCount: lots.length,
-                                onOpenPlan: () =>
-                                    context.push('/prospect/programmes/$programmeId/plan'),
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+            DetailSection(
+              title: 'Viabilisation du site (VRD)',
+              child: FeatureRow(
+                tiles: [
+                  FeatureTile(
+                    icon: Icons.water_drop_outlined,
+                    title: 'Eau potable',
+                    subtitle: programme.eauSomapep == true ? 'Raccordé' : 'Non raccordé',
+                    ok: programme.eauSomapep == true,
                   ),
-                ),
+                  FeatureTile(
+                    icon: Icons.bolt_outlined,
+                    title: 'Réseau EDM',
+                    subtitle: programme.electriciteEdm == true ? 'Disponible' : 'Non raccordé',
+                    ok: programme.electriciteEdm == true,
+                  ),
+                  FeatureTile(
+                    icon: Icons.alt_route_rounded,
+                    title: 'Voirie',
+                    subtitle: programme.voirieBitumee == true ? 'Bitumée' : 'Non bitumée',
+                    ok: programme.voirieBitumee == true,
+                  ),
+                ],
               ),
-              Container(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  12,
-                  16,
-                  12 + MediaQuery.of(context).padding.bottom,
-                ),
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  border: Border(top: BorderSide(color: AppColors.borderLight)),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Localisation : disponible lorsque les coordonnées GPS sont renseignées.',
-                                ),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryBlueAnthracite,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: const Text(
-                            'Voir la localisation',
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: () =>
-                              context.push('/prospect/programmes/$programmeId/lots'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryOcre,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                          ),
-                          child: const Text(
-                            'Voir lots',
-                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+            if (commodites.isNotEmpty)
+              DetailSection(
+                title: 'Commodités du lotissement',
+                child: _CommoditesGrid(items: commodites),
               ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _IdentityCard extends StatelessWidget {
-  final ProgrammeFoncier programme;
-  final int lotsCount;
-
-  const _IdentityCard({required this.programme, required this.lotsCount});
-
-  @override
-  Widget build(BuildContext context) {
-    final status = _status(programme.statut);
-    final surfaceHa = programme.superficieTotale != null
-        ? (programme.superficieTotale! / 10000).toStringAsFixed(
-            programme.superficieTotale! >= 10000 ? 0 : 1,
-          )
-        : null;
-
-    return Transform.translate(
-      offset: const Offset(0, -28),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderLight),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryBlueAnthracite.withValues(alpha: 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+            DetailSection(
+              title: 'Plan de masse',
+              child: _PlanPreview(
+                lots: lotsAvecGeometrie(lots),
+                elements: planAsync.valueOrNull?.elements.where((e) => e.visible).toList() ?? const [],
+                lotsCount: lots.length,
+                onOpenPlan: () => context.push('/prospect/programmes/$programmeId/plan'),
+              ),
             ),
           ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    programme.nom,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaryBlueAnthracite,
-                      height: 1.2,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: status.$2,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    status.$1,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: status.$3,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.location_on_outlined,
-                    size: 16, color: AppColors.primaryOcre),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    [
-                      if ((programme.lieu ?? '').isNotEmpty) programme.lieu!,
-                      if ((programme.societeNom ?? '').isNotEmpty)
-                        programme.societeNom!,
-                    ].join(' • '),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                if ((programme.numeroTitreMere ?? '').isNotEmpty)
-                  Text(
-                    'TF Mère : ${programme.numeroTitreMere}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.grey600,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                _Meta(icon: Icons.grid_view_rounded, text: '$lotsCount lots'),
-                const SizedBox(width: 14),
-                if (surfaceHa != null)
-                  _Meta(icon: Icons.terrain_outlined, text: '$surfaceHa ha'),
-                const Spacer(),
-                const Text(
-                  'Dès ',
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                ),
-                const Text(
-                  'sur devis',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryOcre,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+        );
+      },
     );
   }
 
-  /// label, bg, fg
-  static (String, Color, Color) _status(String? statut) {
+  /// label, couleur
+  static (String, Color) _status(String? statut) {
     final s = (statut ?? '').toUpperCase();
-    if (s.contains('VENIR') || s.contains('BROUILLON')) {
-      return ('À venir', const Color(0xFFFFF3C4), const Color(0xFFB45309));
-    }
-    return ('En cours', const Color(0xFFE4F6E9), const Color(0xFF278443));
-  }
-}
-
-class _Meta extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  const _Meta({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: AppColors.grey500),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primaryBlueAnthracite,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final Widget child;
-  const _SectionCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String text;
-  const _SectionTitle(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w800,
-        color: AppColors.primaryBlueAnthracite,
-      ),
-    );
-  }
-}
-
-class _VrdChip extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool ok;
-
-  const _VrdChip({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.ok,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon,
-              size: 20,
-              color: ok ? AppColors.successGreen : AppColors.grey400),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.primaryBlueAnthracite,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            ok ? '✓ $subtitle' : subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: ok ? AppColors.successGreen : AppColors.grey500,
-            ),
-          ),
-        ],
-      ),
-    );
+    if (s.contains('VENIR') || s.contains('BROUILLON')) return ('À venir', AppColors.warningAmber);
+    return ('En cours', AppColors.successGreen);
   }
 }
 
@@ -659,7 +337,7 @@ class _PlanPreview extends StatelessWidget {
                   right: 12,
                   bottom: 12,
                   child: Material(
-                    color: Colors.white.withValues(alpha: 0.95),
+                    color: Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(20),
                     child: InkWell(
                       onTap: onOpenPlan,

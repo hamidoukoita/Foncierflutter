@@ -1,132 +1,160 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
-import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/business_rules.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 
-class ReservationCard extends StatelessWidget {
+/// Carte d'une réservation de l'acquéreur : statut, bien, montant, compte à rebours et annulation.
+class ReservationCard extends ConsumerStatefulWidget {
   final ReservationModel reservation;
 
-  const ReservationCard({
-    super.key,
-    required this.reservation,
-  });
+  const ReservationCard({super.key, required this.reservation});
+
+  @override
+  ConsumerState<ReservationCard> createState() => _ReservationCardState();
+}
+
+class _ReservationCardState extends ConsumerState<ReservationCard> {
+  bool _busy = false;
+
+  Future<void> _annuler() async {
+    setState(() => _busy = true);
+    await annulerReservationAvecConfirmation(context, ref, widget.reservation);
+    if (mounted) setState(() => _busy = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final bool isEnAttente = reservation.statut == 'EN_ATTENTE';
-    final durationRestante =
-        BusinessRules.tempsRestantReservation(reservation.dateReservation);
-    final bool isExpired = durationRestante.inSeconds <= 0 && isEnAttente;
+    final r = widget.reservation;
+    final restant = BusinessRules.tempsRestantReservation(r.dateReservation);
+    final expiree = r.isEnAttente && restant.inSeconds <= 0;
 
-    Color borderColor = AppColors.borderLight;
-    if (isEnAttente && !isExpired) {
-      borderColor = AppColors.ambreReservation24h;
-    } else if (isExpired || reservation.statut == 'REFUSER') {
-      borderColor = AppColors.errorRed;
-    } else if (reservation.statut == 'CONFIRMER') {
-      borderColor = AppColors.successGreen;
+    final Color color;
+    final String label;
+    if (r.isAnnulee) {
+      color = AppColors.grey600;
+      label = 'Annulée';
+    } else if (expiree) {
+      color = AppColors.errorRed;
+      label = 'Expirée';
+    } else if (r.isEnAttente) {
+      color = AppColors.ambreReservation24h;
+      label = 'En attente';
+    } else if (r.statut == 'CONFIRMER') {
+      color = AppColors.successGreen;
+      label = 'Confirmée';
+    } else {
+      color = AppColors.errorRed;
+      label = 'Refusée';
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          )
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: appCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Dossier N° ${reservation.numeroDossier}',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  'DOSSIER ${r.numeroDossier}',
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5, color: AppColors.textSecondary),
+                ),
               ),
-              _buildBadge(isEnAttente, isExpired),
+              StatusPill(label: label, color: color),
             ],
           ),
-          const Divider(height: AppSpacing.lg),
+          const SizedBox(height: 10),
           Text(
-            reservation.bienDesignation ?? 'Bien non renseigné',
-            style: AppTextStyles.h4,
+            r.bienDesignation ?? 'Bien non renseigné',
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite),
           ),
-          if (reservation.programmeNom != null)
-            Text(
-              reservation.programmeNom!,
-              style: AppTextStyles.bodyMedium,
+          if ((r.programmeNom ?? '').isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                const Icon(Icons.apartment_rounded, size: 15, color: AppColors.primaryOcre),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: Text(r.programmeNom!,
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+                ),
+              ],
             ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Montant : ${reservation.montant?.toStringAsFixed(0) ?? 'N/A'} FCFA',
-            style:
-                AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _info('Montant', CurrencyFormatter.fcfa(r.montant), highlight: true)),
+              Expanded(child: _info('Demandée le', DateFormatter.date(r.dateReservation))),
+            ],
           ),
-          if (isEnAttente && !isExpired)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
+          if (r.isEnAttente && !expiree) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.ambreReservation24h.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Row(
                 children: [
-                  const Icon(Icons.timer_outlined,
-                      color: AppColors.ambreReservation24h, size: 20),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    'Expire dans : ${durationRestante.inHours}h ${durationRestante.inMinutes % 60}m',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.ambreReservation24h,
-                        fontWeight: FontWeight.bold),
+                  const Icon(Icons.timer_outlined, size: 18, color: AppColors.ambreReservation24h),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'En attente de la société — délai restant : ${restant.inHours}h ${restant.inMinutes % 60}m',
+                      style: const TextStyle(
+                          fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF9A5B00)),
+                    ),
                   ),
                 ],
               ),
             ),
+          ],
+          if (r.statut == 'REFUSER' && (r.motifRefus ?? '').isNotEmpty && !r.isAnnulee) ...[
+            const SizedBox(height: 12),
+            Text('Motif : ${r.motifRefus}',
+                style: const TextStyle(fontSize: 12.5, color: AppColors.errorRed, fontWeight: FontWeight.w600)),
+          ],
+          if (r.isEnAttente) ...[
+            const SizedBox(height: 14),
+            DetailButton(
+              label: 'Annuler la réservation',
+              icon: Icons.close_rounded,
+              danger: true,
+              compact: true,
+              loading: _busy,
+              onPressed: _annuler,
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildBadge(bool isEnAttente, bool isExpired) {
-    Color color;
-    String text;
-    if (isExpired) {
-      color = AppColors.errorRed;
-      text = 'EXPIRÉE';
-    } else if (isEnAttente) {
-      color = AppColors.ambreReservation24h;
-      text = 'EN ATTENTE 24H';
-    } else if (reservation.statut == 'CONFIRMER') {
-      color = AppColors.successGreen;
-      text = 'CONFIRMÉE';
-    } else {
-      color = AppColors.errorRed;
-      text = 'REFUSÉE';
-    }
-
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        text,
-        style: AppTextStyles.bodySmall
-            .copyWith(color: color, fontWeight: FontWeight.bold),
-      ),
+  Widget _info(String label, String value, {bool highlight = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w800,
+            color: highlight ? AppColors.primaryOcre : AppColors.primaryBlueAnthracite,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/ombordin1_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/ombording2_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/ombordingMain_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/onbording3_screnn.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
@@ -7,8 +11,11 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/r
 import 'package:flutter_mobile_prospect_agent/features/prospect/shell/prospect_shell.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shell/agent_shell.dart';
 
-import 'package:flutter_mobile_prospect_agent/features/agent/presentation/screens/agent_dashboard_screen.dart';
-import 'package:flutter_mobile_prospect_agent/features/agent/presentation/screens/agent_visites_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/dashboard/presentation/views/agent_dashboard_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/reservations/presentation/views/agent_reservations_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/shared/agent_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/visites/presentation/views/agent_visites_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/visites/presentation/views/visite_detail_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_dashboard_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_cites_plan_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_reservations_screen.dart';
@@ -30,7 +37,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ref.watch(_authRefreshProvider);
 
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/ombordingMain',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authProvider);
@@ -40,19 +47,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null; // splash / attente restore
       }
 
-      final loggingIn = loc == '/login' || loc == '/register';
+      final loggingIn = loc == '/login' ||
+          loc == '/register' ||
+          loc == '/ombordingMain' ||
+          loc == '/ombording1' ||
+          loc == '/ombording2' ||
+          loc == '/ombording3';
       final isAuth = auth.status == AuthStatus.authenticated;
 
-      if (!isAuth && !loggingIn) return '/login';
+      if (!isAuth && !loggingIn) return '/ombording1';
       if (isAuth && loggingIn) {
         final user = auth.user;
         if (user?.isAgent == true || user?.isSociete == true)
-          return '/agent/dashboard';
+          return AgentRoutes.dashboard;
         return '/prospect/dashboard';
       }
       return null;
     },
     routes: [
+      GoRoute(
+          path: '/ombordingMain', builder: (_, __) => const OnboardingPage()),
+      GoRoute(
+          path: '/ombording1', builder: (_, __) => const OnboardingOnePage()),
+      GoRoute(
+          path: '/ombording2', builder: (_, __) => const OnboardingTwoPage()),
+      GoRoute(
+          path: '/ombording3', builder: (_, __) => const OnboardingThreePage()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
       StatefulShellRoute.indexedStack(
@@ -110,7 +130,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/agent/dashboard',
+                path: AgentRoutes.dashboard,
                 builder: (context, state) => const AgentDashboardScreen(),
               ),
             ],
@@ -118,12 +138,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/agent/visites',
+                path: AgentRoutes.visites,
                 builder: (context, state) => const AgentVisitesScreen(),
               ),
             ],
           ),
         ],
+      ),
+      // Pages agent plein écran (hors barre de navigation)
+      GoRoute(
+        path: AgentRoutes.visiteDetailPattern,
+        builder: (context, state) => VisiteDetailScreen(
+          visiteId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: AgentRoutes.reservations,
+        builder: (context, state) => const AgentReservationsScreen(),
       ),
     ],
   );

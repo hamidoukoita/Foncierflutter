@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/bien_foncier_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/reservation_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/rendez_vous_repository.dart';
+import 'package:flutter_mobile_prospect_agent/data/repositories/notification_repository.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 
 final bienFoncierRepositoryProvider = Provider<BienFoncierRepository>((ref) {
@@ -14,4 +15,8 @@ final reservationRepositoryProvider = Provider<ReservationRepository>((ref) {
 
 final rendezVousRepositoryProvider = Provider<RendezVousRepository>((ref) {
   return RendezVousRepository(ref.watch(apiClientProvider));
+});
+
+final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
+  return NotificationRepository(ref.watch(apiClientProvider));
 });

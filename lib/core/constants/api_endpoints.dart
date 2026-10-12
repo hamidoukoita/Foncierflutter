@@ -18,6 +18,18 @@ class ApiEndpoints {
   // Réservations & RDV
   static const String reservations = '/reservations';
   static const String rendezVous = '/rendez-vous';
+  static String rendezVousById(int id) => '/rendez-vous/$id';
+  static String rendezVousByAgent(int agentId) => '/rendez-vous/agent/$agentId';
+  static String accepterRendezVous(int id) => '/rendez-vous/$id/accepter';
+  static String reservationsByAgent(int agentId) =>
+      '/reservations/agent/$agentId';
+
+  // Biens fonciers
+  static String bienFoncierById(int id) => '/biens-fonciers/$id';
+
+  // Notifications
+  static String notificationsByUtilisateur(int utilisateurId) =>
+      '/notifications/utilisateur/$utilisateurId';
 
   // Construction
   static const String projetsConstruction = '/projets-construction';

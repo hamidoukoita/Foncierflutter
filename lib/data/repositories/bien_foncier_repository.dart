@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/core/constants/api_endpoints.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/api_client.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
@@ -37,6 +38,21 @@ class BienFoncierRepository {
           .map(
               (json) => BienFoncierModel.fromJson(json as Map<String, dynamic>))
           .toList();
+    }
+    throw Exception(apiResponse.message);
+  }
+
+  /// Fiche complète d'un bien (lot de cité ou parcelle individuelle).
+  Future<BienFoncierModel> getBienById(int id) async {
+    final response = await _apiClient
+        .get<Map<String, dynamic>>(ApiEndpoints.bienFoncierById(id));
+    final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
+      response.data!,
+      (data) => data as Map<String, dynamic>,
+    );
+
+    if (apiResponse.success && apiResponse.data != null) {
+      return BienFoncierModel.fromJson(apiResponse.data!);
     }
     throw Exception(apiResponse.message);
   }

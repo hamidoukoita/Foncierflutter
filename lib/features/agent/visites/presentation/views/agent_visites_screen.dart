@@ -4,6 +4,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/providers/agent_data_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/widgets/agent_async_view.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import '../controllers/agent_planning_controller.dart';
 import '../widgets/day_selector_strip.dart';
 import '../widgets/planning_header.dart';
@@ -33,7 +34,7 @@ class AgentVisitesScreen extends ConsumerWidget {
     final ui = ref.watch(planningUiProvider);
     final controller = ref.read(planningUiProvider.notifier);
     final vue = ref.watch(planningVueProvider);
-    final societeNom = ref.watch(agentConnecteProvider).societeNom;
+    final societeNom = ref.watch(authProvider).user?.societeNom;
     final donnees = vue.valueOrNull;
 
     return SafeArea(

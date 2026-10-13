@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/commodite_model.dart';
 
 class BienFoncierModel extends Equatable {
   final int id;
@@ -33,6 +34,9 @@ class BienFoncierModel extends Equatable {
   /// true = le bien accepte plusieurs réservations actives en parallèle (réglé par la société promotrice).
   final bool? reservationMultiple;
 
+  /// Commodités associées (`biens_commodites`).
+  final List<CommoditeModel> commodites;
+
   const BienFoncierModel({
     required this.id,
     required this.reference,
@@ -59,7 +63,10 @@ class BienFoncierModel extends Equatable {
     this.societeId,
     this.societeNom,
     this.reservationMultiple,
+    this.commodites = const [],
   });
+
+  bool get aDesCoordonnees => latitude != null && longitude != null;
 
   bool get isLot =>
       (typeBien ?? '').toUpperCase().contains('LOT') || numeroLot != null;
@@ -103,6 +110,7 @@ class BienFoncierModel extends Equatable {
       societeId: json['societeId'] as int?,
       societeNom: json['societeNom'] as String?,
       reservationMultiple: json['reservationMultiple'] as bool?,
+      commodites: CommoditeModel.listFromJson(json['commodites']),
     );
   }
 
@@ -161,6 +169,7 @@ class BienFoncierModel extends Equatable {
         societeId,
         societeNom,
         reservationMultiple,
+        commodites,
       ];
 }
 

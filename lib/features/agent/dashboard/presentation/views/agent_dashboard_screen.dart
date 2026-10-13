@@ -6,7 +6,8 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/agent_actions.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/agent_routes.dart';
-import 'package:flutter_mobile_prospect_agent/features/agent/shared/providers/agent_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/shared/agent_session.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/widgets/agent_async_view.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/widgets/reservation_suivi_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/section_header.dart';
@@ -21,9 +22,9 @@ class AgentDashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final agent = ref.watch(agentConnecteProvider);
-    final notificationsNonLues =
-        ref.watch(agentNotificationsNonLuesProvider).valueOrNull ?? 0;
+    // Lecture nullable : l'écran reste stable pendant la déconnexion.
+    final agent = ref.watch(authProvider).user;
+    if (agent == null) return const SizedBox.shrink();
     final dashboard = ref.watch(agentDashboardProvider);
 
     return SafeArea(
@@ -35,7 +36,7 @@ class AgentDashboardScreen extends ConsumerWidget {
           children: [
             AgentProfileHeader(
               agent: agent,
-              aDesNotifications: notificationsNonLues > 0,
+              onDeconnexion: () => AgentSession.deconnecter(context, ref),
             ),
             const SizedBox(height: AppSpacing.lg),
             AgentAsyncView<AgentDashboardState>(

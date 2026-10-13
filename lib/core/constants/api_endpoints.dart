@@ -38,6 +38,10 @@ class ApiEndpoints {
   static String mediasByProgramme(int programmeId) =>
       '/medias/programme/$programmeId';
   static String mediasByBien(int bienId) => '/medias/bien/$bienId';
+  static String proximitesByProgramme(int programmeId) =>
+      '/proximites-commodites/programme/$programmeId';
+  static String proximitesByBien(int bienId) =>
+      '/proximites-commodites/bien/$bienId';
 
   // Construction
   static const String projetsConstruction = '/projets-construction';

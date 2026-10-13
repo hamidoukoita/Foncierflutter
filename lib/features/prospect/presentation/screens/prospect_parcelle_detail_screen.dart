@@ -6,6 +6,9 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/domain/lieu_carte_builder.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/localisation_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/widgets/localisation_preview_card.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/rdv_booking_sheet.dart';
@@ -127,6 +130,13 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
                 StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(b.prix), 'prix de vente', highlight: true),
                 if (prixM2 != null) StatItem(Icons.calculate_outlined, CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
               ],
+            ),
+            DetailSection(
+              title: 'Localisation',
+              child: LocalisationPreviewCard(
+                lieu: LieuCarteBuilder.pourBien(b),
+                onOuvrir: () => context.push(LocalisationRoutes.bien(b.id)),
+              ),
             ),
             DetailSection(
               title: 'Caractéristiques de la parcelle',

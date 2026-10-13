@@ -6,6 +6,10 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/lot_programme.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/controllers/catalogue_provider.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/domain/lieu_carte_builder.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/localisation_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/widgets/localisation_preview_card.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/controllers/localisation_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
@@ -36,6 +40,8 @@ class ProgrammeDetailScreen extends ConsumerWidget {
     final lotsAsync = ref.watch(lotsByProgrammeProvider(programmeId));
     final mediasAsync = ref.watch(programmeMediasProvider(programmeId));
     final planAsync = ref.watch(planMasseProvider(programmeId));
+    final proximites =
+        ref.watch(proximitesProgrammeProvider(programmeId)).valueOrNull ?? const [];
 
     return progAsync.when(
       loading: () => const Scaffold(
@@ -77,10 +83,10 @@ class ProgrammeDetailScreen extends ConsumerWidget {
           bottomBar: DetailActionBar(
             actions: [
               DetailButton(
-                label: 'Voir le plan',
-                icon: Icons.map_outlined,
+                label: 'Localisation',
+                icon: Icons.place_rounded,
                 color: AppColors.primaryBlueAnthracite,
-                onPressed: () => context.push('/prospect/programmes/$programmeId/plan'),
+                onPressed: () => context.push(LocalisationRoutes.programme(programmeId)),
               ),
               DetailButton(
                 label: 'Voir les lots',
@@ -172,6 +178,17 @@ class ProgrammeDetailScreen extends ConsumerWidget {
                     ok: programme.voirieBitumee == true,
                   ),
                 ],
+              ),
+            ),
+            DetailSection(
+              title: 'Localisation',
+              child: LocalisationPreviewCard(
+                lieu: LieuCarteBuilder.pourProgramme(
+                  programme,
+                  lots: lots,
+                  proximites: proximites,
+                ),
+                onOuvrir: () => context.push(LocalisationRoutes.programme(programmeId)),
               ),
             ),
             if (commodites.isNotEmpty)

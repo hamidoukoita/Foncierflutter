@@ -48,7 +48,6 @@ final agentDashboardProvider = FutureProvider<AgentDashboardState>((ref) async {
 Future<void> rafraichirDashboardAgent(WidgetRef ref) async {
   ref
     ..invalidate(agentVisitesProvider)
-    ..invalidate(agentReservationsProvider)
-    ..invalidate(agentNotificationsNonLuesProvider);
+    ..invalidate(agentReservationsProvider);
   await ref.read(agentDashboardProvider.future);
 }

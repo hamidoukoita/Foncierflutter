@@ -7,17 +7,15 @@ import 'package:flutter_mobile_prospect_agent/shared/widgets/circle_icon_button.
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
 import 'agent_avatar.dart';
 
-/// En-tête : avatar, nom, société / fonction et cloche de notifications.
+/// En-tête : avatar, nom, société / fonction et bouton de déconnexion.
 class AgentProfileHeader extends StatelessWidget {
   final AuthUser agent;
-  final bool aDesNotifications;
-  final VoidCallback? onNotifications;
+  final VoidCallback onDeconnexion;
 
   const AgentProfileHeader({
     super.key,
     required this.agent,
-    this.aDesNotifications = false,
-    this.onNotifications,
+    required this.onDeconnexion,
   });
 
   @override
@@ -50,10 +48,12 @@ class AgentProfileHeader extends StatelessWidget {
             ],
           ),
         ),
-        CircleIconButton(
-          icon: Icons.notifications_none_rounded,
-          showDot: aDesNotifications,
-          onPressed: onNotifications,
+        Tooltip(
+          message: 'Se déconnecter',
+          child: CircleIconButton(
+            icon: Icons.logout_rounded,
+            onPressed: onDeconnexion,
+          ),
         ),
       ],
     );

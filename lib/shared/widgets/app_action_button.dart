@@ -16,6 +16,9 @@ enum AppActionVariant {
 
   /// Anthracite clair, pour une action secondaire posée sur fond sombre.
   darkSubtle,
+
+  /// Rouge, pour une action irréversible ou de sortie (déconnexion…).
+  danger,
 }
 
 /// Bouton compact avec icône optionnelle, utilisé dans les cartes.
@@ -42,6 +45,7 @@ class AppActionButton extends StatelessWidget {
         AppActionVariant.outlined => AppColors.backgroundOffWhite,
         AppActionVariant.accent => AppColors.primaryOcre,
         AppActionVariant.darkSubtle => AppColors.primaryBlueSoft,
+        AppActionVariant.danger => AppColors.errorRed,
       };
 
   Color get _foreground => variant == AppActionVariant.outlined

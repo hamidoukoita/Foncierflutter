@@ -3,6 +3,8 @@ class ProgrammeFoncier {
   final String nom;
   final String? description;
   final String? lieu;
+  final double? latitude;
+  final double? longitude;
   final String? numeroTitreMere;
   final double? superficieTotale;
   final String? statut;
@@ -20,6 +22,8 @@ class ProgrammeFoncier {
     required this.nom,
     this.description,
     this.lieu,
+    this.latitude,
+    this.longitude,
     this.numeroTitreMere,
     this.superficieTotale,
     this.statut,
@@ -35,12 +39,16 @@ class ProgrammeFoncier {
 
   String get localisation => lieu ?? '';
 
+  bool get aDesCoordonnees => latitude != null && longitude != null;
+
   factory ProgrammeFoncier.fromJson(Map<String, dynamic> json) {
     return ProgrammeFoncier(
       id: (json['id'] as num?)?.toInt() ?? 0,
       nom: json['nom'] as String? ?? '',
       description: json['description'] as String?,
       lieu: json['lieu'] as String? ?? json['localisation'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
       numeroTitreMere: json['numeroTitreMere'] as String?,
       superficieTotale: (json['superficieTotale'] as num?)?.toDouble(),
       statut: json['statut']?.toString(),

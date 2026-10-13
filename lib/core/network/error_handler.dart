@@ -58,19 +58,22 @@ class ErrorHandler {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
         message =
-            'Délai dépassé. Vérifiez votre connexion ou l’URL du serveur.';
+            'Délai dépassé : le serveur ${e.requestOptions.baseUrl} ne répond pas. '
+            'Sur téléphone USB, lancez l’app avec ./run_phone.sh.';
         break;
       case DioExceptionType.connectionError:
         message =
             'Impossible de joindre le serveur. Vérifiez que le backend tourne et l’URL (${e.requestOptions.baseUrl}).';
         break;
       case DioExceptionType.badResponse:
-        if (status == 401)
+        if (status == 401) {
           message = message.isEmpty
               ? 'Identifiants incorrects ou session expirée.'
               : message;
-        if (status == 403)
+        }
+        if (status == 403) {
           message = message.isEmpty ? 'Accès refusé.' : message;
+        }
         break;
       default:
         break;

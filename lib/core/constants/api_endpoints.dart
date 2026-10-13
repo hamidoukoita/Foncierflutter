@@ -6,6 +6,7 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String registerAcquereur = '/auth/register';
   static const String registerSociete = '/auth/register-societe';
+  static String identiteAcquereur(int id) => '/acquereurs/$id/identite';
 
   // Programmes & lots
   static const String programmes = '/programmes-fonciers';
@@ -38,6 +39,10 @@ class ApiEndpoints {
   static String mediasByProgramme(int programmeId) =>
       '/medias/programme/$programmeId';
   static String mediasByBien(int bienId) => '/medias/bien/$bienId';
+  static String proximitesByProgramme(int programmeId) =>
+      '/proximites-commodites/programme/$programmeId';
+  static String proximitesByBien(int bienId) =>
+      '/proximites-commodites/bien/$bienId';
 
   // Construction
   static const String projetsConstruction = '/projets-construction';

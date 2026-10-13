@@ -5,9 +5,13 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_background.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_error_banner.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_text_field.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/primary_button.dart';
 
@@ -54,253 +58,244 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.lg,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSpacing.md),
-
-                // Logo Foncier+
-                Center(
-                  child: SvgPicture.asset(
-                    'assets/images/logo.svg',
-                    height: 210,
-                    fit: BoxFit.contain,
-                    semanticsLabel: 'Logo Foncier Plus',
-                    placeholderBuilder: (context) => const SizedBox(
-                      height: 40,
-                      width: 40,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                  ),
-
-                ),
-
-                const SizedBox(height: AppSpacing.xs),
-
-                // Titre
-                Text(
-                  'Connectez-vous à votre espace',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.h3,
-                ),
-
-                const SizedBox(height: AppSpacing.xl),
-
-                // Numéro de téléphone
-                AppTextField(
-                  label: 'Numéro de téléphone',
-                  controller: _phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  hintText: '76 12 34 56',
-                  prefixIcon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AppSpacing.gapSm,
-                      const Text('🇲🇱', style: TextStyle(fontSize: 15)),
-                      AppSpacing.gapSm,
-                      Text(
-                        '+223',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.primaryBlueAnthracite,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Container(
-                        height: 20,
-                        width: 1,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm + 2,
-                        ),
-                        color: AppColors.borderLight,
-                      ),
-                    ],
-                  ),
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Numéro obligatoire'
-                      : null,
-                ),
-
-                const SizedBox(height: AppSpacing.md),
-
-                // Mot de passe
-                AppTextField(
-                  label: 'Mot de passe',
-                  controller: _passwordCtrl,
-                  isPassword: true,
-                  hintText: 'Votre mot de passe',
-                  prefixIcon: const Icon(
-                    Icons.lock_outline_rounded,
-                    color: AppColors.grey500,
-                    size: 22,
-                  ),
-                  validator: (v) => v == null || v.isEmpty
-                      ? 'Mot de passe obligatoire'
-                      : null,
-                ),
-
-                const SizedBox(height: AppSpacing.sm),
-
-                // Se souvenir de moi & Mot de passe oublié
-                Row(
-                  children: [
-                    SizedBox(
-                      height: 24,
-                      width: 24,
-                      child: Checkbox(
-                        value: _rememberMe,
-                        activeColor: AppColors.successGreen,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: AppRadius.radiusSm,
-                        ),
-                        side: const BorderSide(
-                          color: AppColors.grey500,
-                          width: 1.5,
-                        ),
-                        onChanged: (val) {
-                          setState(() => _rememberMe = val ?? false);
-                        },
-                      ),
-                    ),
-                    AppSpacing.gapSm,
-                    Text(
-                      'Se souvenir de moi',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.grey700,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        // context.push('/forgot-password');
-                      },
-                      child: Text(
-                        'Mot de passe oublié ?',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryBlueAnthracite,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                if (auth.error != null) ...[
+      body: AuthBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.lg,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   const SizedBox(height: AppSpacing.md),
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    decoration: BoxDecoration(
 
-                      color: AppColors.errorRed.withValues(alpha: 0.08),
-                      borderRadius: AppRadius.radiusMd,
-                      border: Border.all(
-                        color: AppColors.errorRed.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Text(
-                      auth.error!,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.errorRed,
-                      ),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Bouton Se connecter
-                PrimaryButton(
-                  text: auth.loading ? 'Connexion…' : 'Se connecter',
-                  onPressed: auth.loading ? null : _submit,
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Séparateur
-                Row(
-                  children: [
-                    const Expanded(
-                        child: Divider(color: AppColors.borderLight)),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                      ),
-                      child: Text('ou', style: AppTextStyles.bodySmall),
-                    ),
-                    const Expanded(
-                        child: Divider(color: AppColors.borderLight)),
-                  ],
-                ),
-
-                const SizedBox(height: AppSpacing.lg),
-
-                // Bouton Google
-                OutlinedButton(
-                  onPressed: () {},
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: AppColors.white,
-                    side: const BorderSide(color: AppColors.borderLight),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: AppRadius.radiusXl,
-                    ),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.network(
-                        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png',
-                        height: 20,
-                        width: 20,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.g_mobiledata, size: 24),
-                      ),
-                      AppSpacing.gapSm,
-                      Text(
-                        'Se connecter avec Google',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryBlueAnthracite,
+                  // Logo Foncier+
+                  Center(
+                    child: SvgPicture.asset(
+                      'assets/images/logo.svg',
+                      height: 150,
+                      fit: BoxFit.contain,
+                      semanticsLabel: 'Logo Foncier Plus',
+                      placeholderBuilder: (context) => const SizedBox(
+                        height: 40,
+                        width: 40,
+                        child: Center(
+                          child: CircularProgressIndicator(),
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.xs),
 
-                // Lien Inscription
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Pas encore de compte ? ',
-                      style: AppTextStyles.bodyMedium,
+                  // Titre
+                  Text(
+                    'Bon retour parmi nous',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.pageTitle,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Connectez-vous à votre espace Foncier+',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodyMedium,
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+                  Container(
+                    padding:
+                        const EdgeInsets.all(AppSpacing.md + AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: AppRadius.radiusXxl,
+                      border: Border.all(color: AppColors.borderLight),
+                      boxShadow: AppShadows.floating,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        TextSpan(
-                          text: "S'inscrire",
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primaryOcre,
+                        // Numéro de téléphone
+                        AppTextField(
+                          label: 'Numéro de téléphone',
+                          controller: _phoneCtrl,
+                          keyboardType: TextInputType.phone,
+                          hintText: '76 12 34 56',
+                          prefixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AppSpacing.gapSm,
+                              const Text('🇲🇱',
+                                  style: TextStyle(fontSize: 15)),
+                              AppSpacing.gapSm,
+                              Text(
+                                '+223',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.primaryBlueAnthracite,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Container(
+                                height: 20,
+                                width: 1,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.sm + 2,
+                                ),
+                                color: AppColors.borderLight,
+                              ),
+                            ],
                           ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () => context.push('/register'),
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'Numéro obligatoire'
+                              : null,
+                        ),
+
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Mot de passe
+                        AppTextField(
+                          label: 'Mot de passe',
+                          controller: _passwordCtrl,
+                          isPassword: true,
+                          hintText: 'Votre mot de passe',
+                          prefixIcon:
+                              const Icon(Icons.lock_outline_rounded, size: 22),
+                          validator: (v) => v == null || v.isEmpty
+                              ? 'Mot de passe obligatoire'
+                              : null,
+                        ),
+
+                        const SizedBox(height: AppSpacing.sm),
+
+                        // Se souvenir de moi & Mot de passe oublié
+                        Row(
+                          children: [
+                            SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: Checkbox(
+                                value: _rememberMe,
+                                onChanged: (val) {
+                                  setState(() => _rememberMe = val ?? false);
+                                },
+                              ),
+                            ),
+                            AppSpacing.gapSm,
+                            Text(
+                              'Se souvenir de moi',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.grey700,
+                              ),
+                            ),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () {
+                                // context.push('/forgot-password');
+                              },
+                              child: Text(
+                                'Mot de passe oublié ?',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.primaryBlueAnthracite,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        if (auth.error != null) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          AuthErrorBanner(message: auth.error!),
+                        ],
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Bouton Se connecter
+                        PrimaryButton(
+                          text: 'Se connecter',
+                          icon: Icons.login_rounded,
+                          isLoading: auth.loading,
+                          onPressed: _submit,
                         ),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Séparateur
+                  Row(
+                    children: [
+                      const Expanded(
+                          child: Divider(color: AppColors.borderLight)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        child: Text('ou', style: AppTextStyles.bodySmall),
+                      ),
+                      const Expanded(
+                          child: Divider(color: AppColors.borderLight)),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // Bouton Google
+                  OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(AppSizes.buttonLarge),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.network(
+                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png',
+                          height: 20,
+                          width: 20,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.g_mobiledata, size: 24),
+                        ),
+                        AppSpacing.gapSm,
+                        Text(
+                          'Se connecter avec Google',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlueAnthracite,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // Lien Inscription
+                  Center(
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Pas encore de compte ? ',
+                        style: AppTextStyles.bodyMedium,
+                        children: [
+                          TextSpan(
+                            text: "S'inscrire",
+                            style: AppTextStyles.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryOcre,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => context.push('/register'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+              ),
             ),
           ),
         ),

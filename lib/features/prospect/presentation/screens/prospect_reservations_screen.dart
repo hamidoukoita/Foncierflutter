@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/reservation_card.dart';
@@ -12,10 +13,12 @@ class ProspectReservationsScreen extends ConsumerStatefulWidget {
   const ProspectReservationsScreen({super.key});
 
   @override
-  ConsumerState<ProspectReservationsScreen> createState() => _ProspectReservationsScreenState();
+  ConsumerState<ProspectReservationsScreen> createState() =>
+      _ProspectReservationsScreenState();
 }
 
-class _ProspectReservationsScreenState extends ConsumerState<ProspectReservationsScreen> {
+class _ProspectReservationsScreenState
+    extends ConsumerState<ProspectReservationsScreen> {
   /// TOUTES | EN_ATTENTE | CONFIRMER | REFUSER
   String _filtre = 'TOUTES';
 
@@ -26,9 +29,7 @@ class _ProspectReservationsScreenState extends ConsumerState<ProspectReservation
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       body: async.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryOcre),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyStateView(
           icon: Icons.cloud_off_rounded,
           title: 'Réservations indisponibles',
@@ -45,15 +46,22 @@ class _ProspectReservationsScreenState extends ConsumerState<ProspectReservation
             );
           }
 
-          final sorted = [...all]..sort((a, b) => b.dateReservation.compareTo(a.dateReservation));
-          final list = _filtre == 'TOUTES' ? sorted : sorted.where((r) => r.statut == _filtre).toList();
+          final sorted = [...all]
+            ..sort((a, b) => b.dateReservation.compareTo(a.dateReservation));
+          final list = _filtre == 'TOUTES'
+              ? sorted
+              : sorted.where((r) => r.statut == _filtre).toList();
           int count(String s) => all.where((r) => r.statut == s).length;
 
           return RefreshIndicator(
-            color: AppColors.primaryOcre,
             onRefresh: () async => ref.invalidate(mesReservationsProvider),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.xs,
+                AppSpacing.pageHorizontal,
+                AppSpacing.lg,
+              ),
               children: [
                 AppFilterBar<String>(
                   padding: EdgeInsets.zero,
@@ -61,15 +69,21 @@ class _ProspectReservationsScreenState extends ConsumerState<ProspectReservation
                   onChanged: (v) => setState(() => _filtre = v),
                   options: [
                     AppFilterOption('TOUTES', 'Toutes (${all.length})'),
-                    AppFilterOption('EN_ATTENTE', 'En attente (${count('EN_ATTENTE')})', color: AppColors.ambreReservation24h),
-                    AppFilterOption('CONFIRMER', 'Confirmées (${count('CONFIRMER')})', color: AppColors.successGreen),
-                    AppFilterOption('REFUSER', 'Refusées / annulées (${count('REFUSER')})', color: AppColors.errorRed),
+                    AppFilterOption(
+                        'EN_ATTENTE', 'En attente (${count('EN_ATTENTE')})',
+                        color: AppColors.ambreReservation24h),
+                    AppFilterOption(
+                        'CONFIRMER', 'Confirmées (${count('CONFIRMER')})',
+                        color: AppColors.successGreen),
+                    AppFilterOption(
+                        'REFUSER', 'Refusées / annulées (${count('REFUSER')})',
+                        color: AppColors.errorRed),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
                 if (list.isEmpty)
                   const Padding(
-                    padding: EdgeInsets.only(top: 48),
+                    padding: EdgeInsets.only(top: AppSpacing.xxl),
                     child: EmptyStateView(
                       icon: Icons.bookmark_outline,
                       title: 'Aucun dossier',
@@ -77,7 +91,10 @@ class _ProspectReservationsScreenState extends ConsumerState<ProspectReservation
                     ),
                   )
                 else
-                  for (final ReservationModel r in list) ReservationCard(reservation: r),
+                  for (final ReservationModel r in list) ...[
+                    ReservationCard(reservation: r),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
               ],
             ),
           );

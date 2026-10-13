@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_gradients.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -26,15 +28,21 @@ class ProchaineVisiteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.primaryBlueAnthracite,
-      borderRadius: AppRadius.radiusXl,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: visite == null ? null : onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xs),
-          child: visite == null ? _buildVide() : _buildVisite(visite!),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: AppGradients.navy,
+        borderRadius: AppRadius.card,
+        boxShadow: AppShadows.floating,
+      ),
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: visite == null ? null : onTap,
+          borderRadius: AppRadius.card,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xs),
+            child: visite == null ? _buildVide() : _buildVisite(visite!),
+          ),
         ),
       ),
     );

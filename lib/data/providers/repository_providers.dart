@@ -4,6 +4,7 @@ import 'package:flutter_mobile_prospect_agent/data/repositories/bien_foncier_rep
 import 'package:flutter_mobile_prospect_agent/data/repositories/reservation_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/rendez_vous_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/creneau_repository.dart';
+import 'package:flutter_mobile_prospect_agent/data/repositories/commodite_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/media_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/notification_repository.dart';
 import 'package:flutter_mobile_prospect_agent/data/repositories/plan_masse_repository.dart';
@@ -44,4 +45,8 @@ final mediaRepositoryProvider = Provider<MediaRepository>((ref) {
 
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepository(ref.watch(apiClientProvider));
+});
+
+final commoditeRepositoryProvider = Provider<CommoditeRepository>((ref) {
+  return CommoditeRepository(ref.watch(apiClientProvider));
 });

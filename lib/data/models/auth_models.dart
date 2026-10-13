@@ -58,6 +58,23 @@ class AuthUser {
 
   String get fullName => '$prenom $nom'.trim();
 
+  /// Copie avec un nouveau nom / prénom (le jeton et les droits restent identiques).
+  AuthUser copyWith({String? nom, String? prenom}) => AuthUser(
+        token: token,
+        type: type,
+        id: id,
+        nom: nom ?? this.nom,
+        prenom: prenom ?? this.prenom,
+        telephone: telephone,
+        role: role,
+        statut: statut,
+        societeId: societeId,
+        societeNom: societeNom,
+        estResponsableSociete: estResponsableSociete,
+        fonctionLibelle: fonctionLibelle,
+        permissions: permissions,
+      );
+
   bool get isAcquereur =>
       role.toUpperCase().contains('ACQUEREUR') ||
       role.toUpperCase().contains('PROSPECT');

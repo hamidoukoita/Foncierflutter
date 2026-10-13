@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+
 /// Géométrie telle qu'enregistrée par le Studio plan de masse :
 /// `{"type":"POLYGON"|"LINE","points":[{"x":..,"y":..}]}` ou `{"type":"POINT","x":..,"y":..}`.
 class PlanGeometry {
@@ -86,7 +88,8 @@ class PlanGeometry {
 /// Élément non-lot du plan : route, espace vert, mosquée, école, marché…
 class PlanElement {
   final int id;
-  final String type; // ROUTE_GOUDRONNEE, ROUTE_NON_GOUDRONNEE, MOSQUEE, EGLISE, ECOLE, ESPACE_VERT, MARCHE, COMMERCE, EQUIPEMENT_PUBLIC, AUTRE
+  final String
+      type; // ROUTE_GOUDRONNEE, ROUTE_NON_GOUDRONNEE, MOSQUEE, EGLISE, ECOLE, ESPACE_VERT, MARCHE, COMMERCE, EQUIPEMENT_PUBLIC, AUTRE
   final String? nom;
   final PlanGeometry geometry;
   final bool visible;
@@ -101,7 +104,8 @@ class PlanElement {
     this.zIndex = 0,
   });
 
-  bool get isRoute => type == 'ROUTE_GOUDRONNEE' || type == 'ROUTE_NON_GOUDRONNEE';
+  bool get isRoute =>
+      type == 'ROUTE_GOUDRONNEE' || type == 'ROUTE_NON_GOUDRONNEE';
 
   String get libelle {
     switch (type) {
@@ -129,7 +133,8 @@ class PlanElement {
   }
 
   /// Nom saisi par la société, sinon libellé du type.
-  String get affichage => (nom != null && nom!.trim().isNotEmpty) ? nom!.trim() : libelle;
+  String get affichage =>
+      (nom != null && nom!.trim().isNotEmpty) ? nom!.trim() : libelle;
 
   static PlanElement? fromJson(Map<String, dynamic> json) {
     final geo = PlanGeometry.parse(json['geometryJson'] as String?);
@@ -153,7 +158,11 @@ class PlanMasse {
   /// Message si les éléments (routes, équipements…) n'ont pas pu être chargés.
   final String? elementsError;
 
-  const PlanMasse({required this.id, this.description, this.elements = const [], this.elementsError});
+  const PlanMasse(
+      {required this.id,
+      this.description,
+      this.elements = const [],
+      this.elementsError});
 }
 
 /// Statut d'un lot (backend) ramené à 4 familles pour les couleurs et filtres.
@@ -163,20 +172,22 @@ LotFamille familleDeStatut(String? statut) {
   final s = (statut ?? '').toUpperCase();
   if (s.contains('RESERV')) return LotFamille.reserve;
   if (s.contains('VENDU')) return LotFamille.vendu;
-  if (s.startsWith('DISPON') || s == 'LIBRE' || s == 'PUBLIE') return LotFamille.libre;
+  if (s.startsWith('DISPON') || s == 'LIBRE' || s == 'PUBLIE') {
+    return LotFamille.libre;
+  }
   return LotFamille.indisponible;
 }
 
 Color couleurFamille(LotFamille f) {
   switch (f) {
     case LotFamille.libre:
-      return const Color(0xFF4A7A56);
+      return AppColors.lotDisponible;
     case LotFamille.reserve:
-      return const Color(0xFFE5A96A);
+      return AppColors.lotReserve;
     case LotFamille.vendu:
-      return const Color(0xFFC64B4B);
+      return AppColors.lotVendu;
     case LotFamille.indisponible:
-      return const Color(0xFF73808F);
+      return AppColors.lotIndisponible;
   }
 }
 

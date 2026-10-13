@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/accueil/presentation/widgets/annonce_artwork.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
 
+/// Carte d'une parcelle (ou d'un lot) : couverture, statut, TF, surface, prix, actions.
 class BienFoncierCard extends StatelessWidget {
   final BienFoncierModel bien;
   final VoidCallback onReserver;
@@ -23,133 +28,174 @@ class BienFoncierCard extends StatelessWidget {
     this.onTap,
   });
 
+  static const double _hauteurCouverture = 140;
+
   @override
   Widget build(BuildContext context) {
-    // Statut : 🟢 DISPONIBLE, 🟡 RESERVER (Ambre), 🔴 VENDUE/EN_LITIGE
-    Color badgeColor = AppColors.successGreen;
-    String badgeText = bien.statut;
-    if (bien.statut == 'RESERVER') {
-      badgeColor = AppColors.ambreReservation24h;
-    } else if (bien.statut == 'VENDUE' ||
-        bien.statut == 'EN_LITIGE' ||
-        bien.statut == 'INDISPONIBLE') {
-      badgeColor = AppColors.errorRed;
-    }
+    final famille = familleDeStatut(bien.statut);
+    final couleur = couleurFamille(famille);
 
-    final card = Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      clipBehavior: Clip.antiAlias,
-      decoration: appCardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildImage(badgeColor, badgeText),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  bien.typeBien == 'LOT_PROGRAMME'
-                      ? 'Lot ${bien.numeroLot} - Ilot ${bien.numeroIlot}'
-                      : 'Parcelle - TF: ${bien.numeroTitreFoncier ?? "N/A"}',
-                  style: AppTextStyles.h4,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  bien.programmeNom ?? bien.societeNom ?? 'Bien Foncier+',
-                  style: AppTextStyles.bodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${bien.superficie} m²',
-                      style: AppTextStyles.bodyMedium,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+          borderRadius: AppRadius.card, boxShadow: AppShadows.card),
+      child: Material(
+        color: AppColors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.card,
+          side: BorderSide(color: AppColors.borderLight),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Stack(
+                children: [
+                  AnnonceArtwork(
+                    imageUrl: bien.imageUrl,
+                    estProgramme: bien.isLot,
+                    largeur: double.infinity,
+                    hauteur: _hauteurCouverture,
+                    rayon: BorderRadius.zero,
+                  ),
+                  Positioned(
+                    left: AppSpacing.md - AppSpacing.xs,
+                    top: AppSpacing.md - AppSpacing.xs,
+                    child: SoftBadge(
+                      label: libelleFamille(famille),
+                      background: AppColors.white,
+                      foreground: couleur,
+                      icon: Icons.circle,
                     ),
-                    Text(
-                      '${bien.prix.toStringAsFixed(0)} FCFA',
-                      style: AppTextStyles.price,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                if (bien.peutEtreReserve)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DetailButton(label: 'Réserver', compact: true, onPressed: onReserver),
+                  ),
+                  if ((bien.numeroTitreFoncier ?? '').isNotEmpty)
+                    const Positioned(
+                      right: AppSpacing.md - AppSpacing.xs,
+                      top: AppSpacing.md - AppSpacing.xs,
+                      child: SoftBadge(
+                        label: 'TF vérifié',
+                        icon: Icons.verified_rounded,
+                        background: AppColors.white,
+                        foreground: AppColors.successGreen,
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: DetailButton(label: 'Prendre RDV', compact: true, outline: true, onPressed: onPrendreRdv),
+                    ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            bien.designation,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style:
+                                AppTextStyles.cardTitle.copyWith(fontSize: 17),
+                          ),
+                        ),
+                        Text(
+                          CurrencyFormatter.fcfaCompact(bien.prix),
+                          style: AppTextStyles.price.copyWith(
+                              color: AppColors.primaryOcreDark, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    _Infos(bien: bien),
+                    if (bien.peutEtreReserve) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DetailButton(
+                              label: 'Réserver',
+                              icon: Icons.bookmark_add_outlined,
+                              compact: true,
+                              onPressed: onReserver,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: DetailButton(
+                              label: 'Prendre RDV',
+                              icon: Icons.event_available_outlined,
+                              compact: true,
+                              outline: true,
+                              onPressed: onPrendreRdv,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-              ],
-            ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
-
-    if (onTap == null) return card;
-    return GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: card);
   }
+}
 
-  Widget _buildImage(Color badgeColor, String badgeText) {
-    return Stack(
+/// Localisation, surface et viabilisation sur une ligne.
+class _Infos extends StatelessWidget {
+  final BienFoncierModel bien;
+  const _Infos({required this.bien});
+
+  @override
+  Widget build(BuildContext context) {
+    final lieu = [
+      bien.programmeNom,
+      bien.localisation,
+      bien.societeNom
+    ].firstWhere((v) => v != null && v.trim().isNotEmpty, orElse: () => null);
+    return Row(
       children: [
-        ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          child: bien.imageUrl != null && bien.imageUrl!.trim().isNotEmpty
-              ? CachedNetworkImage(
-                  imageUrl: bien.imageUrl!,
-                  height: 160,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    height: 160,
-                    color: AppColors.backgroundOffWhite,
-                    child: const Center(
-                      child: Icon(Icons.landscape_rounded,
-                          color: AppColors.successGreen, size: 36),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    height: 160,
-                    color: AppColors.backgroundOffWhite,
-                    child: const Icon(Icons.landscape_rounded,
-                        color: AppColors.successGreen, size: 36),
-                  ),
-                )
-              : Container(
-                  height: 160,
-                  width: double.infinity,
-                  color: AppColors.constructionMint,
-                  child: const Icon(Icons.landscape_rounded,
-                      color: AppColors.constructionGreen, size: 44),
-                ),
-        ),
-        Positioned(
-          top: AppSpacing.sm,
-          right: AppSpacing.sm,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              badgeText,
-              style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.white, fontWeight: FontWeight.bold),
-            ),
+        const Icon(Icons.square_foot_rounded,
+            size: 15, color: AppColors.primaryOcre),
+        const SizedBox(width: AppSpacing.xxs),
+        Text('${bien.superficie.toStringAsFixed(0)} m²',
+            style: AppTextStyles.label),
+        if (lieu != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          const Icon(Icons.location_on_rounded,
+              size: 15, color: AppColors.primaryOcre),
+          const SizedBox(width: AppSpacing.xxs),
+          Expanded(
+            child: Text(lieu,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyMedium),
           ),
-        ),
+        ] else
+          const Spacer(),
+        if (bien.eauSomapep == true) const _Vrd(Icons.water_drop_rounded),
+        if (bien.electriciteEdm == true) const _Vrd(Icons.bolt_rounded),
+        if (bien.voieBitumee == true) const _Vrd(Icons.add_road_rounded),
       ],
+    );
+  }
+}
+
+class _Vrd extends StatelessWidget {
+  final IconData icone;
+  const _Vrd(this.icone);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(left: AppSpacing.xs),
+      width: 24,
+      height: 24,
+      decoration: const BoxDecoration(
+          color: AppColors.successGreenSoft, shape: BoxShape.circle),
+      child: Icon(icone, size: 13, color: AppColors.successGreen),
     );
   }
 }

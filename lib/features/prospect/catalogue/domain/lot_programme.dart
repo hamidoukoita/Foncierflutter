@@ -33,10 +33,9 @@ class LotProgramme {
     this.longitude,
   });
 
-  String get displayRef =>
-      reference?.isNotEmpty == true
-          ? reference!
-          : (numeroLot?.isNotEmpty == true ? 'Lot $numeroLot' : 'Lot #$id');
+  String get displayRef => reference?.isNotEmpty == true
+      ? reference!
+      : (numeroLot?.isNotEmpty == true ? 'Lot $numeroLot' : 'Lot #$id');
 
   bool get isDisponible {
     final s = (statut ?? '').toUpperCase();

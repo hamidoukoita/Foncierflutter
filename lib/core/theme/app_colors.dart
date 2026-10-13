@@ -8,6 +8,8 @@ class AppColors {
   // Marque / actions
   static const Color primaryOcre = Color(0xFFE5801A);
   static const Color primaryOcreDark = Color(0xFFCC6F14);
+  static const Color primaryOcreLight = Color(0xFFF29A43);
+  static const Color primaryOcreSoft = Color(0xFFFCEBD6);
   static const Color primaryBlueAnthracite = Color(0xFF1A2B4C);
   static const Color primaryBlueSoft = Color(0xFF2A3D5C);
   static const Color brandGold = Color(0xFFE5A96A);
@@ -23,10 +25,17 @@ class AppColors {
   static const Color warningAmberSoft = Color(0xFFFFF2C9);
   static const Color ambreReservation24h = Color(0xFFF59E0B);
 
+  // Statuts des lots (plan de masse) : vert disponible, or réservé, rouge vendu, gris indisponible
+  static const Color lotDisponible = brandGreen;
+  static const Color lotReserve = brandGold;
+  static const Color lotVendu = Color(0xFFC64B4B);
+  static const Color lotIndisponible = Color(0xFF73808F);
+
   // Surfaces
   static const Color backgroundOffWhite = Color(0xFFF8F6F2);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color white = Colors.white;
+  static const Color transparent = Colors.transparent;
   static const Color black = Color(0xFF0F172A);
   static const Color borderLight = Color(0xFFE2DDD5);
   static const Color searchIcon = Color(0xFF8FA2BA);

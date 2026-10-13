@@ -14,7 +14,8 @@ class LotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceFmt = NumberFormat.currency(locale: 'fr_FR', symbol: 'F', decimalDigits: 0);
+    final priceFmt =
+        NumberFormat.currency(locale: 'fr_FR', symbol: 'F', decimalDigits: 0);
     final statut = (lot.statut ?? '—').toUpperCase();
     final disponible = lot.isDisponible;
 
@@ -27,7 +28,8 @@ class LotCard extends StatelessWidget {
       ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         leading: CircleAvatar(
           backgroundColor: disponible
               ? AppColors.successGreen.withValues(alpha: 0.15)
@@ -44,7 +46,8 @@ class LotCard extends StatelessWidget {
         ),
         subtitle: Text(
           [
-            if (lot.superficie != null) '${lot.superficie!.toStringAsFixed(0)} m²',
+            if (lot.superficie != null)
+              '${lot.superficie!.toStringAsFixed(0)} m²',
             if (lot.prix != null) priceFmt.format(lot.prix),
           ].join(' · '),
           style: AppTextStyles.bodySmall,
@@ -62,7 +65,8 @@ class LotCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: disponible ? AppColors.successGreen : AppColors.primaryOcre,
+              color:
+                  disponible ? AppColors.successGreen : AppColors.primaryOcre,
             ),
           ),
         ),

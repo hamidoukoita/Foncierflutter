@@ -37,10 +37,14 @@ Future<bool> reserverBienAvecConfirmation(
         'Suivez son avancement dans l\'onglet « Réservations ».',
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Retour')),
+        TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Retour')),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text('Réserver', style: TextStyle(color: AppColors.primaryOcre, fontWeight: FontWeight.w800)),
+          child: const Text('Réserver',
+              style: TextStyle(
+                  color: AppColors.primaryOcre, fontWeight: FontWeight.w800)),
         ),
       ],
     ),
@@ -55,19 +59,22 @@ Future<bool> reserverBienAvecConfirmation(
     ref.invalidate(prospectDashboardProvider);
     ref.invalidate(parcellesProvider);
     ref.invalidate(bienDetailProvider(bienId));
-    messenger.showSnackBar(const SnackBar(content: Text('Réservation enregistrée')));
+    messenger
+        .showSnackBar(const SnackBar(content: Text('Réservation enregistrée')));
     return true;
   } catch (e) {
     messenger.showSnackBar(
-      SnackBar(content: Text(ErrorHandler.messageOf(e)), backgroundColor: AppColors.errorRed),
+      SnackBar(
+          content: Text(ErrorHandler.messageOf(e)),
+          backgroundColor: AppColors.errorRed),
     );
     return false;
   }
 }
 
-
 /// Ma réservation en attente sur ce bien (null si aucune) — permet d'afficher « Annuler » au lieu de « Réserver ».
-ReservationModel? maReservationEnAttente(List<ReservationModel>? mesReservations, int bienId) {
+ReservationModel? maReservationEnAttente(
+    List<ReservationModel>? mesReservations, int bienId) {
   if (mesReservations == null) return null;
   for (final r in mesReservations) {
     if (r.bienId == bienId && r.isEnAttente) return r;
@@ -90,11 +97,14 @@ Future<bool> annulerReservationAvecConfirmation(
         'Cette action est définitive.',
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Garder')),
+        TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Garder')),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
           child: const Text('Annuler la réservation',
-              style: TextStyle(color: AppColors.errorRed, fontWeight: FontWeight.w800)),
+              style: TextStyle(
+                  color: AppColors.errorRed, fontWeight: FontWeight.w800)),
         ),
       ],
     ),
@@ -107,30 +117,40 @@ Future<bool> annulerReservationAvecConfirmation(
     ref.invalidate(mesReservationsProvider);
     ref.invalidate(prospectDashboardProvider);
     ref.invalidate(parcellesProvider);
-    if (reservation.bienId != null) ref.invalidate(bienDetailProvider(reservation.bienId!));
-    messenger.showSnackBar(const SnackBar(content: Text('Réservation annulée')));
+    if (reservation.bienId != null) {
+      ref.invalidate(bienDetailProvider(reservation.bienId!));
+    }
+    messenger
+        .showSnackBar(const SnackBar(content: Text('Réservation annulée')));
     return true;
   } catch (e) {
     messenger.showSnackBar(
-      SnackBar(content: Text(ErrorHandler.messageOf(e)), backgroundColor: AppColors.errorRed),
+      SnackBar(
+          content: Text(ErrorHandler.messageOf(e)),
+          backgroundColor: AppColors.errorRed),
     );
     return false;
   }
 }
 
 /// Annulation d'un rendez-vous de visite, avec confirmation.
-Future<bool> annulerRendezVousAvecConfirmation(BuildContext context, WidgetRef ref, int rendezVousId) async {
+Future<bool> annulerRendezVousAvecConfirmation(
+    BuildContext context, WidgetRef ref, int rendezVousId) async {
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Annuler ce rendez-vous ?'),
-      content: const Text('La société promotrice sera informée de l\'annulation.'),
+      content:
+          const Text('La société promotrice sera informée de l\'annulation.'),
       actions: [
-        TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Garder')),
+        TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Garder')),
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(true),
           child: const Text('Annuler le rendez-vous',
-              style: TextStyle(color: AppColors.errorRed, fontWeight: FontWeight.w800)),
+              style: TextStyle(
+                  color: AppColors.errorRed, fontWeight: FontWeight.w800)),
         ),
       ],
     ),
@@ -145,7 +165,9 @@ Future<bool> annulerRendezVousAvecConfirmation(BuildContext context, WidgetRef r
     return true;
   } catch (e) {
     messenger.showSnackBar(
-      SnackBar(content: Text(ErrorHandler.messageOf(e)), backgroundColor: AppColors.errorRed),
+      SnackBar(
+          content: Text(ErrorHandler.messageOf(e)),
+          backgroundColor: AppColors.errorRed),
     );
     return false;
   }

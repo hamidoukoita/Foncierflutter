@@ -45,7 +45,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
       pinned: true,
       expandedHeight: widget.expandedHeight,
       backgroundColor: AppColors.primaryBlueAnthracite,
-      foregroundColor: Colors.white,
+      foregroundColor: AppColors.white,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       automaticallyImplyLeading: false,
@@ -99,10 +99,10 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                   ),
                   child: Center(
                     child: widget.loading
-                        ? const CircularProgressIndicator(color: Colors.white54, strokeWidth: 2)
+                        ? CircularProgressIndicator(color: AppColors.white.withValues(alpha: 0.54), strokeWidth: 2)
                         : Padding(
                             padding: const EdgeInsets.only(bottom: 24),
-                            child: Icon(Icons.landscape_rounded, size: 64, color: Colors.white.withOpacity(0.18)),
+                            child: Icon(Icons.landscape_rounded, size: 64, color: AppColors.white.withValues(alpha: 0.18)),
                           ),
                   ),
                 )
@@ -127,14 +127,14 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.center,
-                      colors: [Colors.black.withOpacity(0.45), Colors.transparent],
+                      colors: [AppColors.black.withValues(alpha: 0.45), Colors.transparent],
                     ),
                   ),
                 ),
               ),
               // Replié : la barre devient pleine couleur, le titre apparaît.
               IgnorePointer(
-                child: ColoredBox(color: AppColors.primaryBlueAnthracite.withOpacity((1 - t).clamp(0.0, 1.0))),
+                child: ColoredBox(color: AppColors.primaryBlueAnthracite.withValues(alpha: (1 - t).clamp(0.0, 1.0))),
               ),
               Positioned(
                 left: 64,
@@ -149,7 +149,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                       widget.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.white),
                     ),
                   ),
                 ),
@@ -171,7 +171,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                             width: i == _page ? 20 : 7,
                             height: 7,
                             decoration: BoxDecoration(
-                              color: i == _page ? Colors.white : Colors.white54,
+                              color: i == _page ? AppColors.white : AppColors.white.withValues(alpha: 0.54),
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
@@ -214,7 +214,7 @@ class _CircleBtn extends StatelessWidget {
     final shape = label == null ? const CircleBorder() : const StadiumBorder();
     return Center(
       child: Material(
-        color: Colors.white.withOpacity(0.95),
+        color: AppColors.white.withValues(alpha: 0.95),
         shape: shape,
         elevation: 1,
         child: InkWell(

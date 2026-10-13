@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/theme/app_text_styles.dart';
 
+/// État vide / erreur : pictogramme dans un halo ocre, titre, message, action.
 class EmptyStateView extends StatelessWidget {
   final String title;
   final String message;
   final IconData icon;
   final VoidCallback? onRetry;
+  final String retryLabel;
 
   const EmptyStateView({
     super.key,
@@ -15,6 +17,7 @@ class EmptyStateView extends StatelessWidget {
     required this.message,
     required this.icon,
     this.onRetry,
+    this.retryLabel = 'Réessayer',
   });
 
   @override
@@ -23,37 +26,33 @@ class EmptyStateView extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: AppColors.grey300,
+            Container(
+              width: 88,
+              height: 88,
+              decoration: const BoxDecoration(
+                color: AppColors.primaryOcreSoft,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 38, color: AppColors.primaryOcre),
             ),
-            AppSpacing.gapMd,
-            Text(
-              title,
-              style: AppTextStyles.h3,
-              textAlign: TextAlign.center,
-            ),
-            AppSpacing.gapSm,
+            const SizedBox(height: AppSpacing.lg),
+            Text(title, style: AppTextStyles.h3, textAlign: TextAlign.center),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
-              style: AppTextStyles.bodyMedium,
+              style: AppTextStyles.bodyMedium.copyWith(height: 1.5),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
-              AppSpacing.gapLg,
-              TextButton.icon(
+              const SizedBox(height: AppSpacing.lg),
+              OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh, color: AppColors.primaryOcre),
-                label: Text(
-                  "Réessayer",
-                  style: AppTextStyles.buttonText
-                      .copyWith(color: AppColors.primaryOcre),
-                ),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(retryLabel),
               ),
-            ]
+            ],
           ],
         ),
       ),

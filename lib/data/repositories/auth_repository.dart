@@ -62,6 +62,27 @@ class AuthRepository {
     }
   }
 
+  /// Met à jour le nom et le prénom de l'acquéreur, puis la session locale.
+  Future<AuthUser> modifierIdentite(AuthUser user, {required String nom, required String prenom}) async {
+    try {
+      final res = await _api.patch(
+        ApiEndpoints.identiteAcquereur(user.id),
+        data: {'nom': nom, 'prenom': prenom},
+      );
+      final parsed = ApiResponse.fromJson(res.data as Map<String, dynamic>, (data) => data);
+      if (!parsed.success) {
+        throw ApiException(parsed.message.isEmpty ? 'Mise à jour impossible.' : parsed.message);
+      }
+      final misAJour = user.copyWith(nom: nom, prenom: prenom);
+      await _storage.saveSession(misAJour);
+      return misAJour;
+    } on DioException catch (e) {
+      final err = e.error;
+      if (err is ApiException) throw err;
+      throw ErrorHandler.fromDio(e);
+    }
+  }
+
   Future<AuthUser?> restoreSession() => _storage.readUser();
 
   Future<void> logout() => _storage.clear();

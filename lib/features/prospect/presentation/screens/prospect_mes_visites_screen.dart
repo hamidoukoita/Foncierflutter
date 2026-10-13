@@ -2,21 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/rendez_vous_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/rdv_card.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/section_header.dart';
 
 /// Onglet « Mes visites » : demandes de visite de l'acquéreur, à venir puis passées / refusées.
 class ProspectMesVisitesScreen extends ConsumerStatefulWidget {
   const ProspectMesVisitesScreen({super.key});
 
   @override
-  ConsumerState<ProspectMesVisitesScreen> createState() => _ProspectMesVisitesScreenState();
+  ConsumerState<ProspectMesVisitesScreen> createState() =>
+      _ProspectMesVisitesScreenState();
 }
 
-class _ProspectMesVisitesScreenState extends ConsumerState<ProspectMesVisitesScreen> {
+class _ProspectMesVisitesScreenState
+    extends ConsumerState<ProspectMesVisitesScreen> {
   /// TOUTES | A_VENIR | PASSEES
   String _filtre = 'TOUTES';
 
@@ -27,9 +31,7 @@ class _ProspectMesVisitesScreenState extends ConsumerState<ProspectMesVisitesScr
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       body: async.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryOcre),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyStateView(
           icon: Icons.cloud_off_rounded,
           title: 'Visites indisponibles',
@@ -52,10 +54,14 @@ class _ProspectMesVisitesScreenState extends ConsumerState<ProspectMesVisitesScr
             ..sort((a, b) => b.dateRendezVous.compareTo(a.dateRendezVous));
 
           return RefreshIndicator(
-            color: AppColors.primaryOcre,
             onRefresh: () async => ref.invalidate(mesVisitesProvider),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.xs,
+                AppSpacing.pageHorizontal,
+                AppSpacing.lg,
+              ),
               children: [
                 AppFilterBar<String>(
                   padding: EdgeInsets.zero,
@@ -63,16 +69,22 @@ class _ProspectMesVisitesScreenState extends ConsumerState<ProspectMesVisitesScr
                   onChanged: (v) => setState(() => _filtre = v),
                   options: [
                     AppFilterOption('TOUTES', 'Toutes (${list.length})'),
-                    AppFilterOption('A_VENIR', 'À venir (${aVenir.length})', color: AppColors.successGreen),
-                    AppFilterOption('PASSEES', 'Passées / annulées (${autres.length})', color: AppColors.primaryBlueAnthracite),
+                    AppFilterOption('A_VENIR', 'À venir (${aVenir.length})',
+                        color: AppColors.lotDisponible),
+                    AppFilterOption(
+                        'PASSEES', 'Passées / annulées (${autres.length})',
+                        color: AppColors.primaryBlueAnthracite),
                   ],
                 ),
-                const SizedBox(height: 14),
-                if (_filtre != 'PASSEES' && aVenir.isNotEmpty) ..._section('À venir', aVenir),
-                if (_filtre != 'A_VENIR' && autres.isNotEmpty) ..._section('Passées ou annulées', autres),
-                if ((_filtre == 'A_VENIR' && aVenir.isEmpty) || (_filtre == 'PASSEES' && autres.isEmpty))
+                const SizedBox(height: AppSpacing.md),
+                if (_filtre != 'PASSEES' && aVenir.isNotEmpty)
+                  ..._section('À venir', aVenir),
+                if (_filtre != 'A_VENIR' && autres.isNotEmpty)
+                  ..._section('Passées ou annulées', autres),
+                if ((_filtre == 'A_VENIR' && aVenir.isEmpty) ||
+                    (_filtre == 'PASSEES' && autres.isEmpty))
                   const Padding(
-                    padding: EdgeInsets.only(top: 48),
+                    padding: EdgeInsets.only(top: AppSpacing.xxl),
                     child: EmptyStateView(
                       icon: Icons.event_busy_outlined,
                       title: 'Aucune visite',
@@ -90,13 +102,16 @@ class _ProspectMesVisitesScreenState extends ConsumerState<ProspectMesVisitesScr
   List<Widget> _section(String titre, List<RendezVousModel> items) {
     return [
       Padding(
-        padding: const EdgeInsets.only(bottom: 10, top: 4),
-        child: Text(
-          '$titre (${items.length})',
-          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primaryBlueAnthracite),
-        ),
+        padding: const EdgeInsets.only(
+            bottom: AppSpacing.md - AppSpacing.xs, top: AppSpacing.xs),
+        child: SectionHeader(
+            title: titre,
+            subtitle: '${items.length} visite${items.length > 1 ? 's' : ''}'),
       ),
-      for (final r in items) RdvCard(rdv: r),
+      for (final r in items) ...[
+        RdvCard(rdv: r),
+        const SizedBox(height: AppSpacing.md),
+      ],
     ];
   }
 }

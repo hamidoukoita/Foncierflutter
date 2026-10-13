@@ -11,6 +11,8 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/r
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/programme_detail_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lots_list_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/screens/plan_masse_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/localisation_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/screens/localisation_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lot_detail_screen.dart';
 
 import 'package:flutter_mobile_prospect_agent/features/prospect/shell/prospect_shell.dart';
@@ -93,6 +95,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
+        path: LocalisationRoutes.programmePattern,
+        builder: (context, state) => LocalisationScreen.programme(
+          programmeId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: LocalisationRoutes.bienPattern,
+        builder: (context, state) => LocalisationScreen.bien(
+          bienId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
         path: '/prospect/programmes/:id/plan',
         builder: (context, state) {
           final id = int.parse(state.pathParameters['id']!);
@@ -137,7 +151,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/prospect/cites',
-                builder: (context, state) => const ProspectCitesPlanScreen(),
+                builder: (context, state) {
+                  final zone = state.uri.queryParameters['zone'];
+                  return ProspectCitesPlanScreen(key: ValueKey(zone), zone: zone);
+                },
               ),
             ],
           ),

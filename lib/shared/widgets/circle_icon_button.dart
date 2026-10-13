@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_shadows.dart';
+import '../../core/theme/app_sizes.dart';
 
 /// Bouton rond blanc bordé (retour, calendrier, notifications…).
 /// [showDot] affiche une pastille ocre (ex. notification non lue).
@@ -14,7 +16,7 @@ class CircleIconButton extends StatelessWidget {
     required this.icon,
     this.onPressed,
     this.showDot = false,
-    this.size = 44,
+    this.size = AppSizes.iconButton,
   });
 
   @override
@@ -25,19 +27,23 @@ class CircleIconButton extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Material(
-            color: AppColors.white,
-            shape: const CircleBorder(
-              side: BorderSide(color: AppColors.borderLight, width: 1.5),
-            ),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: onPressed,
-              child: Center(
-                child: Icon(
-                  icon,
-                  size: size * 0.45,
-                  color: AppColors.primaryBlueAnthracite,
+          DecoratedBox(
+            decoration: BoxDecoration(
+                shape: BoxShape.circle, boxShadow: AppShadows.card),
+            child: Material(
+              color: AppColors.white,
+              shape: const CircleBorder(
+                side: BorderSide(color: AppColors.borderLight),
+              ),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: onPressed,
+                child: Center(
+                  child: Icon(
+                    icon,
+                    size: size * 0.45,
+                    color: AppColors.primaryBlueAnthracite,
+                  ),
                 ),
               ),
             ),

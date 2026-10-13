@@ -27,15 +27,6 @@ final agentReservationsProvider = FutureProvider<List<ReservationModel>>((ref) {
       .getReservationsByAgent(agent.id);
 });
 
-/// Nombre de notifications non lues (pastille de la cloche).
-final agentNotificationsNonLuesProvider = FutureProvider<int>((ref) async {
-  final agent = ref.watch(agentConnecteProvider);
-  final notifications = await ref
-      .watch(notificationRepositoryProvider)
-      .getByUtilisateur(agent.id);
-  return notifications.where((n) => !n.lue).length;
-});
-
 /// Fiche d'un bien foncier (lot ou parcelle).
 final bienFoncierProvider =
     FutureProvider.autoDispose.family<BienFoncierModel, int>((ref, id) {

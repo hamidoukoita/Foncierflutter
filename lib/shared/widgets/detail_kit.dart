@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_gradients.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/hero_media.dart';
 
@@ -31,7 +37,12 @@ class DetailPage extends StatelessWidget {
       slivers: [
         DetailSliverAppBar(title: title, medias: medias, loading: mediasLoading, onBack: onBack),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md + AppSpacing.xs,
+            AppSpacing.xs,
+            AppSpacing.md + AppSpacing.xs,
+            AppSpacing.xl,
+          ),
           sliver: SliverList(delegate: SliverChildListDelegate(children)),
         ),
       ],
@@ -53,7 +64,7 @@ class DetailPage extends StatelessWidget {
   }
 }
 
-/// Barre d'actions fixe en bas.
+/// Barre d'actions fixe en bas, arrondie et légèrement surélevée.
 class DetailActionBar extends StatelessWidget {
   final List<Widget> actions;
   const DetailActionBar({super.key, required this.actions});
@@ -61,17 +72,21 @@ class DetailActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md + AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.md + AppSpacing.xs,
+        AppSpacing.md + MediaQuery.of(context).padding.bottom,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: AppColors.primaryBlueAnthracite.withOpacity(0.08), blurRadius: 18, offset: const Offset(0, -4)),
-        ],
+        color: AppColors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
+        boxShadow: AppShadows.floating,
       ),
       child: Row(
         children: [
           for (var i = 0; i < actions.length; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
+            if (i > 0) const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
             Expanded(child: actions[i]),
           ],
         ],
@@ -80,6 +95,7 @@ class DetailActionBar extends StatelessWidget {
   }
 }
 
+/// Bouton des fiches : plein (dégradé ocre ou couleur fournie), contouré ou danger.
 class DetailButton extends StatelessWidget {
   final String label;
   final IconData? icon;
@@ -108,70 +124,69 @@ class DetailButton extends StatelessWidget {
     this.compact = false,
   });
 
+  bool get _contoure => outline || danger;
+
   @override
   Widget build(BuildContext context) {
-    final height = compact ? 44.0 : 52.0;
-    if (outline || danger) {
-      final fg = danger ? AppColors.errorRed : (color ?? AppColors.primaryBlueAnthracite);
-      return SizedBox(
+    final height = compact ? AppSizes.buttonMedium : AppSizes.buttonLarge - 2;
+    final actif = onPressed != null && !loading;
+
+    final Color texte = _contoure
+        ? (danger ? AppColors.errorRed : (color ?? AppColors.primaryBlueAnthracite))
+        : AppColors.white;
+    final Color? fondUni = _contoure
+        ? AppColors.white
+        : (color ?? (primary ? null : AppColors.primaryBlueAnthracite));
+    final bool degrade = !_contoure && fondUni == null;
+
+    return Opacity(
+      opacity: onPressed == null && !loading ? 0.55 : 1,
+      child: Container(
         height: height,
-        child: OutlinedButton(
-          onPressed: loading ? null : onPressed,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: fg,
-            backgroundColor: Colors.white,
-            side: BorderSide(color: danger ? AppColors.errorRed.withOpacity(0.55) : AppColors.borderLight, width: 1.5),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (loading)
-                SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: fg))
-              else if (icon != null)
-                Icon(icon, size: 18),
-              if (loading || icon != null) const SizedBox(width: 8),
-              Flexible(
-                child: Text(label,
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+        decoration: BoxDecoration(
+          color: fondUni,
+          gradient: degrade ? AppGradients.cta : null,
+          borderRadius: AppRadius.button,
+          border: _contoure
+              ? Border.all(
+                  color: danger ? AppColors.errorRed.withValues(alpha: 0.5) : AppColors.borderLight,
+                  width: 1.5,
+                )
+              : null,
+          boxShadow: degrade && actif ? AppShadows.cta : null,
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: AppRadius.button,
+            onTap: actif ? onPressed : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + AppSpacing.xs),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (loading)
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: texte),
+                    )
+                  else if (icon != null)
+                    Icon(icon, size: 19, color: texte),
+                  if (loading || icon != null) const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.buttonLarge.copyWith(color: texte, fontSize: 14),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      );
-    }
-    final bg = color ?? (primary ? AppColors.primaryOcre : AppColors.primaryBlueAnthracite);
-    final child = Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (loading)
-          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-        else if (icon != null)
-          Icon(icon, size: 19),
-        if (loading || icon != null) const SizedBox(width: 8),
-        Flexible(
-          child: Text(label,
-              maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-        ),
-      ],
-    );
-    return SizedBox(
-      height: height,
-      child: ElevatedButton(
-        onPressed: loading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: bg,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: bg.withOpacity(0.6),
-          disabledForegroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        child: child,
       ),
     );
   }
@@ -201,41 +216,26 @@ class DetailHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 14),
+      padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    height: 1.15,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.primaryBlueAnthracite,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              StatusPill(label: statusLabel, color: statusColor),
-            ],
-          ),
+          StatusPill(label: statusLabel, color: statusColor),
+          const SizedBox(height: AppSpacing.sm + AppSpacing.xxs),
+          Text(title, style: AppTextStyles.pageTitle.copyWith(fontSize: 26)),
           if (subtitle != null && subtitle!.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             InkWell(
               onTap: onSubtitleTap,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: AppRadius.radiusSm,
               child: Row(
                 children: [
                   Icon(subtitleIcon, size: 17, color: AppColors.primaryOcre),
-                  const SizedBox(width: 5),
+                  const SizedBox(width: AppSpacing.xs + AppSpacing.xxs),
                   Expanded(
                     child: Text(
                       subtitle!,
-                      style: const TextStyle(fontSize: 13.5, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   if (onSubtitleTap != null)
@@ -245,10 +245,10 @@ class DetailHeader extends StatelessWidget {
             ),
           ],
           if (tags.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm + AppSpacing.xs),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
               children: [for (final t in tags) _Tag(t)],
             ),
           ],
@@ -265,20 +265,28 @@ class _Tag extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + AppSpacing.xxs, vertical: AppSpacing.xs + 1),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.white,
+        borderRadius: AppRadius.radiusRound,
         border: Border.all(color: AppColors.borderLight),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: AppColors.primaryBlueAnthracite),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.verified_outlined, size: 13, color: AppColors.successGreen),
+          const SizedBox(width: AppSpacing.xs),
+          Text(text, style: AppTextStyles.bodySmall.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.primaryBlueAnthracite,
+          )),
+        ],
       ),
     );
   }
 }
 
+/// Pastille de statut avec point coloré.
 class StatusPill extends StatelessWidget {
   final String label;
   final Color color;
@@ -287,14 +295,17 @@ class StatusPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.14), borderRadius: BorderRadius.circular(20)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + AppSpacing.xs, vertical: AppSpacing.xs + 1),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: AppRadius.radiusRound,
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-          const SizedBox(width: 6),
-          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 12)),
+          const SizedBox(width: AppSpacing.xs + AppSpacing.xxs),
+          Text(label, style: AppTextStyles.bodySmall.copyWith(color: color, fontWeight: FontWeight.w800)),
         ],
       ),
     );
@@ -309,67 +320,79 @@ class StatItem {
   const StatItem(this.icon, this.value, this.label, {this.highlight = false});
 }
 
-/// Bandeau de 2 à 3 chiffres clés.
+/// Bandeau de 2 à 3 chiffres clés, chacun dans sa pastille.
 class StatStrip extends StatelessWidget {
   final List<StatItem> items;
   const StatStrip({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < items.length; i++) ...[
+          if (i > 0) const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
+          Expanded(child: _StatTile(item: items[i])),
+        ],
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  final StatItem item;
+  const _StatTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final mise = item.highlight;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: _cardDecoration(),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            for (var i = 0; i < items.length; i++) ...[
-              if (i > 0) const VerticalDivider(width: 1, thickness: 1, color: AppColors.borderLight),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(items[i].icon, size: 20, color: AppColors.primaryOcre),
-                      const SizedBox(height: 6),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          items[i].value,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: items[i].highlight ? AppColors.primaryOcre : AppColors.primaryBlueAnthracite,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(items[i].label,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md - AppSpacing.xxs, horizontal: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: mise ? null : AppColors.white,
+        gradient: mise ? AppGradients.navy : null,
+        borderRadius: AppRadius.card,
+        border: mise ? null : Border.all(color: AppColors.borderLight),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(item.icon, size: 20, color: mise ? AppColors.primaryOcreLight : AppColors.primaryOcre),
+          const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              item.value,
+              maxLines: 1,
+              style: AppTextStyles.cardTitle.copyWith(
+                fontWeight: FontWeight.w800,
+                color: mise ? AppColors.white : AppColors.primaryBlueAnthracite,
               ),
-            ],
-          ],
-        ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            item.label,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodySmall.copyWith(
+              fontWeight: FontWeight.w600,
+              color: mise ? AppColors.onDarkMuted : AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 BoxDecoration _cardDecoration() => BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      color: AppColors.white,
+      borderRadius: AppRadius.card,
       border: Border.all(color: AppColors.borderLight),
-      boxShadow: [
-        BoxShadow(color: AppColors.primaryBlueAnthracite.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 5)),
-      ],
+      boxShadow: AppShadows.card,
     );
 
-/// Carte de section avec titre à barre orange.
+/// Carte de section avec titre à barre ocre.
 class DetailSection extends StatelessWidget {
   final String title;
   final Widget child;
@@ -379,13 +402,13 @@ class DetailSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 14),
+      padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Container(
         width: double.infinity,
         padding: padding,
@@ -397,16 +420,17 @@ class DetailSection extends StatelessWidget {
               children: [
                 Container(
                   width: 4,
-                  height: 16,
-                  decoration: BoxDecoration(color: AppColors.primaryOcre, borderRadius: BorderRadius.circular(4)),
+                  height: 18,
+                  decoration: const BoxDecoration(
+                    gradient: AppGradients.cta,
+                    borderRadius: AppRadius.radiusRound,
+                  ),
                 ),
-                const SizedBox(width: 8),
-                Text(title,
-                    style: const TextStyle(
-                        fontSize: 15.5, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite)),
+                const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
+                Expanded(child: Text(title, style: AppTextStyles.cardTitle)),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: AppSpacing.md - AppSpacing.xxs),
             child,
           ],
         ),
@@ -415,7 +439,7 @@ class DetailSection extends StatelessWidget {
   }
 }
 
-/// Ligne « libellé — valeur » séparée par un filet.
+/// Lignes « libellé — valeur » séparées par un filet.
 class InfoRows extends StatelessWidget {
   final List<(String, String)> rows;
   const InfoRows({super.key, required this.rows});
@@ -426,21 +450,20 @@ class InfoRows extends StatelessWidget {
       children: [
         for (var i = 0; i < rows.length; i++)
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm + AppSpacing.xs),
             decoration: BoxDecoration(
               border: i == 0 ? null : const Border(top: BorderSide(color: AppColors.grey200)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(rows[i].$1, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13.5)),
-                const SizedBox(width: 12),
+                Text(rows[i].$1, style: AppTextStyles.bodyMedium),
+                const SizedBox(width: AppSpacing.md),
                 Flexible(
                   child: Text(
                     rows[i].$2,
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 13.5, color: AppColors.primaryBlueAnthracite),
+                    style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
@@ -463,27 +486,31 @@ class FeatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = ok ? AppColors.successGreen : AppColors.grey500;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + AppSpacing.xxs, vertical: AppSpacing.md - AppSpacing.xs),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        color: ok ? AppColors.successGreenSoft : AppColors.grey100,
+        borderRadius: AppRadius.radiusLg,
       ),
       child: Column(
         children: [
-          Icon(icon, size: 22, color: color),
-          const SizedBox(height: 6),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle),
+            child: Icon(icon, size: 19, color: color),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Text(title,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite)),
-          const SizedBox(height: 2),
+              style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: AppSpacing.xxs),
           Text(subtitle,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+              style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w700, color: color)),
         ],
       ),
     );
@@ -500,7 +527,7 @@ class FeatureRow extends StatelessWidget {
     return Row(
       children: [
         for (var i = 0; i < tiles.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
+          if (i > 0) const SizedBox(width: AppSpacing.sm),
           Expanded(child: tiles[i]),
         ],
       ],
@@ -533,42 +560,44 @@ class AppFilterBar<T> extends StatelessWidget {
     required this.options,
     required this.selected,
     required this.onChanged,
-    this.padding = const EdgeInsets.symmetric(horizontal: 16),
+    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.md + AppSpacing.xs),
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 42,
+      height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: padding,
         itemCount: options.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
         itemBuilder: (_, i) {
           final o = options[i];
           final on = o.value == selected;
           final color = o.color ?? AppColors.primaryOcre;
-          return Material(
-            color: on ? color : Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(24),
-              onTap: () => onChanged(o.value),
-              child: Container(
-                height: 40,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: on ? color : AppColors.borderLight),
-                ),
-                child: Text(
-                  o.label,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: on ? Colors.white : AppColors.primaryBlueAnthracite,
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            decoration: BoxDecoration(
+              color: on ? color : AppColors.white,
+              borderRadius: AppRadius.radiusRound,
+              border: Border.all(color: on ? color : AppColors.borderLight),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: AppRadius.radiusRound,
+                onTap: () => onChanged(o.value),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: Center(
+                    child: Text(
+                      o.label,
+                      style: AppTextStyles.label.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: on ? AppColors.white : AppColors.primaryBlueAnthracite,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -580,7 +609,7 @@ class AppFilterBar<T> extends StatelessWidget {
   }
 }
 
-/// Champ de recherche unique.
+/// Champ de recherche unique (s'appuie sur le thème des champs).
 class AppSearchField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
@@ -590,26 +619,17 @@ class AppSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderLight),
-      ),
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: AppRadius.input, boxShadow: AppShadows.card),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(fontSize: 14, color: AppColors.primaryBlueAnthracite),
+        textInputAction: TextInputAction.search,
+        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryBlueAnthracite),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(fontSize: 13, color: AppColors.grey500.withOpacity(0.9), fontWeight: FontWeight.w500),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.searchIcon, size: 22),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          filled: false,
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          prefixIcon: const Icon(Icons.search_rounded, size: 22),
+          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.md - AppSpacing.xxs),
         ),
       ),
     );

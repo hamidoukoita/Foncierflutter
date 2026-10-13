@@ -7,5 +7,7 @@ final mesReservationsProvider =
     FutureProvider.autoDispose<List<ReservationModel>>((ref) async {
   final user = ref.watch(authProvider).user;
   if (user == null) throw Exception('Non connecté');
-  return ref.watch(reservationRepositoryProvider).getReservationsByAcquereur(user.id);
+  return ref
+      .watch(reservationRepositoryProvider)
+      .getReservationsByAcquereur(user.id);
 });

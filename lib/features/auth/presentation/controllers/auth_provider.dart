@@ -121,6 +121,14 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  /// Renomme l'utilisateur connecté (serveur + session locale).
+  Future<void> modifierIdentite({required String nom, required String prenom}) async {
+    final user = state.user;
+    if (user == null) return;
+    final misAJour = await _repo.modifierIdentite(user, nom: nom.trim(), prenom: prenom.trim());
+    state = state.copyWith(user: misAJour);
+  }
+
   Future<void> logout() async {
     await _repo.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);

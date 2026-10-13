@@ -3,7 +3,7 @@ import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
 
-/// Petite pastille à fond pastel (statuts, labels, délais).
+/// Pastille arrondie à fond pastel (statuts, labels, délais).
 class SoftBadge extends StatelessWidget {
   final String label;
   final Color background;
@@ -22,25 +22,29 @@ class SoftBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
+        horizontal: AppSpacing.sm + AppSpacing.xxs,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: AppRadius.radiusSm,
+        borderRadius: AppRadius.radiusRound,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 12, color: foreground),
+            Icon(icon, size: 13, color: foreground),
             const SizedBox(width: AppSpacing.xs),
           ],
-          Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: foreground,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: foreground,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

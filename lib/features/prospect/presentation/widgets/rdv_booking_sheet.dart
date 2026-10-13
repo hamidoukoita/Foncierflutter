@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_gradients.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/circle_icon_button.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/providers/repository_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
@@ -65,8 +72,18 @@ class RdvBookingSheet extends ConsumerStatefulWidget {
 class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
   static const _joursCourts = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
   static const _moisNoms = [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre',
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
   ];
 
   late final List<DateTime> _jours = _prochainsJours();
@@ -88,9 +105,11 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
     return out;
   }
 
-  DateTime _debut(DateTime jour, RdvPeriode p) => DateTime(jour.year, jour.month, jour.day, p.heureDebut);
+  DateTime _debut(DateTime jour, RdvPeriode p) =>
+      DateTime(jour.year, jour.month, jour.day, p.heureDebut);
 
-  bool _periodePassee(DateTime jour, RdvPeriode p) => _debut(jour, p).isBefore(DateTime.now());
+  bool _periodePassee(DateTime jour, RdvPeriode p) =>
+      _debut(jour, p).isBefore(DateTime.now());
 
   String get _lieuTexte {
     if (_type == 'SIEGE') {
@@ -114,7 +133,8 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
       return;
     }
     if (_periodePassee(jour, periode)) {
-      setState(() => _error = 'Cette plage est déjà passée : choisissez un autre créneau.');
+      setState(() => _error =
+          'Cette plage est déjà passée : choisissez un autre créneau.');
       return;
     }
 
@@ -135,7 +155,9 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
       ref.invalidate(mesVisitesProvider);
       navigator.pop();
       messenger.showSnackBar(
-        const SnackBar(content: Text('Demande envoyée : la société confirmera votre rendez-vous')),
+        const SnackBar(
+            content: Text(
+                'Demande envoyée : la société confirmera votre rendez-vous')),
       );
     } catch (e) {
       if (mounted) {
@@ -158,26 +180,29 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md + AppSpacing.xs,
+                  AppSpacing.sm, AppSpacing.md + AppSpacing.xs, AppSpacing.xs),
               child: Row(
                 children: [
-                  _roundButton(Icons.arrow_back_ios_new_rounded, () => Navigator.of(context).pop()),
-                  const SizedBox(width: 12),
+                  CircleIconButton(
+                      icon: Icons.arrow_back_ios_new_rounded,
+                      onPressed: () => Navigator.of(context).pop()),
+                  const SizedBox(width: AppSpacing.md - AppSpacing.xs),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Prise de rendez-vous',
-                            style: TextStyle(
-                                fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.primaryBlueAnthracite)),
+                        Text('Prise de rendez-vous', style: AppTextStyles.h3),
                         Text(
                           [
-                            if ((widget.societeNom ?? '').isNotEmpty) widget.societeNom!,
+                            if ((widget.societeNom ?? '').isNotEmpty)
+                              widget.societeNom!,
                             widget.bienLabel,
                           ].join(' • '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                          style: AppTextStyles.bodySmall
+                              .copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -187,7 +212,11 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md + AppSpacing.xs,
+                    AppSpacing.md - AppSpacing.xs,
+                    AppSpacing.md + AppSpacing.xs,
+                    AppSpacing.lg),
                 children: [
                   _titre('Lieu de rencontre'),
                   Row(
@@ -195,18 +224,22 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                       Expanded(
                         child: _LieuCard(
                           icon: Icons.business_rounded,
-                          titre: (widget.societeNom ?? '').isNotEmpty ? 'Au siège ${widget.societeNom}' : 'Au siège',
+                          titre: (widget.societeNom ?? '').isNotEmpty
+                              ? 'Au siège ${widget.societeNom}'
+                              : 'Au siège',
                           sous: 'Rendez-vous en agence',
                           selected: _type == 'SIEGE',
                           onTap: () => setState(() => _type = 'SIEGE'),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
                       Expanded(
                         child: _LieuCard(
                           icon: Icons.place_rounded,
                           titre: 'Sur le chantier',
-                          sous: (widget.chantierLabel ?? '').isNotEmpty ? widget.chantierLabel! : 'Visite sur site',
+                          sous: (widget.chantierLabel ?? '').isNotEmpty
+                              ? widget.chantierLabel!
+                              : 'Visite sur site',
                           selected: _type == 'CHANTIER',
                           onTap: () => setState(() => _type = 'CHANTIER'),
                         ),
@@ -219,7 +252,9 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                       Expanded(child: _titre('Choisir le jour', bottom: 0)),
                       Text(
                         _moisAffiche(),
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.primaryOcre),
+                        style: AppTextStyles.label.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primaryOcre),
                       ),
                     ],
                   ),
@@ -229,7 +264,8 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _jours.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: AppSpacing.sm),
                       itemBuilder: (_, i) {
                         final d = _jours[i];
                         final on = jour != null && d == jour;
@@ -237,30 +273,37 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                           onTap: () => setState(() {
                             _jour = d;
                             // Si la plage choisie est déjà passée aujourd'hui, on la désélectionne.
-                            if (_periode != null && _periodePassee(d, _periode!)) _periode = null;
+                            if (_periode != null &&
+                                _periodePassee(d, _periode!)) {
+                              _periode = null;
+                            }
                           }),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 160),
                             width: 62,
                             decoration: BoxDecoration(
-                              color: on ? AppColors.primaryOcre : Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: on ? AppColors.primaryOcre : AppColors.borderLight),
+                              color: on ? null : AppColors.white,
+                              gradient: on ? AppGradients.cta : null,
+                              borderRadius: AppRadius.radiusXl,
+                              border: on
+                                  ? null
+                                  : Border.all(color: AppColors.borderLight),
+                              boxShadow: on ? AppShadows.cta : null,
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(_joursCourts[d.weekday - 1],
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
-                                        color: on ? Colors.white70 : AppColors.textSecondary)),
-                                const SizedBox(height: 4),
+                                    style: AppTextStyles.overline.copyWith(
+                                        color: on
+                                            ? AppColors.primaryOcreSoft
+                                            : AppColors.textSecondary)),
+                                const SizedBox(height: AppSpacing.xs),
                                 Text('${d.day}',
-                                    style: TextStyle(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w900,
-                                        color: on ? Colors.white : AppColors.primaryBlueAnthracite)),
+                                    style: AppTextStyles.h2.copyWith(
+                                        color: on
+                                            ? AppColors.white
+                                            : AppColors.primaryBlueAnthracite)),
                               ],
                             ),
                           ),
@@ -273,7 +316,8 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                   Row(
                     children: [
                       for (final p in RdvPeriode.values) ...[
-                        if (p != RdvPeriode.values.first) const SizedBox(width: 10),
+                        if (p != RdvPeriode.values.first)
+                          const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
                         Expanded(
                           child: _PeriodeButton(
                             periode: p,
@@ -286,26 +330,26 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                     ],
                   ),
                   if (jour == null)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.sm),
                       child: Text('Choisissez d\'abord un jour.',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                          style: AppTextStyles.bodySmall),
                     ),
                   const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    decoration: appCardDecoration(),
+                  AppCard(
                     child: Row(
                       children: [
-                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.primaryOcre, shape: BoxShape.circle)),
-                        const SizedBox(width: 12),
+                        Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(
+                                color: AppColors.primaryOcre,
+                                shape: BoxShape.circle)),
+                        const SizedBox(width: AppSpacing.md - AppSpacing.xs),
                         Expanded(
-                          child: Text(
-                            'Visite — ${widget.bienLabel}',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.primaryBlueAnthracite),
-                          ),
-                        ),
+                            child: Text('Visite — ${widget.bienLabel}',
+                                style: AppTextStyles.cardTitle
+                                    .copyWith(fontSize: 14))),
                       ],
                     ),
                   ),
@@ -320,16 +364,20 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
                   if (_error != null) ...[
                     const SizedBox(height: 14),
                     Text(_error!,
-                        style: const TextStyle(color: AppColors.errorRed, fontSize: 13, fontWeight: FontWeight.w700)),
+                        style: AppTextStyles.label.copyWith(
+                            color: AppColors.errorRed,
+                            fontWeight: FontWeight.w700)),
                   ],
                 ],
               ),
             ),
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [BoxShadow(color: AppColors.primaryBlueAnthracite.withOpacity(0.08), blurRadius: 18, offset: const Offset(0, -4))],
+                color: AppColors.white,
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppRadius.xxl)),
+                boxShadow: AppShadows.floating,
               ),
               child: SizedBox(
                 width: double.infinity,
@@ -352,20 +400,10 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
     return '${_moisNoms[d.month - 1]} ${d.year}';
   }
 
-  Widget _titre(String t, {double bottom = 10}) => Padding(
+  Widget _titre(String t, {double bottom = AppSpacing.sm + AppSpacing.xxs}) =>
+      Padding(
         padding: EdgeInsets.only(bottom: bottom),
-        child: Text(t,
-            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite)),
-      );
-
-  Widget _roundButton(IconData icon, VoidCallback onTap) => Material(
-        color: Colors.white,
-        shape: const CircleBorder(side: BorderSide(color: AppColors.borderLight)),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(width: 42, height: 42, child: Icon(icon, size: 18, color: AppColors.primaryBlueAnthracite)),
-        ),
+        child: Text(t, style: AppTextStyles.cardTitle.copyWith(fontSize: 15)),
       );
 }
 
@@ -376,7 +414,12 @@ class _LieuCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _LieuCard({required this.icon, required this.titre, required this.sous, required this.selected, required this.onTap});
+  const _LieuCard(
+      {required this.icon,
+      required this.titre,
+      required this.sous,
+      required this.selected,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -384,12 +427,15 @@ class _LieuCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
         constraints: const BoxConstraints(minHeight: 108),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: selected ? AppColors.primaryOcre : AppColors.borderLight, width: selected ? 2 : 1),
+          color: AppColors.white,
+          borderRadius: AppRadius.radiusXl,
+          border: Border.all(
+              color: selected ? AppColors.primaryOcre : AppColors.borderLight,
+              width: selected ? 2 : 1),
+          boxShadow: AppShadows.card,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,28 +446,37 @@ class _LieuCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: selected ? AppColors.primaryOcre.withOpacity(0.15) : AppColors.backgroundOffWhite,
-                    borderRadius: BorderRadius.circular(10),
+                    color: selected
+                        ? AppColors.primaryOcreSoft
+                        : AppColors.backgroundOffWhite,
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(icon, size: 20, color: selected ? AppColors.primaryOcre : AppColors.textSecondary),
+                  child: Icon(icon,
+                      size: 20,
+                      color: selected
+                          ? AppColors.primaryOcre
+                          : AppColors.textSecondary),
                 ),
                 const Spacer(),
-                if (selected) const Icon(Icons.check_circle_rounded, size: 20, color: AppColors.primaryOcre),
+                if (selected)
+                  const Icon(Icons.check_circle_rounded,
+                      size: 20, color: AppColors.primaryOcre),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.sm + AppSpacing.xxs),
             Text(titre,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite)),
-            const SizedBox(height: 2),
+                style: AppTextStyles.cardTitle.copyWith(fontSize: 14)),
+            const SizedBox(height: AppSpacing.xxs),
             Text(sous,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                    fontSize: 11.5,
+                style: AppTextStyles.bodySmall.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: selected ? AppColors.primaryOcre : AppColors.textSecondary)),
+                    color: selected
+                        ? AppColors.primaryOcre
+                        : AppColors.textSecondary)),
           ],
         ),
       ),
@@ -435,11 +490,17 @@ class _PeriodeButton extends StatelessWidget {
   final bool enabled;
   final VoidCallback onTap;
 
-  const _PeriodeButton({required this.periode, required this.selected, required this.enabled, required this.onTap});
+  const _PeriodeButton(
+      {required this.periode,
+      required this.selected,
+      required this.enabled,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final fg = selected ? Colors.white : (enabled ? AppColors.primaryBlueAnthracite : AppColors.grey400);
+    final fg = selected
+        ? AppColors.white
+        : (enabled ? AppColors.primaryBlueAnthracite : AppColors.grey400);
     return Opacity(
       opacity: enabled ? 1 : 0.55,
       child: GestureDetector(
@@ -448,17 +509,25 @@ class _PeriodeButton extends StatelessWidget {
           duration: const Duration(milliseconds: 160),
           height: 64,
           decoration: BoxDecoration(
-            color: selected ? AppColors.primaryOcre : Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: selected ? AppColors.primaryOcre : AppColors.borderLight),
+            color: selected ? null : AppColors.white,
+            gradient: selected ? AppGradients.cta : null,
+            borderRadius: AppRadius.radiusXl,
+            border: selected ? null : Border.all(color: AppColors.borderLight),
+            boxShadow: selected ? AppShadows.cta : null,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(periode.libelle, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: fg)),
-              const SizedBox(height: 2),
+              Text(periode.libelle,
+                  style: AppTextStyles.cardTitle
+                      .copyWith(fontSize: 15, color: fg)),
+              const SizedBox(height: AppSpacing.xxs),
               Text(periode.horaires,
-                  style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: selected ? Colors.white70 : AppColors.textSecondary)),
+                  style: AppTextStyles.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: selected
+                          ? AppColors.primaryOcreSoft
+                          : AppColors.textSecondary)),
             ],
           ),
         ),
@@ -476,32 +545,43 @@ class _Recap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final d = date.isEmpty ? date : '${date[0].toUpperCase()}${date.substring(1)}';
+    final d =
+        date.isEmpty ? date : '${date[0].toUpperCase()}${date.substring(1)}';
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
       decoration: BoxDecoration(
-        color: AppColors.primaryBlueAnthracite,
-        borderRadius: BorderRadius.circular(20),
+        gradient: AppGradients.navy,
+        borderRadius: AppRadius.card,
+        boxShadow: AppShadows.floating,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(width: 7, height: 7, decoration: const BoxDecoration(color: AppColors.primaryOcre, shape: BoxShape.circle)),
-              const SizedBox(width: 8),
-              const Text('RÉCAPITULATIF DU RENDEZ-VOUS',
-                  style: TextStyle(fontSize: 10.5, letterSpacing: 0.6, fontWeight: FontWeight.w800, color: Colors.white60)),
+              Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                      color: AppColors.primaryOcre, shape: BoxShape.circle)),
+              const SizedBox(width: AppSpacing.sm),
+              Text('RÉCAPITULATIF DU RENDEZ-VOUS',
+                  style: AppTextStyles.overline
+                      .copyWith(color: AppColors.onDarkMuted)),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(d, style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white)),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.md - AppSpacing.xs),
+          Text(d, style: AppTextStyles.h3.copyWith(color: AppColors.white)),
+          const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
           Text('${periode.libelle} · ${periode.horaires}',
-              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFFF2B27A))),
-          const SizedBox(height: 4),
-          Text(lieu, style: const TextStyle(fontSize: 13, color: Colors.white70)),
+              style: AppTextStyles.label.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryOcreLight)),
+          const SizedBox(height: AppSpacing.xs),
+          Text(lieu,
+              style: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.onDarkMuted)),
         ],
       ),
     );

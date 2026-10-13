@@ -28,7 +28,8 @@ class LotProgrammeRepository {
       (data) => LotProgramme.fromJson(data as Map<String, dynamic>),
     );
     if (!parsed.success || parsed.data == null) {
-      throw Exception(parsed.message.isEmpty ? 'Lot introuvable' : parsed.message);
+      throw Exception(
+          parsed.message.isEmpty ? 'Lot introuvable' : parsed.message);
     }
     return parsed.data!;
   }

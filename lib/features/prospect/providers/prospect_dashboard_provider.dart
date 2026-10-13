@@ -104,7 +104,9 @@ class ProspectDashboardNotifier extends AsyncNotifier<ProspectDashboardState> {
 
   void setFiltreType(String type) {
     final current = state.valueOrNull;
-    if (current != null) state = AsyncValue.data(current.copyWith(filtreType: type));
+    if (current != null) {
+      state = AsyncValue.data(current.copyWith(filtreType: type));
+    }
   }
 
   Future<bool> reserverBien(int bienId) async {
@@ -112,7 +114,9 @@ class ProspectDashboardNotifier extends AsyncNotifier<ProspectDashboardState> {
     if (user == null) return false;
 
     try {
-      await ref.read(reservationRepositoryProvider).reserverBien(bienId, user.id);
+      await ref
+          .read(reservationRepositoryProvider)
+          .reserverBien(bienId, user.id);
       await refresh();
       return true;
     } catch (_) {

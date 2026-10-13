@@ -28,7 +28,8 @@ class ProgrammeRepository {
       (data) => ProgrammeFoncier.fromJson(data as Map<String, dynamic>),
     );
     if (!parsed.success || parsed.data == null) {
-      throw Exception(parsed.message.isEmpty ? 'Programme introuvable' : parsed.message);
+      throw Exception(
+          parsed.message.isEmpty ? 'Programme introuvable' : parsed.message);
     }
     return parsed.data!;
   }

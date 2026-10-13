@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/info_banner.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/lot_programme.dart';
@@ -41,7 +44,9 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
     );
     if (ok) {
       ref.invalidate(lotDetailProvider(widget.lotId));
-      if (lot.programmeId != null) ref.invalidate(lotsByProgrammeProvider(lot.programmeId!));
+      if (lot.programmeId != null) {
+        ref.invalidate(lotsByProgrammeProvider(lot.programmeId!));
+      }
     }
     if (mounted) setState(() => _reserving = false);
   }
@@ -53,7 +58,8 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
     if (mounted) setState(() => _annulant = false);
   }
 
-  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  static String _n(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +69,8 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
     return async.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundOffWhite,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+        body: Center(
+            child: CircularProgressIndicator(color: AppColors.primaryOcre)),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: AppColors.backgroundOffWhite,
@@ -77,16 +84,22 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
       ),
       data: (lot) {
         final programmeId = lot.programmeId;
-        final ProgrammeFoncier? programme =
-            programmeId != null ? ref.watch(programmeDetailProvider(programmeId)).valueOrNull : null;
-        final fam = familleDeStatut(lot.statut);
-        final maReservation = maReservationEnAttente(ref.watch(mesReservationsProvider).valueOrNull, lot.id);
-        final numero = (lot.numeroLot ?? '').isNotEmpty ? lot.numeroLot! : '${lot.id}';
-        final titre = numero.toLowerCase().startsWith('lot') ? numero : 'Lot $numero';
-        final hasPlan = programmeId != null && PlanGeometry.parse(lot.geometryJson)?.isPolygon == true;
-        final prixM2 = (lot.superficie != null && lot.prix != null && lot.superficie! > 0)
-            ? lot.prix! / lot.superficie!
+        final ProgrammeFoncier? programme = programmeId != null
+            ? ref.watch(programmeDetailProvider(programmeId)).valueOrNull
             : null;
+        final fam = familleDeStatut(lot.statut);
+        final maReservation = maReservationEnAttente(
+            ref.watch(mesReservationsProvider).valueOrNull, lot.id);
+        final numero =
+            (lot.numeroLot ?? '').isNotEmpty ? lot.numeroLot! : '${lot.id}';
+        final titre =
+            numero.toLowerCase().startsWith('lot') ? numero : 'Lot $numero';
+        final hasPlan = programmeId != null &&
+            PlanGeometry.parse(lot.geometryJson)?.isPolygon == true;
+        final prixM2 =
+            (lot.superficie != null && lot.prix != null && lot.superficie! > 0)
+                ? lot.prix! / lot.superficie!
+                : null;
 
         return DetailPage(
           title: titre,
@@ -136,27 +149,42 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
               statusColor: couleurFamille(fam),
               subtitle: lot.programmeNom,
               subtitleIcon: Icons.apartment_rounded,
-              onSubtitleTap: programmeId == null ? null : () => context.push('/prospect/programmes/$programmeId'),
+              onSubtitleTap: programmeId == null
+                  ? null
+                  : () => context.push('/prospect/programmes/$programmeId'),
               tags: [
                 if ((lot.reference ?? '').isNotEmpty) 'RÉF : ${lot.reference}',
-                if ((lot.numeroIlot ?? '').isNotEmpty) 'ÎLOT : ${lot.numeroIlot}',
+                if ((lot.numeroIlot ?? '').isNotEmpty)
+                  'ÎLOT : ${lot.numeroIlot}',
               ],
             ),
             StatStrip(
               items: [
-                StatItem(Icons.square_foot_rounded, lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—', 'surface'),
-                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(lot.prix), 'prix de vente', highlight: true),
-                if (prixM2 != null) StatItem(Icons.calculate_outlined, CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
+                StatItem(
+                    Icons.square_foot_rounded,
+                    lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—',
+                    'surface'),
+                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(lot.prix),
+                    'prix de vente',
+                    highlight: true),
+                if (prixM2 != null)
+                  StatItem(Icons.calculate_outlined,
+                      CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
               ],
             ),
             DetailSection(
               title: 'Caractéristiques du lot',
               child: InfoRows(
                 rows: [
-                  ('Surface', lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—'),
+                  (
+                    'Surface',
+                    lot.superficie != null ? '${_n(lot.superficie!)} m²' : '—'
+                  ),
                   if (lot.facade != null) ('Façade', '${_n(lot.facade!)} m'),
-                  if (lot.profondeur != null) ('Profondeur', '${_n(lot.profondeur!)} m'),
-                  if ((lot.numeroIlot ?? '').isNotEmpty) ('Îlot', lot.numeroIlot!),
+                  if (lot.profondeur != null)
+                    ('Profondeur', '${_n(lot.profondeur!)} m'),
+                  if ((lot.numeroIlot ?? '').isNotEmpty)
+                    ('Îlot', lot.numeroIlot!),
                   ('Statut', libelleFamille(fam)),
                 ],
               ),
@@ -169,19 +197,25 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
                     FeatureTile(
                       icon: Icons.water_drop_outlined,
                       title: 'Eau potable',
-                      subtitle: programme.eauSomapep == true ? 'Raccordé' : 'Non raccordé',
+                      subtitle: programme.eauSomapep == true
+                          ? 'Raccordé'
+                          : 'Non raccordé',
                       ok: programme.eauSomapep == true,
                     ),
                     FeatureTile(
                       icon: Icons.bolt_outlined,
                       title: 'Réseau EDM',
-                      subtitle: programme.electriciteEdm == true ? 'Disponible' : 'Non raccordé',
+                      subtitle: programme.electriciteEdm == true
+                          ? 'Disponible'
+                          : 'Non raccordé',
                       ok: programme.electriciteEdm == true,
                     ),
                     FeatureTile(
                       icon: Icons.alt_route_rounded,
                       title: 'Voirie',
-                      subtitle: programme.voirieBitumee == true ? 'Bitumée' : 'Non bitumée',
+                      subtitle: programme.voirieBitumee == true
+                          ? 'Bitumée'
+                          : 'Non bitumée',
                       ok: programme.voirieBitumee == true,
                     ),
                   ],
@@ -189,66 +223,34 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
               ),
             if (maReservation != null) ...[
               const SizedBox(height: 14),
-              _MaReservationBanner(numeroDossier: maReservation.numeroDossier),
+              InfoBanner.reservationEnAttente(
+                  numeroDossier: maReservation.numeroDossier),
             ],
             const SizedBox(height: 14),
-            ReservationRuleBanner(reservationMultiple: lot.reservationMultiple, isReserve: lot.isReserve),
+            ReservationRuleBanner(
+                reservationMultiple: lot.reservationMultiple,
+                isReserve: lot.isReserve),
             if (hasPlan) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: () => context.push('/prospect/programmes/$programmeId/plan?lot=${lot.id}'),
+                onPressed: () => context.push(
+                    '/prospect/programmes/$programmeId/plan?lot=${lot.id}'),
                 icon: const Icon(Icons.map_outlined, size: 18),
                 label: const Text('Voir ce lot sur le plan de masse'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primaryBlueAnthracite,
-                  backgroundColor: Colors.white,
-                  side: const BorderSide(color: AppColors.borderLight),
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
+                    minimumSize: const Size.fromHeight(AppSizes.buttonMedium)),
               ),
             ],
             if (!lot.peutEtreReserve) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: AppColors.grey100, borderRadius: BorderRadius.circular(14)),
-                child: const Text('Ce lot n\'est pas réservable pour le moment.',
-                    style: TextStyle(color: AppColors.grey600)),
+              const SizedBox(height: AppSpacing.md - AppSpacing.xs),
+              const InfoBanner(
+                icone: Icons.block_rounded,
+                message: 'Ce lot n\'est pas réservable pour le moment.',
               ),
             ],
           ],
         );
       },
-    );
-  }
-}
-
-class _MaReservationBanner extends StatelessWidget {
-  final String numeroDossier;
-  const _MaReservationBanner({required this.numeroDossier});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.ambreReservation24h.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.ambreReservation24h.withOpacity(0.4)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.hourglass_top_rounded, color: AppColors.ambreReservation24h),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'Votre réservation (dossier $numeroDossier) est en attente de la société. Vous pouvez l\'annuler à tout moment.',
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF9A5B00), height: 1.35),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -6,6 +6,7 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String registerAcquereur = '/auth/register';
   static const String registerSociete = '/auth/register-societe';
+  static String identiteAcquereur(int id) => '/acquereurs/$id/identite';
 
   // Programmes & lots
   static const String programmes = '/programmes-fonciers';

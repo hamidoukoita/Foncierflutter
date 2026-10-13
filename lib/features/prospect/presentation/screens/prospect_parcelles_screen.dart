@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/bien_foncier_card.dart';
@@ -16,10 +17,12 @@ class ProspectParcellesScreen extends ConsumerStatefulWidget {
   const ProspectParcellesScreen({super.key});
 
   @override
-  ConsumerState<ProspectParcellesScreen> createState() => _ProspectParcellesScreenState();
+  ConsumerState<ProspectParcellesScreen> createState() =>
+      _ProspectParcellesScreenState();
 }
 
-class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScreen> {
+class _ProspectParcellesScreenState
+    extends ConsumerState<ProspectParcellesScreen> {
   final _search = TextEditingController();
   String _query = '';
 
@@ -58,9 +61,7 @@ class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScree
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       body: async.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryOcre),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => EmptyStateView(
           icon: Icons.cloud_off_rounded,
           title: 'Parcelles indisponibles',
@@ -70,41 +71,48 @@ class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScree
         data: (parcelles) {
           final list = _filtrer(parcelles);
           return RefreshIndicator(
-            color: AppColors.primaryOcre,
             onRefresh: () async => ref.invalidate(parcellesProvider),
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal,
+                AppSpacing.xs,
+                AppSpacing.pageHorizontal,
+                AppSpacing.lg,
+              ),
               children: [
                 AppSearchField(
                   controller: _search,
                   hint: 'Rechercher une parcelle, un titre foncier…',
                   onChanged: (v) => setState(() => _query = v),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md - AppSpacing.xs),
                 AppFilterBar<String>(
                   padding: EdgeInsets.zero,
                   selected: _filtre,
                   onChanged: (v) => setState(() => _filtre = v),
                   options: [
                     AppFilterOption('TOUTES', 'Toutes (${parcelles.length})'),
-                    AppFilterOption('DISPONIBLES', 'Disponibles (${parcelles.where((b) => b.isDisponible).length})',
-                        color: AppColors.successGreen),
-                    AppFilterOption('RESERVEES', 'Réservées (${parcelles.where((b) => b.isReserve).length})',
-                        color: const Color(0xFFE5A96A)),
+                    AppFilterOption('DISPONIBLES',
+                        'Disponibles (${parcelles.where((b) => b.isDisponible).length})',
+                        color: AppColors.lotDisponible),
+                    AppFilterOption('RESERVEES',
+                        'Réservées (${parcelles.where((b) => b.isReserve).length})',
+                        color: AppColors.lotReserve),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
                 if (list.isEmpty)
                   const Padding(
-                    padding: EdgeInsets.only(top: 48),
+                    padding: EdgeInsets.only(top: AppSpacing.xxl),
                     child: EmptyStateView(
                       icon: Icons.grid_view_outlined,
                       title: 'Aucune parcelle trouvée',
-                      message: 'Aucune parcelle ne correspond à votre recherche ou au filtre choisi.',
+                      message:
+                          'Aucune parcelle ne correspond à votre recherche ou au filtre choisi.',
                     ),
                   )
                 else
-                  for (final b in list)
+                  for (final b in list) ...[
                     BienFoncierCard(
                       bien: b,
                       onTap: () => context.push('/prospect/parcelles/${b.id}'),
@@ -123,6 +131,8 @@ class _ProspectParcellesScreenState extends ConsumerState<ProspectParcellesScree
                         chantierLabel: b.localisation,
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
               ],
             ),
           );

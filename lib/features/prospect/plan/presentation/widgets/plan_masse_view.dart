@@ -13,7 +13,9 @@ class PlanLotShape {
 
   /// « L.104 » à partir du numéro de lot.
   String get etiquette {
-    final n = (lot.numeroLot ?? '').trim().replaceFirst(RegExp(r'^Lot\s*N°\s*', caseSensitive: false), '');
+    final n = (lot.numeroLot ?? '')
+        .trim()
+        .replaceFirst(RegExp(r'^Lot\s*N°\s*', caseSensitive: false), '');
     if (n.isEmpty) return 'L ${lot.id}';
     return 'L $n';
   }
@@ -38,7 +40,8 @@ Rect _bounds(List<PlanLotShape> lots, List<PlanElement> elements, double pad) {
     add(e.geometry.bounds);
   }
   final base = r ?? const Rect.fromLTWH(0, 0, 100, 100);
-  return base.inflate(pad).expandToInclude(Rect.fromLTRB(base.left - pad, base.top - pad, base.right + pad, base.bottom + pad + 30));
+  return base.inflate(pad).expandToInclude(Rect.fromLTRB(base.left - pad,
+      base.top - pad, base.right + pad, base.bottom + pad + 30));
 }
 
 /// Plan de masse interactif : zoom / déplacement, lots colorés par statut, tap pour sélectionner.
@@ -77,12 +80,13 @@ class _PlanMasseViewState extends State<PlanMasseView> {
   void _fit(Size viewport, Rect bounds) {
     if (_fittedFor == viewport) return;
     _fittedFor = viewport;
-    final scale = math.min(viewport.width / bounds.width, viewport.height / bounds.height);
+    final scale = math.min(
+        viewport.width / bounds.width, viewport.height / bounds.height);
     final dx = (viewport.width - bounds.width * scale) / 2;
     final dy = (viewport.height - bounds.height * scale) / 2;
     _controller.value = Matrix4.identity()
-      ..translate(dx, dy)
-      ..scale(scale);
+      ..translateByDouble(dx, dy, 0, 1)
+      ..scaleByDouble(scale, scale, scale, 1);
   }
 
   @override
@@ -91,7 +95,8 @@ class _PlanMasseViewState extends State<PlanMasseView> {
 
     return LayoutBuilder(
       builder: (context, c) {
-        final viewport = Size(c.maxWidth, c.maxHeight.isFinite ? c.maxHeight : c.maxWidth);
+        final viewport =
+            Size(c.maxWidth, c.maxHeight.isFinite ? c.maxHeight : c.maxWidth);
         _fit(viewport, bounds);
 
         return ClipRect(
@@ -106,7 +111,9 @@ class _PlanMasseViewState extends State<PlanMasseView> {
                 final p = d.localPosition + bounds.topLeft;
                 PlanLotShape? hit;
                 for (final s in widget.lots.reversed) {
-                  if (widget.filtre != null && s.famille != widget.filtre) continue;
+                  if (widget.filtre != null && s.famille != widget.filtre) {
+                    continue;
+                  }
                   if (s.geometry.contains(p)) {
                     hit = s;
                     break;
@@ -248,7 +255,8 @@ class PlanMassePainter extends CustomPainter {
     if (goudron) {
       canvas.drawPath(path, paint);
     } else {
-      _dashed(canvas, path, paint..strokeCap = StrokeCap.butt, dash: 10, gap: 8);
+      _dashed(canvas, path, paint..strokeCap = StrokeCap.butt,
+          dash: 10, gap: 8);
     }
   }
 
@@ -266,7 +274,8 @@ class PlanMassePainter extends CustomPainter {
     );
     _icon(canvas, _poiIcon(e.type), c, 20, _navy);
     if (showLabels && (e.nom ?? '').trim().isNotEmpty) {
-      _text(canvas, e.nom!.trim(), c.translate(0, 32), 15, _navy, bold: true, maxWidth: 160);
+      _text(canvas, e.nom!.trim(), c.translate(0, 32), 15, _navy,
+          bold: true, maxWidth: 160);
     }
   }
 
@@ -296,17 +305,21 @@ class PlanMassePainter extends CustomPainter {
     final isSel = s.lot.id == selectedLotId;
 
     if (actif) {
-      canvas.drawPath(path.shift(const Offset(0, 3)),
-          Paint()..color = Colors.black.withOpacity(0.12)..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
+      canvas.drawPath(
+          path.shift(const Offset(0, 3)),
+          Paint()
+            ..color = Colors.black.withValues(alpha: 0.12)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4));
     }
-    canvas.drawPath(path, Paint()..color = color.withOpacity(actif ? 1 : 0.2));
+    canvas.drawPath(
+        path, Paint()..color = color.withValues(alpha: actif ? 1 : 0.2));
     canvas.drawPath(
       path,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeJoin = StrokeJoin.round
-        ..color = Colors.white.withOpacity(actif ? 1 : 0.4),
+        ..color = Colors.white.withValues(alpha: actif ? 1 : 0.4),
     );
 
     if (isSel) {
@@ -327,23 +340,30 @@ class PlanMassePainter extends CustomPainter {
       final m = math.min(b.width, b.height);
       if (m >= 22) {
         final fs = math.min(18.0, m * 0.42);
-        _text(canvas, s.etiquette, s.geometry.centroid, fs, _navy, bold: true, maxWidth: b.width, heavy: true);
+        _text(canvas, s.etiquette, s.geometry.centroid, fs, _navy,
+            bold: true, maxWidth: b.width, heavy: true);
       }
     }
   }
 
-  void _icon(Canvas canvas, IconData icon, Offset center, double size, Color color) {
+  void _icon(
+      Canvas canvas, IconData icon, Offset center, double size, Color color) {
     final tp = TextPainter(
       text: TextSpan(
         text: String.fromCharCode(icon.codePoint),
-        style: TextStyle(fontSize: size, fontFamily: icon.fontFamily, package: icon.fontPackage, color: color),
+        style: TextStyle(
+            fontSize: size,
+            fontFamily: icon.fontFamily,
+            package: icon.fontPackage,
+            color: color),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 
-  void _text(Canvas canvas, String text, Offset center, double size, Color color,
+  void _text(
+      Canvas canvas, String text, Offset center, double size, Color color,
       {bool bold = false, double? maxWidth, bool heavy = false}) {
     final tp = TextPainter(
       text: TextSpan(
@@ -351,7 +371,9 @@ class PlanMassePainter extends CustomPainter {
         style: TextStyle(
           fontSize: size,
           color: color,
-          fontWeight: heavy ? FontWeight.w900 : (bold ? FontWeight.w800 : FontWeight.w700),
+          fontWeight: heavy
+              ? FontWeight.w900
+              : (bold ? FontWeight.w800 : FontWeight.w700),
         ),
       ),
       textAlign: TextAlign.center,
@@ -362,7 +384,8 @@ class PlanMassePainter extends CustomPainter {
     tp.paint(canvas, center - Offset(tp.width / 2, tp.height / 2));
   }
 
-  void _dashed(Canvas canvas, Path path, Paint paint, {required double dash, required double gap}) {
+  void _dashed(Canvas canvas, Path path, Paint paint,
+      {required double dash, required double gap}) {
     for (final metric in path.computeMetrics()) {
       var d = 0.0;
       while (d < metric.length) {

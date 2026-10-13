@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_gradients.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -25,47 +27,50 @@ class DayChip extends StatelessWidget {
     final texte = selected ? AppColors.white : AppColors.primaryBlueAnthracite;
     final pastille = selected ? AppColors.white : AppColors.primaryOcre;
 
-    return Material(
-      color: selected ? AppColors.primaryOcre : AppColors.white,
-      shape: RoundedRectangleBorder(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        color: selected ? null : AppColors.white,
+        gradient: selected ? AppGradients.cta : null,
         borderRadius: AppRadius.radiusXl,
-        side: BorderSide(
-          color: selected ? AppColors.primaryOcre : AppColors.borderLight,
-          width: 1.5,
-        ),
+        border: selected ? null : Border.all(color: AppColors.borderLight),
+        boxShadow: selected ? AppShadows.cta : AppShadows.card,
       ),
-      child: InkWell(
-        customBorder:
-            const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                DateFormatter.jourCourt(jour),
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? AppColors.white : AppColors.grey500,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          customBorder:
+              const RoundedRectangleBorder(borderRadius: AppRadius.radiusXl),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  DateFormatter.jourCourt(jour),
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: selected ? AppColors.white : AppColors.grey500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${jour.day}',
-                style: AppTextStyles.h4.copyWith(color: texte),
-              ),
-              const SizedBox(height: 2),
-              Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: aDesVisites ? pastille : Colors.transparent,
-                  shape: BoxShape.circle,
+                const SizedBox(height: 2),
+                Text(
+                  '${jour.day}',
+                  style: AppTextStyles.h4.copyWith(color: texte),
                 ),
-              ),
-            ],
+                const SizedBox(height: 2),
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: aDesVisites ? pastille : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

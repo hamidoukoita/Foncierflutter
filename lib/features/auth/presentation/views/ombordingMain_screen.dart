@@ -76,7 +76,7 @@ class OnboardingPage extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodySmall.copyWith(
                           color:
-                              AppColors.primaryBlueAnthracite.withOpacity(0.8),
+                              AppColors.primaryBlueAnthracite.withValues(alpha: 0.8),
                           fontWeight: FontWeight.w600,
                           height: 1.5,
                         ),

@@ -151,7 +151,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/prospect/cites',
-                builder: (context, state) => const ProspectCitesPlanScreen(),
+                builder: (context, state) {
+                  final zone = state.uri.queryParameters['zone'];
+                  return ProspectCitesPlanScreen(key: ValueKey(zone), zone: zone);
+                },
               ),
             ],
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/loc
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/widgets/localisation_preview_card.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/info_banner.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/rdv_booking_sheet.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
@@ -25,16 +27,19 @@ class ProspectParcelleDetailScreen extends ConsumerStatefulWidget {
   const ProspectParcelleDetailScreen({super.key, required this.parcelleId});
 
   @override
-  ConsumerState<ProspectParcelleDetailScreen> createState() => _ProspectParcelleDetailScreenState();
+  ConsumerState<ProspectParcelleDetailScreen> createState() =>
+      _ProspectParcelleDetailScreenState();
 }
 
-class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleDetailScreen> {
+class _ProspectParcelleDetailScreenState
+    extends ConsumerState<ProspectParcelleDetailScreen> {
   bool _reserving = false;
   bool _annulant = false;
 
   Future<void> _reserver(BienFoncierModel b) async {
     setState(() => _reserving = true);
-    await reserverBienAvecConfirmation(context, ref, bienId: b.id, libelle: b.designation);
+    await reserverBienAvecConfirmation(context, ref,
+        bienId: b.id, libelle: b.designation);
     if (mounted) setState(() => _reserving = false);
   }
 
@@ -45,7 +50,8 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
     if (mounted) setState(() => _annulant = false);
   }
 
-  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  static String _n(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +61,8 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
     return async.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundOffWhite,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+        body: Center(
+            child: CircularProgressIndicator(color: AppColors.primaryOcre)),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: AppColors.backgroundOffWhite,
@@ -69,7 +76,8 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
       ),
       data: (b) {
         final fam = familleDeStatut(b.statut);
-        final maReservation = maReservationEnAttente(ref.watch(mesReservationsProvider).valueOrNull, b.id);
+        final maReservation = maReservationEnAttente(
+            ref.watch(mesReservationsProvider).valueOrNull, b.id);
         final prixM2 = b.superficie > 0 ? b.prix / b.superficie : null;
 
         return DetailPage(
@@ -121,14 +129,20 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
               subtitle: b.societeNom,
               subtitleIcon: Icons.business_rounded,
               tags: [
-                if ((b.numeroTitreFoncier ?? '').isNotEmpty) 'TF : ${b.numeroTitreFoncier}',
+                if ((b.numeroTitreFoncier ?? '').isNotEmpty)
+                  'TF : ${b.numeroTitreFoncier}',
               ],
             ),
             StatStrip(
               items: [
-                StatItem(Icons.square_foot_rounded, '${_n(b.superficie)} m²', 'surface'),
-                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(b.prix), 'prix de vente', highlight: true),
-                if (prixM2 != null) StatItem(Icons.calculate_outlined, CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
+                StatItem(Icons.square_foot_rounded, '${_n(b.superficie)} m²',
+                    'surface'),
+                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(b.prix),
+                    'prix de vente',
+                    highlight: true),
+                if (prixM2 != null)
+                  StatItem(Icons.calculate_outlined,
+                      CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
               ],
             ),
             DetailSection(
@@ -144,8 +158,10 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
                 rows: [
                   ('Surface', '${_n(b.superficie)} m²'),
                   if (b.facade != null) ('Façade', '${_n(b.facade!)} m'),
-                  if (b.profondeur != null) ('Profondeur', '${_n(b.profondeur!)} m'),
-                  if ((b.numeroTitreFoncier ?? '').isNotEmpty) ('Titre foncier', b.numeroTitreFoncier!),
+                  if (b.profondeur != null)
+                    ('Profondeur', '${_n(b.profondeur!)} m'),
+                  if ((b.numeroTitreFoncier ?? '').isNotEmpty)
+                    ('Titre foncier', b.numeroTitreFoncier!),
                   ('Statut', libelleFamille(fam)),
                 ],
               ),
@@ -159,13 +175,16 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
                       FeatureTile(
                         icon: Icons.water_drop_outlined,
                         title: 'Eau potable',
-                        subtitle: b.eauSomapep == true ? 'Raccordé' : 'Non raccordé',
+                        subtitle:
+                            b.eauSomapep == true ? 'Raccordé' : 'Non raccordé',
                         ok: b.eauSomapep == true,
                       ),
                       FeatureTile(
                         icon: Icons.bolt_outlined,
                         title: 'Réseau EDM',
-                        subtitle: b.electriciteEdm == true ? 'Disponible' : 'Non raccordé',
+                        subtitle: b.electriciteEdm == true
+                            ? 'Disponible'
+                            : 'Non raccordé',
                         ok: b.electriciteEdm == true,
                       ),
                     ],
@@ -176,13 +195,16 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
                       FeatureTile(
                         icon: Icons.alt_route_rounded,
                         title: 'Voirie',
-                        subtitle: b.voieBitumee == true ? 'Bitumée' : 'Non bitumée',
+                        subtitle:
+                            b.voieBitumee == true ? 'Bitumée' : 'Non bitumée',
                         ok: b.voieBitumee == true,
                       ),
                       FeatureTile(
                         icon: Icons.fence_rounded,
                         title: 'Clôture',
-                        subtitle: b.murCloture == true ? 'Mur de clôture' : 'Sans clôture',
+                        subtitle: b.murCloture == true
+                            ? 'Mur de clôture'
+                            : 'Sans clôture',
                         ok: b.murCloture == true,
                       ),
                     ],
@@ -191,37 +213,19 @@ class _ProspectParcelleDetailScreenState extends ConsumerState<ProspectParcelleD
               ),
             ),
             if (maReservation != null) ...[
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppColors.ambreReservation24h.withOpacity(0.12),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.ambreReservation24h.withOpacity(0.4)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.hourglass_top_rounded, color: AppColors.ambreReservation24h),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Votre réservation (dossier ${maReservation.numeroDossier}) est en attente de la société. Vous pouvez l\'annuler à tout moment.',
-                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF9A5B00), height: 1.35),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: AppSpacing.md),
+              InfoBanner.reservationEnAttente(
+                  numeroDossier: maReservation.numeroDossier),
             ],
-            const SizedBox(height: 14),
-            ReservationRuleBanner(reservationMultiple: b.reservationMultiple, isReserve: b.isReserve),
+            const SizedBox(height: AppSpacing.md),
+            ReservationRuleBanner(
+                reservationMultiple: b.reservationMultiple,
+                isReserve: b.isReserve),
             if (!b.peutEtreReserve) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: AppColors.grey100, borderRadius: BorderRadius.circular(14)),
-                child: const Text('Cette parcelle n\'est pas réservable pour le moment.',
-                    style: TextStyle(color: AppColors.grey600)),
+              const SizedBox(height: AppSpacing.md - AppSpacing.xs),
+              const InfoBanner(
+                icone: Icons.block_rounded,
+                message: 'Cette parcelle n\'est pas réservable pour le moment.',
               ),
             ],
           ],

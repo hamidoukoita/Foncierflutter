@@ -24,29 +24,31 @@ final mesVisitesProvider =
     FutureProvider.autoDispose<List<RendezVousModel>>((ref) async {
   final user = ref.watch(authProvider).user;
   if (user == null) throw Exception('Non connecté');
-  return ref.watch(rendezVousRepositoryProvider).getRendezVousByAcquereur(user.id);
+  return ref
+      .watch(rendezVousRepositoryProvider)
+      .getRendezVousByAcquereur(user.id);
 });
 
 /// Photos / panoramas 360° / visites virtuelles d'un bien.
-final mediasBienProvider =
-    FutureProvider.autoDispose.family<List<MediaModel>, int>((ref, bienId) async {
+final mediasBienProvider = FutureProvider.autoDispose
+    .family<List<MediaModel>, int>((ref, bienId) async {
   return ref.watch(mediaRepositoryProvider).getByBien(bienId);
 });
 
 /// Créneaux de visite disponibles d'une société promotrice.
-final creneauxSocieteProvider =
-    FutureProvider.autoDispose.family<List<CreneauModel>, int>((ref, societeId) async {
+final creneauxSocieteProvider = FutureProvider.autoDispose
+    .family<List<CreneauModel>, int>((ref, societeId) async {
   return ref.watch(creneauRepositoryProvider).getDisponibles(societeId);
 });
 
 /// Photos / panoramas 360° / visites virtuelles d'un programme (cité).
-final programmeMediasProvider =
-    FutureProvider.autoDispose.family<List<MediaModel>, int>((ref, programmeId) async {
+final programmeMediasProvider = FutureProvider.autoDispose
+    .family<List<MediaModel>, int>((ref, programmeId) async {
   return ref.watch(mediaRepositoryProvider).getByProgramme(programmeId);
 });
 
 /// Plan de masse d'un programme (null si non créé).
-final planMasseProvider =
-    FutureProvider.autoDispose.family<PlanMasse?, int>((ref, programmeId) async {
+final planMasseProvider = FutureProvider.autoDispose
+    .family<PlanMasse?, int>((ref, programmeId) async {
   return ref.watch(planMasseRepositoryProvider).getByProgramme(programmeId);
 });

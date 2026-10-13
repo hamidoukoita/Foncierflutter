@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
@@ -33,6 +34,11 @@ class AgentProfileHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                DateFormatter.dateLongue(DateTime.now()).toUpperCase(),
+                style: AppTextStyles.overline,
+              ),
+              const SizedBox(height: AppSpacing.xxs),
               Text(
                 agent.fullName,
                 maxLines: 1,

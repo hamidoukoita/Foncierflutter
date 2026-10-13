@@ -49,6 +49,46 @@ class AppTextStyles {
         color: AppColors.white,
       );
 
+  /// Titre d'écran principal (onglets, pages).
+  static TextStyle get pageTitle => GoogleFonts.quicksand(
+        fontSize: 24,
+        height: 1.2,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.3,
+        color: AppColors.primaryBlueAnthracite,
+      );
+
+  /// Titre de carte (annonce, visite, réservation).
+  static TextStyle get cardTitle => GoogleFonts.quicksand(
+        fontSize: 16,
+        height: 1.25,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primaryBlueAnthracite,
+      );
+
+  /// Petit libellé en capitales (sur-titres, catégories).
+  static TextStyle get overline => GoogleFonts.inter(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+        color: AppColors.textSecondary,
+      );
+
+  /// Libellé de champ / métadonnée appuyée.
+  static TextStyle get label => GoogleFonts.inter(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w600,
+        color: AppColors.primaryBlueAnthracite,
+      );
+
+  /// Texte des boutons principaux.
+  static TextStyle get buttonLarge => GoogleFonts.inter(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.1,
+        color: AppColors.white,
+      );
+
   static TextStyle get price => GoogleFonts.quicksand(
         fontSize: 14,
         fontWeight: FontWeight.w800,

@@ -60,7 +60,7 @@ class OnboardingTwoPage extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.image_outlined,
                         size: 80,
-                        color: AppColors.primaryBlueAnthracite.withOpacity(0.3),
+                        color: AppColors.primaryBlueAnthracite.withValues(alpha: 0.3),
                       ),
                     ),
                   ),

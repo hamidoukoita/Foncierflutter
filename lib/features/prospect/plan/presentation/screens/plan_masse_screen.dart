@@ -20,7 +20,8 @@ class PlanMasseScreen extends ConsumerStatefulWidget {
   final int programmeId;
   final int? initialLotId;
 
-  const PlanMasseScreen({super.key, required this.programmeId, this.initialLotId});
+  const PlanMasseScreen(
+      {super.key, required this.programmeId, this.initialLotId});
 
   @override
   ConsumerState<PlanMasseScreen> createState() => _PlanMasseScreenState();
@@ -63,17 +64,21 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
         title: Text(
-          programme != null ? 'Plan de masse : ${programme.nom}' : 'Plan de masse',
+          programme != null
+              ? 'Plan de masse : ${programme.nom}'
+              : 'Plan de masse',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
       body: lotsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryOcre)),
         error: (e, _) => EmptyStateView(
           icon: Icons.error_outline,
           title: 'Chargement impossible',
           message: ErrorHandler.messageOf(e),
-          onRetry: () => ref.invalidate(lotsByProgrammeProvider(widget.programmeId)),
+          onRetry: () =>
+              ref.invalidate(lotsByProgrammeProvider(widget.programmeId)),
         ),
         data: (lots) {
           final shapes = lotsAvecGeometrie(lots);
@@ -86,7 +91,8 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
                   : 'La société n\'a pas encore dessiné le plan de masse. Vous pouvez consulter la liste des lots.',
             );
           }
-          final elements = (planAsync.valueOrNull?.elements ?? const <PlanElement>[])
+          final elements = (planAsync.valueOrNull?.elements ??
+                  const <PlanElement>[])
               .where((e) => e.visible)
               .toList()
             ..sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -105,31 +111,39 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
                   selected: _filtre,
                   onChanged: (v) => setState(() => _filtre = v),
                   options: [
-                    AppFilterOption<LotFamille?>(null, 'Tous (${shapes.length})'),
-                    AppFilterOption<LotFamille?>(LotFamille.libre, 'Libre (${count(LotFamille.libre)})',
+                    AppFilterOption<LotFamille?>(
+                        null, 'Tous (${shapes.length})'),
+                    AppFilterOption<LotFamille?>(
+                        LotFamille.libre, 'Libre (${count(LotFamille.libre)})',
                         color: couleurFamille(LotFamille.libre)),
-                    AppFilterOption<LotFamille?>(LotFamille.reserve, 'Réservé (${count(LotFamille.reserve)})',
+                    AppFilterOption<LotFamille?>(LotFamille.reserve,
+                        'Réservé (${count(LotFamille.reserve)})',
                         color: couleurFamille(LotFamille.reserve)),
-                    AppFilterOption<LotFamille?>(LotFamille.vendu, 'Vendu (${count(LotFamille.vendu)})',
+                    AppFilterOption<LotFamille?>(
+                        LotFamille.vendu, 'Vendu (${count(LotFamille.vendu)})',
                         color: couleurFamille(LotFamille.vendu)),
                   ],
                 ),
               ),
-              if (planAsync.valueOrNull?.elementsError != null || planAsync.hasError)
+              if (planAsync.valueOrNull?.elementsError != null ||
+                  planAsync.hasError)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
                   child: Row(
                     children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.warningAmber),
+                      const Icon(Icons.info_outline,
+                          size: 16, color: AppColors.warningAmber),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           'Routes et équipements indisponibles (${planAsync.valueOrNull?.elementsError ?? planAsync.error}).',
-                          style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                          style: const TextStyle(
+                              fontSize: 11.5, color: AppColors.textSecondary),
                         ),
                       ),
                       TextButton(
-                        onPressed: () => ref.invalidate(planMasseProvider(widget.programmeId)),
+                        onPressed: () => ref
+                            .invalidate(planMasseProvider(widget.programmeId)),
                         child: const Text('Réessayer'),
                       ),
                     ],
@@ -147,7 +161,8 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
                         elements: elements,
                         selectedLotId: _selectedId,
                         filtre: _filtre,
-                        onLotTap: (lot) => setState(() => _selectedId = lot?.id),
+                        onLotTap: (lot) =>
+                            setState(() => _selectedId = lot?.id),
                       ),
                     ),
                   ),
@@ -159,15 +174,18 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
                   programme: programme,
                   reserving: _reserving,
                   onReserver: () => _reserver(selected!),
-                  onDetails: () => context.push('/prospect/lots/${selected!.id}'),
+                  onDetails: () =>
+                      context.push('/prospect/lots/${selected!.id}'),
                 )
               else
                 Padding(
-                  padding: EdgeInsets.fromLTRB(16, 4, 16, 12 + MediaQuery.of(context).padding.bottom),
+                  padding: EdgeInsets.fromLTRB(
+                      16, 4, 16, 12 + MediaQuery.of(context).padding.bottom),
                   child: const Text(
                     'Touchez un lot pour voir sa fiche. Les lots verts sont disponibles.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12.5),
+                    style: TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12.5),
                   ),
                 ),
             ],
@@ -203,11 +221,15 @@ class _LotPanel extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(18, 14, 18, 14 + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          18, 14, 18, 14 + MediaQuery.of(context).padding.bottom),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: [BoxShadow(color: Color(0x22000000), blurRadius: 14, offset: Offset(0, -3))],
+        boxShadow: [
+          BoxShadow(
+              color: Color(0x22000000), blurRadius: 14, offset: Offset(0, -3))
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -217,20 +239,26 @@ class _LotPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  lot.numeroLot != null && lot.numeroLot!.isNotEmpty ? 'Lot N° ${lot.numeroLot}' : lot.displayRef,
+                  lot.numeroLot != null && lot.numeroLot!.isNotEmpty
+                      ? 'Lot N° ${lot.numeroLot}'
+                      : lot.displayRef,
                   style: const TextStyle(
-                      fontSize: 19, fontWeight: FontWeight.w800, color: AppColors.primaryBlueAnthracite),
+                      fontSize: 19,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryBlueAnthracite),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.14),
+                  color: color.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   libelleFamille(fam),
-                  style: TextStyle(color: color, fontWeight: FontWeight.w800, fontSize: 12),
+                  style: TextStyle(
+                      color: color, fontWeight: FontWeight.w800, fontSize: 12),
                 ),
               ),
             ],
@@ -240,19 +268,26 @@ class _LotPanel extends StatelessWidget {
             spacing: 14,
             runSpacing: 6,
             children: [
-              if (lot.superficie != null) _info(Icons.square_foot_rounded, '${_n(lot.superficie!)} m²'),
+              if (lot.superficie != null)
+                _info(Icons.square_foot_rounded, '${_n(lot.superficie!)} m²'),
               if (dims != null) _info(Icons.straighten_rounded, dims),
-              if (programme?.eauSomapep == true) _info(Icons.water_drop_outlined, 'SOMAPEP'),
-              if (programme?.electriciteEdm == true) _info(Icons.bolt_outlined, 'EDM'),
+              if (programme?.eauSomapep == true)
+                _info(Icons.water_drop_outlined, 'SOMAPEP'),
+              if (programme?.electriciteEdm == true)
+                _info(Icons.bolt_outlined, 'EDM'),
             ],
           ),
           if (lot.prix != null) ...[
             const SizedBox(height: 10),
             const Text('Prix de vente officiel',
-                style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                style:
+                    TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
             Text(
               CurrencyFormatter.fcfa(lot.prix!),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primaryOcre),
+              style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryOcre),
             ),
           ],
           const SizedBox(height: 12),
@@ -271,7 +306,8 @@ class _LotPanel extends StatelessWidget {
                 const SizedBox(width: 10),
               ],
               Expanded(
-                child: DetailButton(label: 'Voir les détails', onPressed: onDetails),
+                child: DetailButton(
+                    label: 'Voir les détails', onPressed: onDetails),
               ),
             ],
           ),
@@ -285,9 +321,12 @@ class _LotPanel extends StatelessWidget {
         children: [
           Icon(i, size: 16, color: AppColors.grey500),
           const SizedBox(width: 4),
-          Text(t, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(t,
+              style:
+                  const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       );
 
-  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  static String _n(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 }

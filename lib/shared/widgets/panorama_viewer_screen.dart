@@ -311,7 +311,7 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.55),
+                        color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -451,7 +451,7 @@ class _RoundBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? const Color(0xFFE5801A) : Colors.black.withOpacity(0.55),
+      color: active ? const Color(0xFFE5801A) : Colors.black.withValues(alpha: 0.55),
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),

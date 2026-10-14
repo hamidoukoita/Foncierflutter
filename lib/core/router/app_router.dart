@@ -8,12 +8,24 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/login_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/register_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/splash_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/auth_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/providers/demarrage_provider.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/redirection_demarrage.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/programme_detail_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lots_list_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/screens/plan_masse_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/localisation_routes.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/screens/localisation_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/presentation/views/lot_detail_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/construction_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/cles_en_main_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/domain/maison_cle_en_main.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/presentation/screens/cles_en_main_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/presentation/screens/maison_detail_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/presentation/screens/mes_projets_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/presentation/screens/projet_detail_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/presentation/screens/soumettre_projet_screen.dart';
 
 import 'package:flutter_mobile_prospect_agent/features/prospect/shell/prospect_shell.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shell/agent_shell.dart';
@@ -30,7 +42,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/scr
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_parcelle_detail_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/screens/prospect_mes_visites_screen.dart';
 
-/// Notifier pour forcer le refresh du router quand l'auth change.
+/// Notifier pour forcer le refresh du router quand l'auth ou le démarrage change.
 class _AuthRefresh extends ChangeNotifier {
   void refresh() => notifyListeners();
 }
@@ -38,6 +50,7 @@ class _AuthRefresh extends ChangeNotifier {
 final _authRefreshProvider = Provider<_AuthRefresh>((ref) {
   final r = _AuthRefresh();
   ref.listen(authProvider, (_, __) => r.refresh());
+  ref.listen(demarrageProvider, (_, __) => r.refresh());
   return r;
 });
 
@@ -45,48 +58,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ref.watch(_authRefreshProvider);
 
   return GoRouter(
-    initialLocation: '/ombordingMain',
+    initialLocation: AuthRoutes.splash,
     refreshListenable: refresh,
-    redirect: (context, state) {
-      final auth = ref.read(authProvider);
-      final loc = state.matchedLocation;
-
-      if (auth.status == AuthStatus.unknown) {
-        return null; // splash / attente restore
-      }
-
-      final loggingIn = loc == '/login' ||
-          loc == '/register' ||
-          loc == '/ombordingMain' ||
-          loc == '/ombording1' ||
-          loc == '/ombording2' ||
-          loc == '/ombording3';
-      final isAuth = auth.status == AuthStatus.authenticated;
-
-      if (!isAuth && !loggingIn) return '/ombording1';
-      if (isAuth && loggingIn) {
-        final user = auth.user;
-
-        if (user?.isAgent == true || user?.isSociete == true){
-
-          return AgentRoutes.dashboard;
-        }
-
-        return '/prospect/dashboard';
-      }
-      return null;
-    },
+    redirect: (context, state) => redirectionDemarrage(
+      location: state.matchedLocation,
+      auth: ref.read(authProvider),
+      demarrage: ref.read(demarrageProvider),
+    ),
     routes: [
       GoRoute(
-          path: '/ombordingMain', builder: (_, __) => const OnboardingPage()),
+          path: AuthRoutes.splash, builder: (_, __) => const SplashScreen()),
       GoRoute(
-          path: '/ombording1', builder: (_, __) => const OnboardingOnePage()),
+          path: AuthRoutes.onboarding,
+          builder: (_, __) => const OnboardingPage()),
       GoRoute(
-          path: '/ombording2', builder: (_, __) => const OnboardingTwoPage()),
+          path: AuthRoutes.onboarding1,
+          builder: (_, __) => const OnboardingOnePage()),
       GoRoute(
-          path: '/ombording3', builder: (_, __) => const OnboardingThreePage()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+          path: AuthRoutes.onboarding2,
+          builder: (_, __) => const OnboardingTwoPage()),
+      GoRoute(
+          path: AuthRoutes.onboarding3,
+          builder: (_, __) => const OnboardingThreePage()),
+      GoRoute(path: AuthRoutes.login, builder: (_, __) => const LoginScreen()),
+      GoRoute(
+          path: AuthRoutes.register,
+          builder: (_, __) => const RegisterScreen()),
       GoRoute(
         path: '/prospect/programmes/:id',
         builder: (context, state) {
@@ -133,6 +130,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return LotDetailScreen(lotId: id);
         },
       ),
+      // « Construire sur mon terrain » : « nouveau » avant « :id ».
+      GoRoute(
+        path: ClesEnMainRoutes.detailPattern,
+        builder: (context, state) => MaisonDetailScreen(
+            maisonId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: ConstructionRoutes.nouveau,
+        // extra : maison clé en main d'où vient l'acquéreur (« construire une maison comme celle-ci »).
+        builder: (context, state) => SoumettreProjetScreen(
+            maisonDeReference: state.extra is MaisonCleEnMain
+                ? state.extra as MaisonCleEnMain
+                : null),
+      ),
+      GoRoute(
+        path: ConstructionRoutes.detailPattern,
+        builder: (context, state) => ProjetDetailScreen(
+            projetId: int.parse(state.pathParameters['id']!)),
+      ),
 
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -153,16 +169,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: '/prospect/cites',
                 builder: (context, state) {
                   final zone = state.uri.queryParameters['zone'];
-                  return ProspectCitesPlanScreen(key: ValueKey(zone), zone: zone);
+                  return ProspectCitesPlanScreen(
+                      key: ValueKey(zone), zone: zone);
                 },
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/prospect/reservations',
-                builder: (context, state) => const ProspectReservationsScreen(),
               ),
             ],
           ),
@@ -171,6 +180,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/prospect/parcelles',
                 builder: (context, state) => const ProspectParcellesScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: ClesEnMainRoutes.liste,
+                builder: (context, state) => const ClesEnMainScreen(),
+              ),
+            ],
+          ),
+          // Rangée « Mes dossiers » (bouton + de la barre).
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: ConstructionRoutes.liste,
+                builder: (context, state) => const MesProjetsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/prospect/reservations',
+                builder: (context, state) => const ProspectReservationsScreen(),
               ),
             ],
           ),

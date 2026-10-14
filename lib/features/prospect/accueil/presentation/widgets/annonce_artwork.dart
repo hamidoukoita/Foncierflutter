@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
 
 /// Vignette d'annonce : photo du bien, sinon illustration neutre.
 class AnnonceArtwork extends StatelessWidget {
@@ -25,14 +26,15 @@ class AnnonceArtwork extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final remplacement = _ArtworkPlaceholder(isProgramme: estProgramme);
+    final url = UrlMedia.absolue(imageUrl);
     return ClipRRect(
       borderRadius: rayon,
       child: SizedBox(
         width: largeur,
         height: hauteur,
-        child: imageUrl != null && imageUrl!.trim().isNotEmpty
+        child: url != null
             ? CachedNetworkImage(
-                imageUrl: imageUrl!,
+                imageUrl: url,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => remplacement,
                 errorWidget: (_, __, ___) => remplacement,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/foncier_logo.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
@@ -34,6 +35,11 @@ class AgentDashboardScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xs),
           children: [
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: FoncierLogo.horizontal(hauteur: 30),
+            ),
+            const SizedBox(height: AppSpacing.md + AppSpacing.xs),
             AgentProfileHeader(
               agent: agent,
               onDeconnexion: () => AgentSession.deconnecter(context, ref),

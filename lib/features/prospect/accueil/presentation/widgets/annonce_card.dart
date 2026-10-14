@@ -5,6 +5,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
 import '../../domain/annonce_accueil.dart';
 import 'annonce_artwork.dart';
 
@@ -42,9 +43,22 @@ class AnnonceCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm + AppSpacing.xxs),
       child: Row(
         children: [
-          AnnonceArtwork(
-              imageUrl: annonce.bien?.imageUrl,
-              estProgramme: annonce.estProgramme),
+          Stack(
+            children: [
+              AnnonceArtwork(
+                  imageUrl:
+                      annonce.programme?.imageUrl ?? annonce.bien?.imageUrl,
+                  estProgramme: annonce.estProgramme),
+              Positioned(
+                left: AppSpacing.xs,
+                bottom: AppSpacing.xs,
+                child: Badge360(
+                    nombre: annonce.programme?.nombrePanoramas ??
+                        annonce.bien?.nombrePanoramas ??
+                        0),
+              ),
+            ],
+          ),
           const SizedBox(width: AppSpacing.md - AppSpacing.xs),
           Expanded(
             child: Column(

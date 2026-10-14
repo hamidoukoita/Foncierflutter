@@ -10,6 +10,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/accueil/presenta
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
 
 /// Carte d'une parcelle (ou d'un lot) : couverture, statut, TF, surface, prix, actions.
 class BienFoncierCard extends StatelessWidget {
@@ -80,6 +81,11 @@ class BienFoncierCard extends StatelessWidget {
                         foreground: AppColors.successGreen,
                       ),
                     ),
+                  Positioned(
+                    left: AppSpacing.md - AppSpacing.xs,
+                    bottom: AppSpacing.md - AppSpacing.xs,
+                    child: Badge360(nombre: bien.nombrePanoramas),
+                  ),
                 ],
               ),
               Padding(

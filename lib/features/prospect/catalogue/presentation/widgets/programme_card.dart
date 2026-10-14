@@ -6,6 +6,9 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/programme_foncier.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
 import 'programme_cover.dart';
 
 /// Carte annonce d'une cité : couverture, statut, chiffres clés, VRD, prix.
@@ -40,7 +43,7 @@ class ProgrammeCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    ProgrammeCover(seed: programme.id),
+                    _Couverture(programme: programme),
                     Positioned(
                       left: AppSpacing.md - AppSpacing.xs,
                       top: AppSpacing.md - AppSpacing.xs,
@@ -59,6 +62,11 @@ class ProgrammeCard extends StatelessWidget {
                         background: AppColors.white,
                         foreground: AppColors.successGreen,
                       ),
+                    ),
+                    Positioned(
+                      left: AppSpacing.md - AppSpacing.xs,
+                      bottom: AppSpacing.md - AppSpacing.xs,
+                      child: Badge360(nombre: programme.nombrePanoramas),
                     ),
                   ],
                 ),
@@ -200,5 +208,24 @@ class _StatutCite {
     }
     return const _StatutCite('Commercialisation', AppColors.successGreenSoft,
         AppColors.successGreen);
+  }
+}
+
+/// Photo de couverture de la cité ; illustration de plan en attendant ou à défaut.
+class _Couverture extends StatelessWidget {
+  final ProgrammeFoncier programme;
+  const _Couverture({required this.programme});
+
+  @override
+  Widget build(BuildContext context) {
+    final url = UrlMedia.absolue(programme.imageUrl);
+    final illustration = ProgrammeCover(seed: programme.id);
+    if (url == null) return illustration;
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.cover,
+      placeholder: (_, __) => illustration,
+      errorWidget: (_, __, ___) => illustration,
+    );
   }
 }

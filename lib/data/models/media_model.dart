@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_mobile_prospect_agent/core/constants/app_constants.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
 
 /// Média d'un bien (photo, panorama 360°, visite virtuelle) — miroir de `MediaFoncierResponse`.
 class MediaModel extends Equatable {
@@ -24,12 +24,7 @@ class MediaModel extends Equatable {
   bool get isVisiteVirtuelle => type == 'VISITE_VIRTUELLE';
 
   /// URL absolue : les fichiers téléversés sont servis par le backend sous « /uploads/... ».
-  String get urlAbsolue {
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    final base = AppConstants.apiBaseUrl;
-    final origin = base.endsWith('/api') ? base.substring(0, base.length - 4) : base;
-    return url.startsWith('/') ? '$origin$url' : '$origin/$url';
-  }
+  String get urlAbsolue => UrlMedia.absolue(url) ?? '';
 
   factory MediaModel.fromJson(Map<String, dynamic> json) {
     return MediaModel(

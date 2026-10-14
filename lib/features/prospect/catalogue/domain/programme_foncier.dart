@@ -5,6 +5,12 @@ class ProgrammeFoncier {
   final String? lieu;
   final double? latitude;
   final double? longitude;
+
+  /// Photo de couverture (chemin relatif servi par le backend), null sans photo.
+  final String? imageUrl;
+
+  /// Nombre de panoramas 360° de la cité.
+  final int nombrePanoramas;
   final String? numeroTitreMere;
   final double? superficieTotale;
   final String? statut;
@@ -24,6 +30,8 @@ class ProgrammeFoncier {
     this.lieu,
     this.latitude,
     this.longitude,
+    this.imageUrl,
+    this.nombrePanoramas = 0,
     this.numeroTitreMere,
     this.superficieTotale,
     this.statut,
@@ -49,6 +57,8 @@ class ProgrammeFoncier {
       lieu: json['lieu'] as String? ?? json['localisation'] as String?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      imageUrl: json['imageUrl'] as String?,
+      nombrePanoramas: (json['nombrePanoramas'] as num?)?.toInt() ?? 0,
       numeroTitreMere: json['numeroTitreMere'] as String?,
       superficieTotale: (json['superficieTotale'] as num?)?.toDouble(),
       statut: json['statut']?.toString(),

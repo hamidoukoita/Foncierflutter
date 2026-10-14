@@ -1,17 +1,19 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/auth_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/redirection_demarrage.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_background.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_carte.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_entete.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_error_banner.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/telephone_mali_prefixe.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_text_field.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/primary_button.dart';
 
@@ -42,14 +44,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _passwordCtrl.text,
         );
     if (!mounted) return;
-    if (ok) {
-      final user = ref.read(authProvider).user;
-      if (user?.isAgent == true || user?.isSociete == true) {
-        context.go('/agent/dashboard');
-      } else {
-        context.go('/prospect/dashboard');
-      }
-    }
+    if (ok) context.go(dashboardDe(ref.read(authProvider).user));
   }
 
   @override
@@ -72,155 +67,95 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 children: [
                   const SizedBox(height: AppSpacing.md),
 
-                  // Logo Foncier+
-                  Center(
-                    child: SvgPicture.asset(
-                      'assets/images/logo.svg',
-                      height: 150,
-                      fit: BoxFit.contain,
-                      semanticsLabel: 'Logo Foncier Plus',
-                      placeholderBuilder: (context) => const SizedBox(
-                        height: 40,
-                        width: 40,
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.xs),
-
-                  // Titre
-                  Text(
-                    'Bon retour parmi nous',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.pageTitle,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Connectez-vous à votre espace Foncier+',
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyMedium,
+                  const AuthEntete(
+                    titre: 'Bon retour parmi nous',
+                    sousTitre: 'Connectez-vous à votre espace Foncier+',
+                    hauteurLogo: 110,
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
-                  Container(
-                    padding:
-                        const EdgeInsets.all(AppSpacing.md + AppSpacing.xs),
-                    decoration: BoxDecoration(
-                      color: AppColors.white,
-                      borderRadius: AppRadius.radiusXxl,
-                      border: Border.all(color: AppColors.borderLight),
-                      boxShadow: AppShadows.floating,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Numéro de téléphone
-                        AppTextField(
-                          label: 'Numéro de téléphone',
-                          controller: _phoneCtrl,
-                          keyboardType: TextInputType.phone,
-                          hintText: '76 12 34 56',
-                          prefixIcon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              AppSpacing.gapSm,
-                              const Text('🇲🇱',
-                                  style: TextStyle(fontSize: 15)),
-                              AppSpacing.gapSm,
-                              Text(
-                                '+223',
-                                style: AppTextStyles.bodyMedium.copyWith(
-                                  color: AppColors.primaryBlueAnthracite,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              Container(
-                                height: 20,
-                                width: 1,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.sm + 2,
-                                ),
-                                color: AppColors.borderLight,
-                              ),
-                            ],
-                          ),
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? 'Numéro obligatoire'
-                              : null,
-                        ),
+                  AuthCarte(
+                    children: [
+                      // Numéro de téléphone
+                      AppTextField(
+                        label: 'Numéro de téléphone',
+                        controller: _phoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        hintText: '76 12 34 56',
+                        prefixIcon: const TelephoneMaliPrefixe(),
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Numéro obligatoire'
+                            : null,
+                      ),
 
-                        const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.md),
 
-                        // Mot de passe
-                        AppTextField(
-                          label: 'Mot de passe',
-                          controller: _passwordCtrl,
-                          isPassword: true,
-                          hintText: 'Votre mot de passe',
-                          prefixIcon:
-                              const Icon(Icons.lock_outline_rounded, size: 22),
-                          validator: (v) => v == null || v.isEmpty
-                              ? 'Mot de passe obligatoire'
-                              : null,
-                        ),
+                      // Mot de passe
+                      AppTextField(
+                        label: 'Mot de passe',
+                        controller: _passwordCtrl,
+                        isPassword: true,
+                        hintText: 'Votre mot de passe',
+                        prefixIcon:
+                            const Icon(Icons.lock_outline_rounded, size: 22),
+                        validator: (v) => v == null || v.isEmpty
+                            ? 'Mot de passe obligatoire'
+                            : null,
+                      ),
 
-                        const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.sm),
 
-                        // Se souvenir de moi & Mot de passe oublié
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: Checkbox(
-                                value: _rememberMe,
-                                onChanged: (val) {
-                                  setState(() => _rememberMe = val ?? false);
-                                },
-                              ),
-                            ),
-                            AppSpacing.gapSm,
-                            Text(
-                              'Se souvenir de moi',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.grey700,
-                              ),
-                            ),
-                            const Spacer(),
-                            GestureDetector(
-                              onTap: () {
-                                // context.push('/forgot-password');
+                      // Se souvenir de moi & Mot de passe oublié
+                      Row(
+                        children: [
+                          SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: Checkbox(
+                              value: _rememberMe,
+                              onChanged: (val) {
+                                setState(() => _rememberMe = val ?? false);
                               },
-                              child: Text(
-                                'Mot de passe oublié ?',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primaryBlueAnthracite,
-                                ),
+                            ),
+                          ),
+                          AppSpacing.gapSm,
+                          Text(
+                            'Se souvenir de moi',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.grey700,
+                            ),
+                          ),
+                          const Spacer(),
+                          GestureDetector(
+                            onTap: () {
+                              // context.push('/forgot-password');
+                            },
+                            child: Text(
+                              'Mot de passe oublié ?',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryBlueAnthracite,
                               ),
                             ),
-                          ],
-                        ),
-
-                        if (auth.error != null) ...[
-                          const SizedBox(height: AppSpacing.md),
-                          AuthErrorBanner(message: auth.error!),
+                          ),
                         ],
+                      ),
 
-                        const SizedBox(height: AppSpacing.lg),
-
-                        // Bouton Se connecter
-                        PrimaryButton(
-                          text: 'Se connecter',
-                          icon: Icons.login_rounded,
-                          isLoading: auth.loading,
-                          onPressed: _submit,
-                        ),
+                      if (auth.error != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        AuthErrorBanner(message: auth.error!),
                       ],
-                    ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Bouton Se connecter
+                      PrimaryButton(
+                        text: 'Se connecter',
+                        icon: Icons.login_rounded,
+                        isLoading: auth.loading,
+                        onPressed: _submit,
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -287,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: AppColors.primaryOcre,
                             ),
                             recognizer: TapGestureRecognizer()
-                              ..onTap = () => context.push('/register'),
+                              ..onTap = () => context.push(AuthRoutes.register),
                           ),
                         ],
                       ),

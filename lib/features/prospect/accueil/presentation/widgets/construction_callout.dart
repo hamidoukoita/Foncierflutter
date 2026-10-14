@@ -5,49 +5,12 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_action_button.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
-import 'package:flutter_mobile_prospect_agent/shared/widgets/primary_button.dart';
 
-/// Encart « Construire sur mon terrain » (offre clé des promoteurs).
+/// Encart « Construire sur mon terrain » : ouvre le formulaire de soumission d'un projet.
 class ConstructionCallout extends StatelessWidget {
   final VoidCallback onTap;
 
   const ConstructionCallout({super.key, required this.onTap});
-
-  /// Présentation de l'offre avant d'orienter vers les parcelles.
-  static Future<void> afficherInfo(
-      BuildContext context, VoidCallback onVoirParcelles) {
-    return showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _Pictogramme(taille: 56),
-            const SizedBox(height: AppSpacing.md),
-            Text('Construire sur mon terrain', style: AppTextStyles.h3),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Vous avez une parcelle avec Titre Foncier ? Un promoteur agréé conçoit les plans, '
-              'obtient le permis et construit votre villa, avec un paiement échelonné.',
-              style: AppTextStyles.bodyMedium.copyWith(height: 1.5),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            PrimaryButton(
-              text: 'Voir les parcelles',
-              icon: Icons.grid_view_rounded,
-              onPressed: () {
-                Navigator.of(sheetContext).pop();
-                onVoirParcelles();
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

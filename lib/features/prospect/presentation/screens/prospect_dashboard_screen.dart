@@ -20,16 +20,23 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_dashboard_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/section_header.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/construction_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/presentation/widgets/projet_card.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/providers/construction_providers.dart';
 
 /// Accueil Acquéreur : suivi personnel, exploration par zone, annonces récentes.
 class ProspectDashboardScreen extends ConsumerWidget {
   const ProspectDashboardScreen({super.key});
+
+  /// Projets de construction affichés sur l'accueil ; les autres sont dans « Tout voir ».
+  static const int _projetsApercu = 2;
 
   static const EdgeInsets _marges =
       EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal);
 
   Future<void> _rafraichir(WidgetRef ref) async {
     ref.invalidate(mesVisitesProvider);
+    ref.invalidate(mesProjetsProvider);
     await ref.read(prospectDashboardProvider.notifier).refresh();
   }
 
@@ -51,6 +58,7 @@ class ProspectDashboardScreen extends ConsumerWidget {
     final visites =
         ref.watch(mesVisitesProvider).valueOrNull ?? const <RendezVousModel>[];
     final programmes = state?.programmes ?? const [];
+    final projets = ref.watch(mesProjetsProvider).valueOrNull ?? const [];
 
     final suivi = SuiviAcquereur.depuis(reservations, visites, DateTime.now());
     final zones = ZonesExploration.depuisProgrammes(programmes);
@@ -81,6 +89,22 @@ class ProspectDashboardScreen extends ConsumerWidget {
                     onExplorer: () => context.go('/prospect/cites'),
                   ),
                 ),
+                if (projets.isNotEmpty) ...[
+                  _bloc(SectionHeader(
+                    title: 'Mes projets de construction',
+                    subtitle: 'L’avancement de vos dossiers',
+                    actionLabel: 'Tout voir',
+                    onAction: () => context.go(ConstructionRoutes.liste),
+                  )),
+                  for (final projet in projets.take(_projetsApercu))
+                    _bloc(
+                      ProjetCard(
+                        projet: projet,
+                        onTap: () => context.push(ConstructionRoutes.detail(projet.id)),
+                      ),
+                      haut: AppSpacing.md - AppSpacing.xs,
+                    ),
+                ],
                 if (zones.isNotEmpty) ...[
                   _bloc(const SectionHeader(
                     title: 'Explorer par zone',
@@ -101,10 +125,7 @@ class ProspectDashboardScreen extends ConsumerWidget {
                 _bloc(
                     HeroBanner(onExplore: () => context.go('/prospect/cites'))),
                 _bloc(ConstructionCallout(
-                  onTap: () => ConstructionCallout.afficherInfo(
-                    context,
-                    () => context.go('/prospect/parcelles'),
-                  ),
+                  onTap: () => context.push(ConstructionRoutes.nouveau),
                 )),
                 _bloc(SectionHeader(
                   title: 'Annonces récentes',

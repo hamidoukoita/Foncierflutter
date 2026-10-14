@@ -49,7 +49,14 @@ class ApiEndpoints {
   static String projetsByAcquereur(int id) =>
       '/projets-construction/acquereur/$id';
   static String projetsBySociete(int id) => '/projets-construction/societe/$id';
+  static String projetById(int id) => '/projets-construction/$id';
+  static String fichiersProjet(int id) => '/projets-construction/$id/fichiers';
   static const String modelesMaison = '/modeles-maison';
+
+  // Maisons clés en main
+  static const String maisonsCleEnMain = '/maisons-cle-en-main';
+  static String maisonById(int id) => '/maisons-cle-en-main/$id';
+  static String maisonsDeSociete(int id) => '/maisons-cle-en-main/societe/$id';
 
   // Société / agents
   static const String agents = '/agents-promoteurs';

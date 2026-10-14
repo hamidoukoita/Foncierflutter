@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/auth_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/providers/demarrage_provider.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:go_router/go_router.dart';
 
-class OnboardingTwoPage extends StatelessWidget {
+class OnboardingTwoPage extends ConsumerWidget {
   const OnboardingTwoPage({
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.backgroundOffWhite,
       body: SafeArea(
@@ -23,7 +26,8 @@ class OnboardingTwoPage extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () => context.push("/register"),
+                  onPressed: () =>
+                      quitterOnboarding(context, ref, AuthRoutes.register),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primaryBlueAnthracite,
                     padding: EdgeInsets.zero,
@@ -60,7 +64,8 @@ class OnboardingTwoPage extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.image_outlined,
                         size: 80,
-                        color: AppColors.primaryBlueAnthracite.withValues(alpha: 0.3),
+                        color: AppColors.primaryBlueAnthracite
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                   ),
@@ -114,7 +119,7 @@ class OnboardingTwoPage extends StatelessWidget {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton(
-                  onPressed: () => context.push("/ombording3"),
+                  onPressed: () => context.push(AuthRoutes.onboarding3),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryOcre,
                     foregroundColor: AppColors.white,

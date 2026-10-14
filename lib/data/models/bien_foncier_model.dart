@@ -11,7 +11,10 @@ class BienFoncierModel extends Equatable {
   final double? latitude;
   final double? longitude;
   final String statut;
-  final String? typeBien; // "LOT_PROGRAMME" ou "PARCELLE_INDIVIDUELLE"
+  final String? typeBien; // LOT_PROGRAMME, PARCELLE_INDIVIDUELLE ou MAISON_CLE_EN_MAIN
+
+  /// Titre de l'annonce d'une maison clé en main.
+  final String? titre;
 
   // Champs spécifiques au LotProgramme
   final String? numeroLot;
@@ -21,6 +24,9 @@ class BienFoncierModel extends Equatable {
   final String? programmeNom;
   final String? localisation;
   final String? imageUrl;
+
+  /// Nombre de panoramas 360° ajoutés par la société.
+  final int nombrePanoramas;
 
   // Champs spécifiques à la ParcelleIndividuelle
   final String? numeroTitreFoncier;
@@ -48,6 +54,7 @@ class BienFoncierModel extends Equatable {
     this.longitude,
     required this.statut,
     this.typeBien,
+    this.titre,
     this.numeroLot,
     this.numeroIlot,
     this.numeroIlotLotissement,
@@ -55,6 +62,7 @@ class BienFoncierModel extends Equatable {
     this.programmeNom,
     this.localisation,
     this.imageUrl,
+    this.nombrePanoramas = 0,
     this.numeroTitreFoncier,
     this.murCloture,
     this.eauSomapep,
@@ -71,8 +79,12 @@ class BienFoncierModel extends Equatable {
   bool get isLot =>
       (typeBien ?? '').toUpperCase().contains('LOT') || numeroLot != null;
 
-  /// Libellé affichable : « Lot 12 · Îlot B » ou « Parcelle A-12 ».
-  String get designation => isLot
+  bool get isMaison => typeBien == 'MAISON_CLE_EN_MAIN';
+
+  /// Libellé affichable : « Lot 12 · Îlot B », « Parcelle A-12 » ou le titre d'une maison.
+  String get designation => isMaison && (titre ?? '').isNotEmpty
+      ? titre!
+      : isLot
       ? 'Lot ${numeroLot ?? reference}${numeroIlot != null ? ' · Îlot $numeroIlot' : ''}'
       : (reference.isNotEmpty ? reference : 'Parcelle #$id');
 
@@ -95,6 +107,7 @@ class BienFoncierModel extends Equatable {
       longitude: (json['longitude'] as num?)?.toDouble(),
       statut: json['statut'] as String? ?? 'DISPONIBLE',
       typeBien: json['typeBien'] as String?,
+      titre: json['titre'] as String?,
       numeroLot: json['numeroLot'] as String?,
       numeroIlot: json['numeroIlot'] as String?,
       numeroIlotLotissement: json['numeroIlotLotissement'] as String?,
@@ -102,6 +115,7 @@ class BienFoncierModel extends Equatable {
       programmeNom: json['programmeNom'] as String?,
       localisation: _firstText(json, const ['lieu', 'localisation', 'adresse', 'programmeLieu']),
       imageUrl: _firstText(json, const ['imageUrl', 'urlImage', 'photoUrl', 'imagePrincipale']),
+      nombrePanoramas: (json['nombrePanoramas'] as num?)?.toInt() ?? 0,
       numeroTitreFoncier: json['numeroTitreFoncier'] as String?,
       murCloture: json['murCloture'] as bool?,
       eauSomapep: json['eauSomapep'] as bool?,
@@ -132,6 +146,7 @@ class BienFoncierModel extends Equatable {
         'programmeNom': programmeNom,
         'localisation': localisation,
         'imageUrl': imageUrl,
+        'nombrePanoramas': nombrePanoramas,
         'numeroTitreFoncier': numeroTitreFoncier,
         'murCloture': murCloture,
         'eauSomapep': eauSomapep,
@@ -161,6 +176,7 @@ class BienFoncierModel extends Equatable {
         programmeNom,
         localisation,
         imageUrl,
+        nombrePanoramas,
         numeroTitreFoncier,
         murCloture,
         eauSomapep,

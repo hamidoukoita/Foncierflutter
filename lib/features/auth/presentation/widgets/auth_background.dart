@@ -18,12 +18,16 @@ class AuthBackground extends StatelessWidget {
           Positioned(
             top: -90,
             right: -70,
-            child: _Disque(taille: 220, couleur: AppColors.primaryOcre.withValues(alpha: 0.08)),
+            child: _Disque(
+                taille: 220,
+                couleur: AppColors.primaryOcre.withValues(alpha: 0.08)),
           ),
           Positioned(
             top: 120,
             left: -60,
-            child: _Disque(taille: 140, couleur: AppColors.brandGreen.withValues(alpha: 0.06)),
+            child: _Disque(
+                taille: 140,
+                couleur: AppColors.brandGreen.withValues(alpha: 0.06)),
           ),
           child,
         ],

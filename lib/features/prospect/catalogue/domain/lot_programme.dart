@@ -15,6 +15,12 @@ class LotProgramme {
   final double? latitude;
   final double? longitude;
 
+  /// Photo de couverture (chemin relatif servi par le backend), null sans photo.
+  final String? imageUrl;
+
+  /// Nombre de panoramas 360° du lot.
+  final int nombrePanoramas;
+
   const LotProgramme({
     required this.id,
     this.reference,
@@ -31,6 +37,8 @@ class LotProgramme {
     this.reservationMultiple,
     this.latitude,
     this.longitude,
+    this.imageUrl,
+    this.nombrePanoramas = 0,
   });
 
   String get displayRef => reference?.isNotEmpty == true
@@ -66,6 +74,8 @@ class LotProgramme {
       reservationMultiple: json['reservationMultiple'] as bool?,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
+      imageUrl: json['imageUrl'] as String?,
+      nombrePanoramas: (json['nombrePanoramas'] as num?)?.toInt() ?? 0,
     );
   }
 }

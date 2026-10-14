@@ -14,6 +14,8 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/accueil/presentation/widgets/annonce_artwork.dart';
 
 /// « Lots du programme » : liste filtrable (Tous / Disponibles / Réservés / Vendus).
 class LotsListScreen extends ConsumerStatefulWidget {
@@ -150,18 +152,27 @@ class _LotCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
         child: Row(
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              padding: const EdgeInsets.all(AppSpacing.xs + AppSpacing.xxs),
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundOffWhite,
-                borderRadius: AppRadius.radiusMd,
+            // Photo de couverture si la société en a ajouté une, sinon la forme du lot.
+            if ((lot.imageUrl ?? '').isNotEmpty)
+              AnnonceArtwork(
+                imageUrl: lot.imageUrl,
+                estProgramme: true,
+                taille: 64,
+                rayon: AppRadius.radiusMd,
+              )
+            else
+              Container(
+                width: 64,
+                height: 64,
+                padding: const EdgeInsets.all(AppSpacing.xs + AppSpacing.xxs),
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundOffWhite,
+                  borderRadius: AppRadius.radiusMd,
+                ),
+                child: shapes.isEmpty
+                    ? Icon(Icons.grid_view_rounded, color: color)
+                    : PlanMiniature(lots: shapes, showLabels: false),
               ),
-              child: shapes.isEmpty
-                  ? Icon(Icons.grid_view_rounded, color: color)
-                  : PlanMiniature(lots: shapes, showLabels: false),
-            ),
             const SizedBox(width: AppSpacing.md - AppSpacing.xs),
             Expanded(
               child: Column(
@@ -178,7 +189,15 @@ class _LotCard extends StatelessWidget {
                     Text(details, style: AppTextStyles.bodySmall),
                   ],
                   const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
-                  StatusPill(label: libelleFamille(fam), color: color),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      StatusPill(label: libelleFamille(fam), color: color),
+                      Badge360(nombre: lot.nombrePanoramas, surFondClair: true),
+                    ],
+                  ),
                 ],
               ),
             ),

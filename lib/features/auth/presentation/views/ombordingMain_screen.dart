@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/auth_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/providers/demarrage_provider.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/foncier_logo.dart';
 import 'package:go_router/go_router.dart';
 
-class OnboardingPage extends StatelessWidget {
+class OnboardingPage extends ConsumerWidget {
   const OnboardingPage({
     super.key,
     this.onStart,
@@ -17,7 +20,7 @@ class OnboardingPage extends StatelessWidget {
   final VoidCallback? onLogin;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       // Le fond principal est le fond clair (beige lin) de la charte
       backgroundColor: AppColors.backgroundOffWhite,
@@ -34,23 +37,8 @@ class OnboardingPage extends StatelessWidget {
                     children: [
                       const SizedBox(height: AppSpacing.xxl),
 
-                      // LOGO
-                      // Remplacez par votre vrai logo :
-                      SvgPicture.asset(
-                        'assets/images/logo.svg',
-                        height: 80,
-                        fit: BoxFit.contain,
-                        semanticsLabel: 'Logo Foncier Plus',
-                        placeholderBuilder: (context) => const SizedBox(
-                          height: 80,
-                          width: 80,
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
-
-                    
+                      // Logo officiel Foncier+
+                      const FoncierLogo(hauteur: 80),
 
                       const SizedBox(height: AppSpacing.xl),
 
@@ -75,8 +63,8 @@ class OnboardingPage extends StatelessWidget {
                         'Parcelles • Lots • Programmes fonciers\nVillas • Terrains individuels',
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color:
-                              AppColors.primaryBlueAnthracite.withValues(alpha: 0.8),
+                          color: AppColors.primaryBlueAnthracite
+                              .withValues(alpha: 0.8),
                           fontWeight: FontWeight.w600,
                           height: 1.5,
                         ),
@@ -139,7 +127,7 @@ class OnboardingPage extends StatelessWidget {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () => context.push('/ombording1'),
+                      onPressed: () => context.push(AuthRoutes.onboarding1),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryOcre,
                         foregroundColor: AppColors.white,
@@ -156,7 +144,8 @@ class OnboardingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TextButton(
-                    onPressed: onLogin,
+                    onPressed: onLogin ??
+                        () => quitterOnboarding(context, ref, AuthRoutes.login),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.white,
                       padding: const EdgeInsets.symmetric(

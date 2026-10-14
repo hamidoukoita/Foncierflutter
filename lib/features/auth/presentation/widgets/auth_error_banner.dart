@@ -14,13 +14,16 @@ class AuthErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
-      decoration: const BoxDecoration(color: AppColors.errorRedSoft, borderRadius: AppRadius.radiusMd),
+      decoration: const BoxDecoration(
+          color: AppColors.errorRedSoft, borderRadius: AppRadius.radiusMd),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, size: 20, color: AppColors.errorRed),
+          const Icon(Icons.error_outline_rounded,
+              size: 20, color: AppColors.errorRed),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(message, style: AppTextStyles.label.copyWith(color: AppColors.errorRed)),
+            child: Text(message,
+                style: AppTextStyles.label.copyWith(color: AppColors.errorRed)),
           ),
         ],
       ),

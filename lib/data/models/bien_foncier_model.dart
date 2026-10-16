@@ -36,6 +36,8 @@ class BienFoncierModel extends Equatable {
   final bool? voieBitumee;
   final int? societeId;
   final String? societeNom;
+  /// Logo de la société promotrice (chemin relatif servi par le backend).
+  final String? societeLogoUrl;
 
   /// true = le bien accepte plusieurs réservations actives en parallèle (réglé par la société promotrice).
   final bool? reservationMultiple;
@@ -70,6 +72,7 @@ class BienFoncierModel extends Equatable {
     this.voieBitumee,
     this.societeId,
     this.societeNom,
+    this.societeLogoUrl,
     this.reservationMultiple,
     this.commodites = const [],
   });
@@ -123,6 +126,7 @@ class BienFoncierModel extends Equatable {
       voieBitumee: json['voieBitumee'] as bool?,
       societeId: json['societeId'] as int?,
       societeNom: json['societeNom'] as String?,
+      societeLogoUrl: json['societeLogoUrl'] as String?,
       reservationMultiple: json['reservationMultiple'] as bool?,
       commodites: CommoditeModel.listFromJson(json['commodites']),
     );
@@ -154,6 +158,7 @@ class BienFoncierModel extends Equatable {
         'voieBitumee': voieBitumee,
         'societeId': societeId,
         'societeNom': societeNom,
+        'societeLogoUrl': societeLogoUrl,
         'reservationMultiple': reservationMultiple,
       };
 
@@ -184,6 +189,7 @@ class BienFoncierModel extends Equatable {
         voieBitumee,
         societeId,
         societeNom,
+        societeLogoUrl,
         reservationMultiple,
         commodites,
       ];

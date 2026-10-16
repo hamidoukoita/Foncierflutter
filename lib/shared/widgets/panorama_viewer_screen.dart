@@ -4,22 +4,32 @@ import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/panorama_geometrie.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 
 /// Visionneuse 360° native, même principe que sur le web : image équirectangulaire projetée sur une sphère,
 /// glisser pour regarder autour (haut/bas/gauche/droite) avec inertie, pincer pour zoomer.
 /// Aucune dépendance supplémentaire ; l'état est propre à chaque ouverture (aucun état résiduel au retour).
+/// Avec des points de passage (visite virtuelle d'une maison), on passe d'une pièce à l'autre en les touchant.
 class PanoramaViewerScreen extends StatefulWidget {
   final List<MediaModel> panoramas;
   final int initialIndex;
+  final List<LienPanoramaModel> liens;
 
-  const PanoramaViewerScreen({super.key, required this.panoramas, this.initialIndex = 0});
+  const PanoramaViewerScreen({super.key, required this.panoramas, this.initialIndex = 0, this.liens = const []});
 
-  static Future<void> show(BuildContext context, List<MediaModel> panoramas, {int index = 0}) {
+  static Future<void> show(
+    BuildContext context,
+    List<MediaModel> panoramas, {
+    int index = 0,
+    List<LienPanoramaModel> liens = const [],
+  }) {
     return Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (_) => PanoramaViewerScreen(panoramas: panoramas, initialIndex: index),
+        builder: (_) => PanoramaViewerScreen(panoramas: panoramas, initialIndex: index, liens: liens),
       ),
     );
   }
@@ -50,6 +60,25 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
   bool _touching = false;
   double _startFov = _fovDefault;
   double _viewHeight = 1;
+
+  /// Orientation à prendre au chargement du panorama suivant (dos à la porte d'entrée).
+  (double, double)? _orientationArrivee;
+
+  List<LienPanoramaModel> get _points =>
+      widget.liens.where((l) => l.sourceId == widget.panoramas[_index].id).toList();
+
+  /// Passe dans la pièce visée par le point, orienté dos à la porte par laquelle on revient.
+  void _suivre(LienPanoramaModel lien) {
+    final cible = widget.panoramas.indexWhere((p) => p.id == lien.cibleId);
+    if (cible < 0) return;
+    final retour = widget.liens.where((l) => l.sourceId == lien.cibleId && l.cibleId == lien.sourceId);
+    _orientationArrivee = retour.isEmpty
+        ? null
+        : PanoramaGeometrie.orientationVers(
+            DirectionPanorama(PanoramaGeometrie.normaliserAzimut(retour.first.azimut + 180), 0));
+    _index = cible;
+    _load();
+  }
 
   @override
   void initState() {
@@ -96,11 +125,13 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
           TileMode.clamp,
           Matrix4.identity().storage,
         );
+        final (yaw, pitch) = _orientationArrivee ?? (0.0, 0.0);
+        _orientationArrivee = null;
         setState(() {
           _image = img;
           _shader = shader;
-          _yaw = 0;
-          _pitch = 0;
+          _yaw = yaw;
+          _pitch = pitch;
           _fov = _fovDefault;
           _vYaw = _vPitch = 0;
         });
@@ -206,21 +237,51 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
               if (_shader == null || _image == null) {
                 return const Center(child: CircularProgressIndicator(color: Color(0xFFE5801A)));
               }
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onScaleStart: _onScaleStart,
-                onScaleUpdate: _onScaleUpdate,
-                onScaleEnd: _onScaleEnd,
-                child: CustomPaint(
-                  size: Size.infinite,
-                  painter: _PanoPainter(
-                    repaint: _repaint,
-                    shader: _shader!,
-                    imgW: _image!.width.toDouble(),
-                    imgH: _image!.height.toDouble(),
-                    state: () => (_yaw, _pitch, _fov),
+              final taille = Size(c.maxWidth, c.maxHeight);
+              final points = _points;
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onScaleStart: _onScaleStart,
+                      onScaleUpdate: _onScaleUpdate,
+                      onScaleEnd: _onScaleEnd,
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: _PanoPainter(
+                          repaint: _repaint,
+                          shader: _shader!,
+                          imgW: _image!.width.toDouble(),
+                          imgH: _image!.height.toDouble(),
+                          state: () => (_yaw, _pitch, _fov),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  if (points.isNotEmpty)
+                    // Les points suivent la vue : repositionnés à chaque image, comme le panorama.
+                    ValueListenableBuilder<int>(
+                      valueListenable: _repaint,
+                      builder: (context, _, __) => Stack(
+                        children: [
+                          for (final lien in points)
+                            if (PanoramaGeometrie.positionAEcran(
+                              DirectionPanorama(lien.azimut, lien.elevation),
+                              yaw: _yaw,
+                              pitch: _pitch,
+                              fov: _fov,
+                              taille: taille,
+                            ) case final position?)
+                              Positioned(
+                                left: position.dx - _PointPassage.largeur / 2,
+                                top: position.dy - _PointPassage.rayon,
+                                child: _PointPassage(libelle: lien.libelle, onTap: () => _suivre(lien)),
+                              ),
+                        ],
+                      ),
+                    ),
+                ],
               );
             },
           ),
@@ -292,6 +353,7 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                               GestureDetector(
                                 onTap: () {
                                   if (i == _index) return;
+                                  _orientationArrivee = null;
                                   _index = i;
                                   _load();
                                 },
@@ -440,6 +502,60 @@ class _PanoPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PanoPainter old) => old.shader != shader;
+}
+
+/// Point de passage vers une autre pièce : pastille fléchée et nom de la pièce.
+class _PointPassage extends StatelessWidget {
+  static const double rayon = 22;
+  static const double largeur = 140;
+
+  final String libelle;
+  final VoidCallback onTap;
+  const _PointPassage({required this.libelle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Aller vers $libelle',
+      child: GestureDetector(
+        onTap: onTap,
+        child: SizedBox(
+          width: largeur,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: rayon * 2,
+                height: rayon * 2,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withValues(alpha: 0.92),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.white, width: 2),
+                  boxShadow: [BoxShadow(color: AppColors.black.withValues(alpha: 0.35), blurRadius: 10)],
+                ),
+                child: const Icon(Icons.north_rounded, color: AppColors.primaryBlueAnthracite),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  libelle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _RoundBtn extends StatelessWidget {

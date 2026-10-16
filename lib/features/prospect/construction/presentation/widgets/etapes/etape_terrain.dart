@@ -5,10 +5,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_text_field.dart';
-import '../../../domain/projet_construction.dart';
 import '../../controllers/champs_projet.dart';
-import '../../controllers/soumission_controller.dart';
-import '../pieces_jointes_field.dart';
 import 'entete_etape.dart';
 
 /// Étape 2 : le terrain titré sur lequel construire.
@@ -22,9 +19,6 @@ class EtapeTerrain extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pieces = ref.watch(soumissionControllerProvider
-        .select((s) => s.piecesDeType({TypeFichierProjet.titreFoncier})));
-    final controller = ref.read(soumissionControllerProvider.notifier);
     final chiffres = [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))];
 
     return Form(
@@ -92,15 +86,6 @@ class EtapeTerrain extends ConsumerWidget {
                   ),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          PiecesJointesField(
-            titre: 'Copie du Titre Foncier',
-            aide: 'Recommandé : PDF ou photo lisible, 15 Mo maximum.',
-            type: TypeFichierProjet.titreFoncier,
-            pieces: pieces,
-            onAjout: controller.ajouterPieces,
-            onRetrait: controller.retirerPiece,
           ),
         ],
       ),

@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_mobile_prospect_agent/core/constants/api_endpoints.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/api_client.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
@@ -42,19 +41,6 @@ class ProjetConstructionRepository {
     final res = await _api.post<Map<String, dynamic>>(ApiEndpoints.projetsConstruction,
         data: soumission.toJson());
     return ProjetConstruction.fromJson(_objet(res.data!));
-  }
-
-  Future<void> joindre(int projetId, PieceAJoindre piece) async {
-    final f = piece.fichier;
-    final contenu = f.path != null
-        ? await MultipartFile.fromFile(f.path!, filename: f.name)
-        : MultipartFile.fromBytes(f.bytes ?? const [], filename: f.name);
-    await _api.dio.post<Map<String, dynamic>>(
-      ApiEndpoints.fichiersProjet(projetId),
-      queryParameters: {'type': piece.type.code},
-      data: FormData.fromMap({'fichier': contenu}),
-      options: Options(contentType: 'multipart/form-data'),
-    );
   }
 
   List<Map<String, dynamic>> _liste(Map<String, dynamic> body) {

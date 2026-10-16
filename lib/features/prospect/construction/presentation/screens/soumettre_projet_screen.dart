@@ -91,18 +91,13 @@ class _SoumettreProjetScreenState extends ConsumerState<SoumettreProjetScreen> {
       return;
     }
     try {
-      final resultat = await _controller.soumettre(
+      final projet = await _controller.soumettre(
         _champs.versSoumission(
             societeId: etat.societe!.id, modeleId: etat.modele?.id, maisonId: etat.maison?.id),
       );
       if (!mounted) return;
-      if (resultat.piecesEnEchec > 0) {
-        AppSnackbar.error(context,
-            'Projet envoyé, mais ${resultat.piecesEnEchec} pièce(s) n’ont pas pu être jointes.');
-      } else {
-        AppSnackbar.success(context, 'Projet envoyé à ${etat.societe!.nom}.');
-      }
-      context.pushReplacement(ConstructionRoutes.detail(resultat.projet.id));
+      AppSnackbar.success(context, 'Projet envoyé à ${etat.societe!.nom}.');
+      context.pushReplacement(ConstructionRoutes.detail(projet.id));
     } catch (e) {
       if (mounted) AppSnackbar.error(context, ErrorHandler.messageOf(e));
     }

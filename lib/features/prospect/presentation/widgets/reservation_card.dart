@@ -10,8 +10,9 @@ import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/reservation_statut_style.dart';
 
-/// Carte d'une réservation de l'acquéreur : statut, bien, montant, délai et annulation.
+/// Carte d'une réservation de l'acquéreur : statut, bien, paiement, décompte et annulation.
 class ReservationCard extends ConsumerStatefulWidget {
   final ReservationModel reservation;
 
@@ -33,7 +34,7 @@ class _ReservationCardState extends ConsumerState<ReservationCard> {
   @override
   Widget build(BuildContext context) {
     final r = widget.reservation;
-    final etat = _EtatReservation.de(r, DateTime.now());
+    final style = ReservationStatutStyle.de(r);
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
@@ -42,45 +43,27 @@ class _ReservationCardState extends ConsumerState<ReservationCard> {
         children: [
           Row(
             children: [
-              Expanded(
-                  child: Text('DOSSIER ${r.numeroDossier}',
-                      style: AppTextStyles.overline)),
-              StatusPill(label: etat.libelle, color: etat.couleur),
+              Expanded(child: Text('DOSSIER ${r.numeroDossier}', style: AppTextStyles.overline)),
+              StatusPill(label: style.libelle, color: style.couleur),
             ],
           ),
           const SizedBox(height: AppSpacing.sm + AppSpacing.xxs),
-          Text(r.bienDesignation ?? 'Bien non renseigné',
-              style: AppTextStyles.cardTitle.copyWith(fontSize: 18)),
+          Text(r.bienDesignation ?? 'Bien non renseigné', style: AppTextStyles.cardTitle.copyWith(fontSize: 18)),
           if ((r.programmeNom ?? '').isNotEmpty) ...[
             const SizedBox(height: AppSpacing.xxs),
             Row(
               children: [
-                const Icon(Icons.apartment_rounded,
-                    size: 15, color: AppColors.primaryOcre),
+                const Icon(Icons.apartment_rounded, size: 15, color: AppColors.primaryOcre),
                 const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                    child:
-                        Text(r.programmeNom!, style: AppTextStyles.bodyMedium)),
+                Expanded(child: Text(r.programmeNom!, style: AppTextStyles.bodyMedium)),
               ],
             ),
           ],
           const SizedBox(height: AppSpacing.md - AppSpacing.xxs),
           _Chiffres(reservation: r),
-          if (etat.enCours) ...[
-            const SizedBox(height: AppSpacing.md - AppSpacing.xxs),
-            _DelaiRestant(reservation: r),
-          ],
-          if (r.statut == 'REFUSER' &&
-              (r.motifRefus ?? '').isNotEmpty &&
-              !r.isAnnulee) ...[
-            const SizedBox(height: AppSpacing.md - AppSpacing.xs),
-            Text(
-              'Motif : ${r.motifRefus}',
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.errorRed, fontWeight: FontWeight.w600),
-            ),
-          ],
-          if (r.isEnAttente) ...[
+          const SizedBox(height: AppSpacing.md - AppSpacing.xxs),
+          _EtapeEnCours(reservation: r, style: style),
+          if (r.estActive) ...[
             const SizedBox(height: AppSpacing.md),
             DetailButton(
               label: 'Annuler la réservation',
@@ -97,53 +80,27 @@ class _ReservationCardState extends ConsumerState<ReservationCard> {
   }
 }
 
-/// Libellé et couleur d'une réservation (le délai vient du backend : `dateExpiration`).
-class _EtatReservation {
-  final String libelle;
-  final Color couleur;
-  final bool enCours;
-
-  const _EtatReservation(this.libelle, this.couleur, {this.enCours = false});
-
-  factory _EtatReservation.de(ReservationModel r, DateTime maintenant) {
-    if (r.isAnnulee) {
-      return const _EtatReservation('Annulée', AppColors.grey600);
-    }
-    if (r.isEnAttente) {
-      return maintenant.isBefore(r.dateExpiration)
-          ? const _EtatReservation('En attente', AppColors.ambreReservation24h,
-              enCours: true)
-          : const _EtatReservation('Expirée', AppColors.errorRed);
-    }
-    if (r.statut == 'CONFIRMER') {
-      return const _EtatReservation('Confirmée', AppColors.successGreen);
-    }
-    return const _EtatReservation('Refusée', AppColors.errorRed);
-  }
-}
-
 class _Chiffres extends StatelessWidget {
   final ReservationModel reservation;
   const _Chiffres({required this.reservation});
 
   @override
   Widget build(BuildContext context) {
+    final r = reservation;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
-      decoration: const BoxDecoration(
-          color: AppColors.backgroundOffWhite,
-          borderRadius: AppRadius.radiusLg),
+      decoration: const BoxDecoration(color: AppColors.backgroundOffWhite, borderRadius: AppRadius.radiusLg),
       child: Row(
         children: [
-          Expanded(
-              child: _Chiffre(
-                  'Montant', CurrencyFormatter.fcfa(reservation.montant),
-                  mise: true)),
+          Expanded(child: _Chiffre('Prix du bien', CurrencyFormatter.fcfa(r.montant), mise: true)),
           Container(width: 1, height: 32, color: AppColors.borderLight),
           const SizedBox(width: AppSpacing.md - AppSpacing.xs),
           Expanded(
-              child: _Chiffre('Demandée le',
-                  DateFormatter.date(reservation.dateReservation))),
+            child: _Chiffre(
+              r.estPayante ? 'Réservation payée' : 'Réservation',
+              r.estPayante ? CurrencyFormatter.fcfa(r.montantReservation) : 'Gratuite',
+            ),
+          ),
         ],
       ),
     );
@@ -167,9 +124,7 @@ class _Chiffre extends StatelessWidget {
           valeur,
           style: AppTextStyles.cardTitle.copyWith(
             fontSize: 15,
-            color: mise
-                ? AppColors.primaryOcreDark
-                : AppColors.primaryBlueAnthracite,
+            color: mise ? AppColors.primaryOcreDark : AppColors.primaryBlueAnthracite,
           ),
         ),
       ],
@@ -177,52 +132,73 @@ class _Chiffre extends StatelessWidget {
   }
 }
 
-/// Délai de gel restant, avec barre de progression.
-class _DelaiRestant extends StatelessWidget {
+/// Où en est le dossier : attente d'agent, décompte (avec jauge), vente, expiration ou annulation.
+class _EtapeEnCours extends StatelessWidget {
   final ReservationModel reservation;
-  const _DelaiRestant({required this.reservation});
+  final ReservationStatutStyle style;
+  const _EtapeEnCours({required this.reservation, required this.style});
+
+  String get _message {
+    final r = reservation;
+    final paiement = r.estPayante && r.referencePaiement != null
+        ? 'Payé par Orange Money (réf. ${r.referencePaiement}). '
+        : '';
+    switch (r.etape) {
+      case StatutReservation.enAttente:
+        return r.agentId == null
+            ? '${paiement}La société va confier votre dossier à un agent.'
+            : '$paiement${r.agentNom ?? 'Votre agent'} va vous contacter et démarrer votre réservation.';
+      case StatutReservation.enCours:
+        final echeance = r.dateExpiration;
+        return echeance == null
+            ? 'Votre réservation est en cours avec ${r.agentNom ?? 'votre agent'}.'
+            : 'Le bien vous est réservé jusqu’au ${DateFormatter.date(echeance)} à ${DateFormatter.heure(echeance)} '
+                'pour conclure la vente avec ${r.agentNom ?? 'votre agent'}.';
+      case StatutReservation.vendue:
+        return 'Félicitations, la vente est conclue${r.dateConclusion == null ? '' : ' le ${DateFormatter.date(r.dateConclusion!)}'}.';
+      case StatutReservation.expiree:
+        return 'Le délai est écoulé sans vente : le bien est de nouveau disponible et le montant de la réservation n’est pas rendu.';
+      case StatutReservation.annulee:
+        return r.rembourse
+            ? 'Le bien a été vendu à un autre acquéreur : votre réservation vous est remboursée.'
+            : r.motifAnnulation ?? 'Réservation annulée.';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final total =
-        reservation.dateExpiration.difference(reservation.dateReservation);
-    final restant = reservation.dateExpiration.difference(DateTime.now());
-    final ratio = total.inSeconds <= 0
-        ? 0.0
-        : (restant.inSeconds / total.inSeconds).clamp(0.0, 1.0);
-
+    final progression = reservation.isEnCours ? reservation.progression() : null;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
-      decoration: const BoxDecoration(
-          color: AppColors.warningAmberSoft, borderRadius: AppRadius.radiusLg),
+      decoration: BoxDecoration(color: style.fond, borderRadius: AppRadius.radiusLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.hourglass_bottom_rounded,
-                  size: 17, color: AppColors.ambreReservation24h),
+              Icon(style.icone, size: 17, color: style.couleur),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'En attente du promoteur · reste ${DateFormatter.dureeCourte(restant)}',
-                  style: AppTextStyles.label.copyWith(
-                      color: AppColors.primaryOcreDark,
-                      fontWeight: FontWeight.w700),
+                  _message,
+                  style: AppTextStyles.label.copyWith(color: AppColors.primaryBlueAnthracite, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          ClipRRect(
-            borderRadius: AppRadius.radiusRound,
-            child: LinearProgressIndicator(
-              value: ratio,
-              minHeight: 6,
-              color: AppColors.ambreReservation24h,
-              backgroundColor: AppColors.white,
+          if (progression != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: AppRadius.radiusRound,
+              child: LinearProgressIndicator(
+                value: 1 - progression,
+                minHeight: 6,
+                color: style.couleur,
+                backgroundColor: AppColors.white,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

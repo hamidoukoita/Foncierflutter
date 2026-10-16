@@ -1,25 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/bien_libelle.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 
-/// État d'une réservation du point de vue du suivi agent.
-enum EtatSuivi { enCours, expiree, confirmee }
-
 extension ReservationSuiviX on ReservationModel {
-  EtatSuivi etatSuivi([DateTime? maintenant]) {
-    if (statut == 'CONFIRMER') return EtatSuivi.confirmee;
-    final now = maintenant ?? DateTime.now();
-    return now.isBefore(dateExpiration) ? EtatSuivi.enCours : EtatSuivi.expiree;
-  }
-
-  Duration tempsRestant([DateTime? maintenant]) {
-    final restant = dateExpiration.difference(maintenant ?? DateTime.now());
-    return restant.isNegative ? Duration.zero : restant;
-  }
-
-  /// "Lot 05 • Résidence Les Palmiers"
+  /// « Lot 05 • Résidence Les Palmiers »
   String get titreSuivi => BienLibelle.joindre([
         BienLibelle.court(
           designation: bienDesignation,
@@ -28,55 +11,38 @@ extension ReservationSuiviX on ReservationModel {
         ),
         programmeNom,
       ]);
+
+  /// L'agent peut lancer le décompte : réservation payée, prise en charge, pas encore démarrée.
+  bool get aDemarrer => isEnAttente;
+
+  /// Décompte en cours et non échu : la vente peut être conclue.
+  bool peutConclure([DateTime? maintenant]) =>
+      isEnCours && (dateExpiration == null || (maintenant ?? DateTime.now()).isBefore(dateExpiration!));
 }
 
-/// Présentation (libellé, couleurs) de l'état de suivi.
-class EtatSuiviStyle {
-  final String libelle;
-  final Color fond;
-  final Color couleur;
-  final IconData icone;
-
-  const EtatSuiviStyle(this.libelle, this.fond, this.couleur, this.icone);
-
-  factory EtatSuiviStyle.de(ReservationModel reservation) {
-    switch (reservation.etatSuivi()) {
-      case EtatSuivi.confirmee:
-        return const EtatSuiviStyle('Confirmée', AppColors.successGreenSoft,
-            AppColors.successGreen, Icons.check_rounded);
-      case EtatSuivi.expiree:
-        return const EtatSuiviStyle('Expirée', AppColors.errorRedSoft,
-            AppColors.errorRed, Icons.timer_off_outlined);
-      case EtatSuivi.enCours:
-        return EtatSuiviStyle(
-          'Reste ${DateFormatter.dureeCourte(reservation.tempsRestant())}',
-          AppColors.warningAmberSoft,
-          AppColors.ambreReservation24h,
-          Icons.hourglass_bottom_rounded,
-        );
-    }
-  }
-}
-
-/// Sélection des réservations à suivre (hors refusées), les plus urgentes d'abord.
+/// Ordre de travail de l'agent : réservations à démarrer (les plus anciennes d'abord),
+/// décomptes en cours (échéance la plus proche d'abord), puis dossiers terminés (les plus récents).
 class ReservationsSuivi {
   ReservationsSuivi._();
 
+  static int _rang(ReservationModel r) => r.isEnAttente ? 0 : r.isEnCours ? 1 : 2;
+
   static List<ReservationModel> trier(List<ReservationModel> reservations) {
-    final suivies = reservations.where((r) => r.statut != 'REFUSER').toList();
-    int rang(ReservationModel r) => r.etatSuivi().index;
-    suivies.sort((a, b) {
-      final parEtat = rang(a).compareTo(rang(b));
-      return parEtat != 0
-          ? parEtat
-          : a.dateExpiration.compareTo(b.dateExpiration);
+    final liste = [...reservations];
+    liste.sort((a, b) {
+      final parRang = _rang(a).compareTo(_rang(b));
+      if (parRang != 0) return parRang;
+      if (a.isEnCours) {
+        final fin = DateTime(9999);
+        return (a.dateExpiration ?? fin).compareTo(b.dateExpiration ?? fin);
+      }
+      if (a.isEnAttente) return a.dateReservation.compareTo(b.dateReservation);
+      return b.dateReservation.compareTo(a.dateReservation);
     });
-    return suivies;
+    return liste;
   }
 
+  /// Dossiers qui demandent encore une action de l'agent.
   static int dossiersEnCours(List<ReservationModel> reservations) =>
-      reservations
-          .where((r) =>
-              r.statut != 'REFUSER' && r.etatSuivi() == EtatSuivi.enCours)
-          .length;
+      reservations.where((r) => r.estActive).length;
 }

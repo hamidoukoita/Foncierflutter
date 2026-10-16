@@ -3,24 +3,27 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
-import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
-import '../../../domain/projet_construction.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
-import 'package:flutter_mobile_prospect_agent/features/prospect/accueil/presentation/widgets/annonce_artwork.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/providers/maisons_providers.dart';
-import '../../../domain/soumission_projet.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/panorama_viewer_screen.dart';
+import '../../../domain/modele_maison.dart';
 import '../../../providers/construction_providers.dart';
 import '../../controllers/champs_projet.dart';
 import '../../controllers/soumission_controller.dart';
+import '../carrousel_choix.dart';
+import '../carte_choix_maison.dart';
 import '../carte_selectionnable.dart';
-import '../modele_card.dart';
-import '../pieces_jointes_field.dart';
 import 'entete_etape.dart';
 
-/// Étape 3 : un modèle du catalogue de la société, ou la maison décrite par l'acquéreur.
+/// Étape 3 : un modèle du catalogue de la société, une de ses maisons clés en main comme
+/// référence, ou la maison décrite par l'acquéreur. Modèles et maisons défilent en carrousel.
 class EtapeModele extends ConsumerWidget {
   final ChampsProjet champs;
   final GlobalKey<FormState> formKey;
@@ -32,7 +35,6 @@ class EtapeModele extends ConsumerWidget {
     final etat = ref.watch(soumissionControllerProvider);
     final controller = ref.read(soumissionControllerProvider.notifier);
     final societe = etat.societe!;
-    final modeles = ref.watch(modelesSocieteProvider(societe.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,38 +44,8 @@ class EtapeModele extends ConsumerWidget {
           texte: 'Choisissez un modèle de ${societe.nom} adapté à votre terrain, '
               'une de ses maisons clés en main comme référence, ou décrivez la maison que vous souhaitez.',
         ),
-        modeles.when(
-          loading: () => const Padding(
-            padding: EdgeInsets.all(AppSpacing.lg),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
-          ),
-          error: (e, _) => EmptyStateView(
-            icon: Icons.cloud_off_rounded,
-            title: 'Catalogue indisponible',
-            message: ErrorHandler.messageOf(e),
-            onRetry: () => ref.invalidate(modelesSocieteProvider(societe.id)),
-          ),
-          data: (liste) => Column(
-            children: [
-              if (liste.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: Text('Cette société n’a pas encore publié de modèle.',
-                      style: AppTextStyles.bodySmall),
-                ),
-              for (final m in liste)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm + AppSpacing.xxs),
-                  child: ModeleCard(
-                    modele: m,
-                    selectionne: etat.modele?.id == m.id,
-                    compatible: m.convientA(champs.superficieM2, champs.typeTerrain.value),
-                    onTap: () => controller.choisirModele(m),
-                  ),
-                ),
-            ],
-          ),
-        ),
+        _ModelesDuCatalogue(societeId: societe.id, champs: champs),
+        const SizedBox(height: AppSpacing.lg),
         _MaisonsDeReference(societeId: societe.id),
         CarteSelectionnable(
           selectionnee: etat.modelePersonnalise,
@@ -85,7 +57,7 @@ class EtapeModele extends ConsumerWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlueAnthracite.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadius.radiusMd,
                 ),
                 child: const Icon(Icons.draw_outlined, color: AppColors.primaryBlueAnthracite),
               ),
@@ -97,7 +69,7 @@ class EtapeModele extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Proposer mon propre modèle', style: AppTextStyles.cardTitle),
-                      Text('Décrivez la maison, joignez vos plans ou photos d’inspiration.',
+                      Text('Décrivez la maison que vous souhaitez faire construire.',
                           style: AppTextStyles.bodySmall),
                     ],
                   ),
@@ -115,16 +87,127 @@ class EtapeModele extends ConsumerWidget {
   }
 }
 
-class _ModelePersonnalise extends ConsumerWidget {
+/// Ouvre la visite 360° à partir des médias chargés pour le modèle ou la maison.
+Future<void> _ouvrir360(BuildContext context, Future<List<MediaModel>> medias) async {
+  try {
+    final panoramas = (await medias).where((m) => m.isPanorama).toList();
+    if (!context.mounted) return;
+    if (panoramas.isEmpty) {
+      AppSnackbar.info(context, 'Aucune vue 360° disponible.');
+      return;
+    }
+    await PanoramaViewerScreen.show(context, panoramas);
+  } catch (e) {
+    if (context.mounted) AppSnackbar.error(context, ErrorHandler.messageOf(e));
+  }
+}
+
+/// Carrousel des modèles du catalogue, grisés s'ils ne conviennent pas au terrain saisi.
+class _ModelesDuCatalogue extends ConsumerWidget {
+  final int societeId;
+  final ChampsProjet champs;
+  const _ModelesDuCatalogue({required this.societeId, required this.champs});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final modeles = ref.watch(modelesSocieteProvider(societeId));
+    final choisi = ref.watch(soumissionControllerProvider.select((s) => s.modele));
+
+    return modeles.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+      ),
+      error: (e, _) => EmptyStateView(
+        icon: Icons.cloud_off_rounded,
+        title: 'Catalogue indisponible',
+        message: ErrorHandler.messageOf(e),
+        onRetry: () => ref.invalidate(modelesSocieteProvider(societeId)),
+      ),
+      data: (liste) {
+        if (liste.isEmpty) {
+          return Text('Cette société n’a pas encore publié de modèle.', style: AppTextStyles.bodySmall);
+        }
+        return CarrouselChoix(
+          titre: 'Modèles du catalogue',
+          nombre: liste.length,
+          itemBuilder: (context, i) {
+            final m = liste[i];
+            final compatible = m.convientA(champs.superficieM2, champs.typeTerrain.value);
+            return CarteChoixMaison(
+              titre: m.libelle,
+              imageUrl: m.imageUrl,
+              caracteristiques: _caracteristiques(m),
+              note: m.terrainRequis == null
+                  ? null
+                  : compatible
+                      ? m.terrainRequis
+                      : 'Non adapté à votre terrain · ${m.terrainRequis}',
+              noteEnAlerte: !compatible,
+              nombrePanoramas: m.nombrePanoramas,
+              onVoir360: () => _ouvrir360(context, ref.read(mediasModeleProvider(m.id).future)),
+              selectionnee: choisi?.id == m.id,
+              active: compatible,
+              onTap: () => ref.read(soumissionControllerProvider.notifier).choisirModele(m),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static List<(IconData, String)> _caracteristiques(ModeleMaison m) => [
+        if (m.nombreChambres != null) (Icons.bed_outlined, '${m.nombreChambres} ch.'),
+        if (m.nombreSallesBain != null) (Icons.bathtub_outlined, '${m.nombreSallesBain} sdb'),
+        if (m.surfaceConstruite != null) (Icons.square_foot_rounded, '${m.surfaceConstruite!.toStringAsFixed(0)} m²'),
+      ];
+}
+
+/// Maisons clés en main de la société, proposées comme référence (« une maison comme celle-ci »).
+class _MaisonsDeReference extends ConsumerWidget {
+  final int societeId;
+  const _MaisonsDeReference({required this.societeId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final maisons = ref.watch(maisonsSocieteProvider(societeId)).valueOrNull ?? const [];
+    final choisie = ref.watch(soumissionControllerProvider.select((s) => s.maison));
+    if (maisons.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: CarrouselChoix(
+        titre: 'Comme une maison clé en main',
+        sousTitre: 'La société construit une maison semblable sur votre terrain.',
+        nombre: maisons.length,
+        itemBuilder: (context, i) {
+          final m = maisons[i];
+          return CarteChoixMaison(
+            titre: m.titre,
+            imageUrl: m.imageUrl,
+            caracteristiques: [
+              if (m.nombreChambres != null) (Icons.bed_outlined, '${m.nombreChambres} ch.'),
+              if (m.surfaceHabitable != null)
+                (Icons.square_foot_rounded, '${m.surfaceHabitable!.toStringAsFixed(0)} m²'),
+            ],
+            note: 'Prix de la maison : ${CurrencyFormatter.fcfaCompact(m.prix)}',
+            nombrePanoramas: m.nombrePanoramas,
+            onVoir360: () => _ouvrir360(context, ref.read(mediasBienProvider(m.id).future)),
+            selectionnee: choisie?.id == m.id,
+            onTap: () => ref.read(soumissionControllerProvider.notifier).choisirMaison(m),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ModelePersonnalise extends StatelessWidget {
   final ChampsProjet champs;
   final GlobalKey<FormState> formKey;
   const _ModelePersonnalise({required this.champs, required this.formKey});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(soumissionControllerProvider.notifier);
-    final pieces = ref.watch(soumissionControllerProvider
-        .select((s) => s.piecesDeType({TypeFichierProjet.plan, TypeFichierProjet.photo})));
+  Widget build(BuildContext context) {
     final entiers = [FilteringTextInputFormatter.digitsOnly];
 
     InputDecoration deco(String indice) => InputDecoration(hintText: indice);
@@ -173,80 +256,6 @@ class _ModelePersonnalise extends ConsumerWidget {
               ],
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          PiecesJointesField(
-            titre: 'Plans et photos d’inspiration',
-            aide: 'Facultatif : plan d’architecte, croquis, photos de maisons qui vous plaisent.',
-            type: TypeFichierProjet.plan,
-            pieces: pieces,
-            // Les PDF sont des plans, les images des photos d'inspiration.
-            onAjout: (nouvelles) => controller.ajouterPieces([
-              for (final p in nouvelles)
-                p.fichier.extension?.toLowerCase() == 'pdf'
-                    ? p
-                    : PieceAJoindre(p.fichier, TypeFichierProjet.photo),
-            ]),
-            onRetrait: controller.retirerPiece,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Maisons clés en main de la société, proposées comme référence (« une maison comme celle-ci »).
-class _MaisonsDeReference extends ConsumerWidget {
-  final int societeId;
-  const _MaisonsDeReference({required this.societeId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final maisons = ref.watch(maisonsSocieteProvider(societeId)).valueOrNull ?? const [];
-    final choisie = ref.watch(soumissionControllerProvider.select((s) => s.maison));
-    if (maisons.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.xs, bottom: AppSpacing.sm),
-            child: Text('Comme une maison clé en main',
-                style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700)),
-          ),
-          for (final m in maisons)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm + AppSpacing.xxs),
-              child: CarteSelectionnable(
-                selectionnee: choisie?.id == m.id,
-                onTap: () => ref.read(soumissionControllerProvider.notifier).choisirMaison(m),
-                child: Row(
-                  children: [
-                    AnnonceArtwork(imageUrl: m.imageUrl, estProgramme: false, taille: 64, rayon: AppRadius.radiusMd),
-                    const SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.lg),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(m.titre, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitle),
-                            Text(
-                              [
-                                if (m.nombreChambres != null) '${m.nombreChambres} ch.',
-                                if (m.surfaceHabitable != null) '${m.surfaceHabitable!.toStringAsFixed(0)} m²',
-                                CurrencyFormatter.fcfaCompact(m.prix),
-                              ].join(' · '),
-                              style: AppTextStyles.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
     );

@@ -10,7 +10,7 @@ import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import '../../domain/suivi_acquereur.dart';
 
-/// Carte « Mon suivi » : réservation en cours (compte à rebours), confirmée,
+/// Carte « Mon suivi » : réservation en cours (compte à rebours), vente conclue,
 /// prochaine visite. Invite à explorer quand rien n'est en cours.
 class MonSuiviCard extends StatelessWidget {
   final SuiviAcquereur suivi;
@@ -40,20 +40,26 @@ class MonSuiviCard extends StatelessWidget {
     final lignes = <Widget>[
       if (suivi.reservationEnCours case final r?)
         _SuiviLigne(
-          icone: Icons.hourglass_bottom_rounded,
+          icone: r.isEnCours ? Icons.timer_outlined : Icons.hourglass_bottom_rounded,
           titre: _titreReservation(r),
-          detail: 'Option en attente du promoteur',
-          etiquette:
-              'Reste ${DateFormatter.dureeCourte(r.dateExpiration.difference(DateTime.now()))}',
+          detail: r.isEnCours
+              ? 'Réservation en cours avec ${r.agentNom ?? 'votre agent'}'
+              : r.agentId == null
+                  ? 'Réservation payée · en attente d’un agent'
+                  : 'Votre agent va démarrer la réservation',
+          etiquette: switch (r.tempsRestant()) {
+            final restant? => 'Reste ${DateFormatter.dureeLisible(restant)}',
+            null => 'En attente',
+          },
           couleurEtiquette: AppColors.primaryOcreLight,
           onTap: onReservations,
         ),
-      if (suivi.reservationConfirmee case final r?)
+      if (suivi.reservationVendue case final r?)
         _SuiviLigne(
           icone: Icons.verified_rounded,
           titre: _titreReservation(r),
-          detail: 'Réservation confirmée · dossier à finaliser au siège',
-          etiquette: 'Confirmée',
+          detail: 'Vente conclue',
+          etiquette: 'Vendue',
           couleurEtiquette: AppColors.successGreenSoft,
           onTap: onReservations,
         ),

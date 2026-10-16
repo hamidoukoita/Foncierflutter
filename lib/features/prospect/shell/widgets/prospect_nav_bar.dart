@@ -31,7 +31,8 @@ class ProspectNavBar extends StatefulWidget {
   static const Curve courbe = Curves.easeOutCubic;
 
   static const double _hauteurAvant = 70;
-  static const double _hauteurArriere = 58;
+  static const double _hauteurArriere = 80;
+
   /// Partie de la rangée arrière cachée sous la barre avant.
   static const double _recouvrement = 16;
 
@@ -48,7 +49,8 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
   void didUpdateWidget(covariant ProspectNavBar ancien) {
     super.didUpdateWidget(ancien);
     // Arrivée sur un dossier (lien depuis l'accueil…) : la rangée s'ouvre pour situer la page.
-    if (_surUnDossier && ancien.currentIndex != widget.currentIndex) _ouvert = true;
+    // Retour sur un onglet principal : la rangée se range.
+    if (ancien.currentIndex != widget.currentIndex) _ouvert = _surUnDossier;
   }
 
   void _basculer() => setState(() => _ouvert = !_ouvert);
@@ -78,8 +80,8 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
               AnimatedPositioned(
                 duration: ProspectNavBar.duree,
                 curve: ProspectNavBar.courbe,
-                left: AppSpacing.md - AppSpacing.xs,
-                right: AppSpacing.md - AppSpacing.xs,
+                left: AppSpacing.sm,
+                right: AppSpacing.sm,
                 bottom: _ouvert ? avant - recouvrement : avant - arriere,
                 height: arriere,
                 child: IgnorePointer(
@@ -103,7 +105,8 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
                 bottom: 0,
                 height: avant,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs + AppSpacing.xxs),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs + AppSpacing.xxs),
                   decoration: BoxDecoration(
                     color: AppColors.white,
                     borderRadius: AppRadius.radiusXxl,
@@ -113,7 +116,10 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
                   child: Row(
                     children: [
                       for (var i = 0; i < moitie; i++) _entreeAvant(i),
-                      _BoutonDossiers(ouvert: _ouvert, surUnDossier: _surUnDossier, onTap: _basculer),
+                      _BoutonDossiers(
+                          ouvert: _ouvert,
+                          surUnDossier: _surUnDossier,
+                          onTap: _basculer),
                       for (var i = moitie; i < n; i++) _entreeAvant(i),
                     ],
                   ),
@@ -130,7 +136,11 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
         child: _EntreeAvant(
           item: widget.principaux[i],
           active: widget.currentIndex == i,
-          onTap: () => widget.onSelect(i),
+          onTap: () {
+            // Un onglet principal referme toujours la rangée, même s'il est déjà actif.
+            if (_ouvert) setState(() => _ouvert = false);
+            widget.onSelect(i);
+          },
         ),
       );
 }
@@ -141,11 +151,13 @@ class _EntreeAvant extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
-  const _EntreeAvant({required this.item, required this.active, required this.onTap});
+  const _EntreeAvant(
+      {required this.item, required this.active, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final couleur = active ? AppColors.primaryOcreDark : AppColors.textSecondary;
+    final couleur =
+        active ? AppColors.primaryOcreDark : AppColors.textSecondary;
     return Semantics(
       button: true,
       selected: active,
@@ -157,7 +169,9 @@ class _EntreeAvant extends StatelessWidget {
           child: AnimatedContainer(
             duration: ProspectNavBar.duree,
             curve: ProspectNavBar.courbe,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xs + AppSpacing.xxs),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xs,
+                vertical: AppSpacing.xs + AppSpacing.xxs),
             decoration: BoxDecoration(
               color: active ? AppColors.primaryOcreSoft : AppColors.transparent,
               borderRadius: AppRadius.radiusLg,
@@ -165,7 +179,8 @@ class _EntreeAvant extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(active ? item.activeIcon : item.icon, size: 22, color: couleur),
+                Icon(active ? item.activeIcon : item.icon,
+                    size: 22, color: couleur),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
                   item.label,
@@ -193,7 +208,8 @@ class _BoutonDossiers extends StatelessWidget {
   final bool surUnDossier;
   final VoidCallback onTap;
 
-  const _BoutonDossiers({required this.ouvert, required this.surUnDossier, required this.onTap});
+  const _BoutonDossiers(
+      {required this.ouvert, required this.surUnDossier, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -214,7 +230,9 @@ class _BoutonDossiers extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: AppShadows.cta,
               border: Border.all(
-                color: surUnDossier && !ouvert ? AppColors.primaryBlueAnthracite : AppColors.white,
+                color: surUnDossier && !ouvert
+                    ? AppColors.primaryBlueAnthracite
+                    : AppColors.white,
                 width: 3,
               ),
             ),
@@ -222,7 +240,8 @@ class _BoutonDossiers extends StatelessWidget {
               duration: ProspectNavBar.duree,
               curve: ProspectNavBar.courbe,
               turns: ouvert ? 0.125 : 0,
-              child: const Icon(Icons.add_rounded, color: AppColors.white, size: 28),
+              child: const Icon(Icons.add_rounded,
+                  color: AppColors.white, size: 28),
             ),
           ),
         ),
@@ -231,63 +250,89 @@ class _BoutonDossiers extends StatelessWidget {
   }
 }
 
-/// Rangée arrière : onglets texte, le dossier ouvert ressort sur une pastille blanche.
+/// Rangée arrière, sur fond bleu anthracite pour se détacher de la barre blanche :
+/// icône au-dessus du libellé, le dossier ouvert ressort sur une pastille blanche.
 class _RangeeDossiers extends StatelessWidget {
   final List<FloatingNavItem> items;
   final int actif;
   final ValueChanged<int> onSelect;
 
-  const _RangeeDossiers({required this.items, required this.actif, required this.onSelect});
+  const _RangeeDossiers(
+      {required this.items, required this.actif, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-          AppSpacing.xs + AppSpacing.xxs, AppSpacing.xs + AppSpacing.xxs, AppSpacing.xs + AppSpacing.xxs, ProspectNavBar._recouvrement),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.sm, AppSpacing.sm,
+          AppSpacing.sm, ProspectNavBar._recouvrement + AppSpacing.xs),
       decoration: BoxDecoration(
-        color: AppColors.placeholderSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
-        border: Border.all(color: AppColors.borderLight),
+        gradient: AppGradients.navy,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
+        boxShadow: AppShadows.floating,
       ),
       child: Row(
         children: [
           for (var i = 0; i < items.length; i++)
             Expanded(
-              child: GestureDetector(
-                onTap: () => onSelect(i),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: ProspectNavBar.duree,
-                  curve: ProspectNavBar.courbe,
-                  margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
-                  decoration: BoxDecoration(
-                    color: i == actif ? AppColors.white : AppColors.transparent,
-                    borderRadius: AppRadius.radiusLg,
-                    boxShadow: i == actif ? AppShadows.soft : null,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(i == actif ? items[i].activeIcon : items[i].icon,
-                          size: 17, color: i == actif ? AppColors.primaryOcre : AppColors.textSecondary),
-                      const SizedBox(width: AppSpacing.xs),
-                      Flexible(
-                        child: Text(
-                          items[i].label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: i == actif ? AppColors.primaryBlueAnthracite : AppColors.textSecondary,
-                            fontWeight: i == actif ? FontWeight.w800 : FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              child: _EntreeDossier(
+                  item: items[i], active: i == actif, onTap: () => onSelect(i)),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _EntreeDossier extends StatelessWidget {
+  final FloatingNavItem item;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _EntreeDossier(
+      {required this.item, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final couleurIcone = active ? AppColors.primaryOcre : AppColors.white;
+    final couleurTexte =
+        active ? AppColors.primaryBlueAnthracite : AppColors.white;
+    return Semantics(
+      button: true,
+      selected: active,
+      label: item.label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: ProspectNavBar.duree,
+          curve: ProspectNavBar.courbe,
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          decoration: BoxDecoration(
+            color: active
+                ? AppColors.white
+                : AppColors.white.withValues(alpha: 0.08),
+            borderRadius: AppRadius.radiusLg,
+            boxShadow: active ? AppShadows.soft : null,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(active ? item.activeIcon : item.icon,
+                  size: 22, color: couleurIcone),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                item.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: couleurTexte,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -130,15 +130,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const AuthEntete(
                     titre: 'Créez votre compte',
-                    sousTitre:
-                        'Réservez et visitez des terrains titrés, au Mali comme depuis la diaspora.',
+                    sousTitre: 'Réservez et visitez des terrains titrés.',
                     hauteurLogo: 80,
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   AuthCarte(
                     children: [
-                      const AuthSectionTitre(
-                          icone: Icons.badge_outlined, titre: 'Identité'),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -162,8 +159,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ],
                       ),
                       const _Separateur(),
-                      const AuthSectionTitre(
-                          icone: Icons.phone_iphone_rounded, titre: 'Contact'),
                       AppTextField(
                         label: 'Numéro de téléphone',
                         controller: _phone,
@@ -178,8 +173,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         style: AppTextStyles.bodySmall,
                       ),
                       const _Separateur(),
-                      const AuthSectionTitre(
-                          icone: Icons.lock_outline_rounded, titre: 'Sécurité'),
                       AppTextField(
                         label: 'Mot de passe',
                         controller: _password,
@@ -218,8 +211,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  const _Garanties(),
-                  const SizedBox(height: AppSpacing.lg),
                   Center(
                     child: RichText(
                       text: TextSpan(
@@ -256,7 +247,7 @@ class _Separateur extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: AppSpacing.md + AppSpacing.xs),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Divider(height: 1, color: AppColors.borderLight),
     );
   }
@@ -336,41 +327,3 @@ class _AccordConditions extends StatelessWidget {
 }
 
 /// Engagements de la plateforme, rappelés sous le formulaire.
-class _Garanties extends StatelessWidget {
-  const _Garanties();
-
-  static const _items = [
-    (Icons.verified_outlined, 'Titres fonciers vérifiés'),
-    (Icons.apartment_rounded, 'Sociétés agréées'),
-    (Icons.payments_outlined, 'Aucun paiement en ligne'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (final (icone, libelle) in _items)
-          Expanded(
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
-                  decoration: const BoxDecoration(
-                      color: AppColors.successGreenSoft,
-                      shape: BoxShape.circle),
-                  child: Icon(icone, size: 18, color: AppColors.successGreen),
-                ),
-                const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
-                Text(
-                  libelle,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}

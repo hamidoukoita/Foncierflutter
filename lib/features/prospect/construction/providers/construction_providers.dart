@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
+import 'package:flutter_mobile_prospect_agent/data/providers/repository_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import '../data/projet_construction_repository.dart';
 import '../domain/modele_maison.dart';
@@ -15,6 +17,11 @@ final societesAgreeesProvider = FutureProvider.autoDispose<List<SocietePromotric
 
 final modelesSocieteProvider = FutureProvider.autoDispose.family<List<ModeleMaison>, int>(
   (ref, societeId) => ref.watch(projetConstructionRepositoryProvider).modelesDeSociete(societeId),
+);
+
+/// Photos et panoramas 360° d'un modèle du catalogue.
+final mediasModeleProvider = FutureProvider.autoDispose.family<List<MediaModel>, int>(
+  (ref, modeleId) => ref.watch(mediaRepositoryProvider).getByModele(modeleId),
 );
 
 /// Projets de l'acquéreur connecté, du plus récent au plus ancien.

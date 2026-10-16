@@ -23,7 +23,6 @@ class SoumissionState {
   final ModeleMaison? modele;
   final MaisonCleEnMain? maison;
   final bool modelePersonnalise;
-  final List<PieceAJoindre> pieces;
   final bool envoi;
 
   const SoumissionState({
@@ -32,14 +31,10 @@ class SoumissionState {
     this.modele,
     this.maison,
     this.modelePersonnalise = false,
-    this.pieces = const [],
     this.envoi = false,
   });
 
   bool get maisonChoisie => modele != null || maison != null || modelePersonnalise;
-
-  List<PieceAJoindre> piecesDeType(Set<TypeFichierProjet> types) =>
-      pieces.where((p) => types.contains(p.type)).toList();
 
   SoumissionState copyWith({
     EtapeSoumission? etape,
@@ -47,7 +42,6 @@ class SoumissionState {
     ModeleMaison? Function()? modele,
     MaisonCleEnMain? Function()? maison,
     bool? modelePersonnalise,
-    List<PieceAJoindre>? pieces,
     bool? envoi,
   }) {
     return SoumissionState(
@@ -56,17 +50,9 @@ class SoumissionState {
       modele: modele != null ? modele() : this.modele,
       maison: maison != null ? maison() : this.maison,
       modelePersonnalise: modelePersonnalise ?? this.modelePersonnalise,
-      pieces: pieces ?? this.pieces,
       envoi: envoi ?? this.envoi,
     );
   }
-}
-
-/// Résultat de l'envoi : le dossier créé et les pièces qui n'ont pas pu partir.
-class ResultatSoumission {
-  final ProjetConstruction projet;
-  final int piecesEnEchec;
-  const ResultatSoumission(this.projet, this.piecesEnEchec);
 }
 
 class SoumissionController extends AutoDisposeNotifier<SoumissionState> {
@@ -99,32 +85,13 @@ class SoumissionController extends AutoDisposeNotifier<SoumissionState> {
     state = SoumissionState(etape: EtapeSoumission.terrain, societe: societe, maison: maison);
   }
 
-  void ajouterPieces(List<PieceAJoindre> pieces) =>
-      state = state.copyWith(pieces: [...state.pieces, ...pieces]);
-
-  void retirerPiece(PieceAJoindre piece) =>
-      state = state.copyWith(pieces: state.pieces.where((p) => p != piece).toList());
-
-  /// Crée le dossier puis envoie les pièces jointes une à une.
-  Future<ResultatSoumission> soumettre(SoumissionProjet soumission) async {
+  /// Crée le dossier de construction.
+  Future<ProjetConstruction> soumettre(SoumissionProjet soumission) async {
     state = state.copyWith(envoi: true);
     try {
-      final repo = ref.read(projetConstructionRepositoryProvider);
-      final projet = await repo.soumettre(soumission);
-      // Les plans et photos d'un modèle du catalogue n'ont plus d'objet.
-      final pieces = state.modelePersonnalise
-          ? state.pieces
-          : state.piecesDeType({TypeFichierProjet.titreFoncier});
-      var echecs = 0;
-      for (final piece in pieces) {
-        try {
-          await repo.joindre(projet.id, piece);
-        } catch (_) {
-          echecs++;
-        }
-      }
+      final projet = await ref.read(projetConstructionRepositoryProvider).soumettre(soumission);
       ref.invalidate(mesProjetsProvider);
-      return ResultatSoumission(projet, echecs);
+      return projet;
     } finally {
       state = state.copyWith(envoi: false);
     }

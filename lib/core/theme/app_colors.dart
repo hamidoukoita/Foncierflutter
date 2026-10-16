@@ -16,6 +16,10 @@ class AppColors {
   static const Color brandGreen = Color(0xFF4A7A56);
   static const Color accentCoral = Color(0xFFE65335);
 
+  // Paiement mobile (Orange Money, simulé)
+  static const Color orangeMoney = Color(0xFFFF7900);
+  static const Color orangeMoneySoft = Color(0xFFFFF1E5);
+
   // Statuts
   static const Color successGreen = Color(0xFF278443);
   static const Color successGreenSoft = Color(0xFFE4F6E9);

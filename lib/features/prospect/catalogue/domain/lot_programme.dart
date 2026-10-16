@@ -20,6 +20,9 @@ class LotProgramme {
 
   /// Nombre de panoramas 360° du lot.
   final int nombrePanoramas;
+  final String? societeNom;
+  /// Logo de la société promotrice (chemin relatif servi par le backend).
+  final String? societeLogoUrl;
 
   const LotProgramme({
     required this.id,
@@ -39,6 +42,8 @@ class LotProgramme {
     this.longitude,
     this.imageUrl,
     this.nombrePanoramas = 0,
+    this.societeNom,
+    this.societeLogoUrl,
   });
 
   String get displayRef => reference?.isNotEmpty == true
@@ -76,6 +81,8 @@ class LotProgramme {
       longitude: (json['longitude'] as num?)?.toDouble(),
       imageUrl: json['imageUrl'] as String?,
       nombrePanoramas: (json['nombrePanoramas'] as num?)?.toInt() ?? 0,
+      societeNom: json['societeNom'] as String?,
+      societeLogoUrl: json['societeLogoUrl'] as String?,
     );
   }
 }

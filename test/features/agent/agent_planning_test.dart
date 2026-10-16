@@ -72,25 +72,36 @@ void main() {
   });
 
   group('Suivi des réservations', () {
-    ReservationModel res(int id, String statut, DateTime expiration) =>
+    ReservationModel res(int id, String statut, DateTime date, {DateTime? expiration}) =>
         ReservationModel(
           id: id,
           numeroDossier: 'D$id',
-          dateReservation: expiration.subtract(const Duration(hours: 24)),
+          dateReservation: date,
+          dateDebutDecompte: expiration?.subtract(const Duration(hours: 72)),
           dateExpiration: expiration,
           statut: statut,
         );
 
-    test('tri : en cours, puis expirées, puis confirmées ; refusées exclues',
-        () {
+    test('tri : à démarrer, puis décomptes (échéance proche d’abord), puis terminées', () {
       final liste = [
-        res(1, 'CONFIRMER', dans2h),
-        res(2, 'EN_ATTENTE', hier),
-        res(3, 'EN_ATTENTE', dans2h),
-        res(4, 'REFUSER', dans2h),
+        res(1, 'VENDUE', hier),
+        res(2, 'EN_COURS', hier, expiration: dans2h.add(const Duration(days: 1))),
+        res(3, 'EN_ATTENTE', hier),
+        res(4, 'EN_COURS', hier, expiration: dans2h),
+        res(5, 'ANNULEE', hier),
       ];
-      expect(ReservationsSuivi.trier(liste).map((r) => r.id), [3, 2, 1]);
-      expect(ReservationsSuivi.dossiersEnCours(liste), 1);
+      expect(ReservationsSuivi.trier(liste).map((r) => r.id).take(3), [3, 4, 2]);
+      expect(ReservationsSuivi.dossiersEnCours(liste), 3);
+    });
+
+    test('anciens dossiers : confirmé = en cours, refusé = annulé', () {
+      expect(res(1, 'CONFIRMER', hier).isEnCours, isTrue);
+      expect(res(2, 'REFUSER', hier).isAnnulee, isTrue);
+    });
+
+    test('vente possible seulement avant l’échéance', () {
+      expect(res(1, 'EN_COURS', hier, expiration: dans2h).peutConclure(now), isTrue);
+      expect(res(2, 'EN_COURS', hier, expiration: hier).peutConclure(now), isFalse);
     });
   });
 }

@@ -24,6 +24,13 @@ class ApiEndpoints {
   static String accepterRendezVous(int id) => '/rendez-vous/$id/accepter';
   static String reservationsByAgent(int agentId) =>
       '/reservations/agent/$agentId';
+  static String reservationsByAcquereur(int acquereurId) =>
+      '/reservations/acquereur/$acquereurId';
+  static String conditionsReservation(int bienId) =>
+      '/reservations/conditions/$bienId';
+  static String annulerReservation(int id) => '/reservations/$id/annuler';
+  static String demarrerReservation(int id) => '/reservations/$id/demarrer';
+  static String vendreReservation(int id) => '/reservations/$id/vendre';
 
   // Notifications
   static String notificationsByUtilisateur(int utilisateurId) =>
@@ -39,6 +46,8 @@ class ApiEndpoints {
   static String mediasByProgramme(int programmeId) =>
       '/medias/programme/$programmeId';
   static String mediasByBien(int bienId) => '/medias/bien/$bienId';
+  static String mediasByModele(int modeleId) => '/medias/modele/$modeleId';
+  static String liensPanoramasByBien(int bienId) => '/medias/bien/$bienId/liens';
   static String proximitesByProgramme(int programmeId) =>
       '/proximites-commodites/programme/$programmeId';
   static String proximitesByBien(int bienId) =>
@@ -50,7 +59,6 @@ class ApiEndpoints {
       '/projets-construction/acquereur/$id';
   static String projetsBySociete(int id) => '/projets-construction/societe/$id';
   static String projetById(int id) => '/projets-construction/$id';
-  static String fichiersProjet(int id) => '/projets-construction/$id/fichiers';
   static const String modelesMaison = '/modeles-maison';
 
   // Maisons clés en main

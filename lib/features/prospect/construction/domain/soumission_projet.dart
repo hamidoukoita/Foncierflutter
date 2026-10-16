@@ -1,13 +1,3 @@
-import 'package:file_picker/file_picker.dart';
-import 'projet_construction.dart';
-
-/// Pièce choisie sur le téléphone, envoyée après la création du dossier.
-class PieceAJoindre {
-  final PlatformFile fichier;
-  final TypeFichierProjet type;
-  const PieceAJoindre(this.fichier, this.type);
-}
-
 /// Données saisies dans le formulaire « Soumettre mon projet ».
 class SoumissionProjet {
   final int societeId;

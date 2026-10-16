@@ -25,6 +25,24 @@ void main() {
     });
   });
 
+  group('ModeleMaison.fromJson', () {
+    test('lit la couverture et le nombre de panoramas 360°', () {
+      final m = ModeleMaison.fromJson({
+        'id': 4,
+        'libeller': 'Villa Kayes',
+        'imageUrl': '/uploads/medias/a.jpg',
+        'nombrePanoramas': 2,
+      });
+      expect(m.libelle, 'Villa Kayes');
+      expect(m.imageUrl, '/uploads/medias/a.jpg');
+      expect(m.nombrePanoramas, 2);
+    });
+
+    test('sans galerie : aucun panorama', () {
+      expect(ModeleMaison.fromJson({'id': 1}).nombrePanoramas, 0);
+    });
+  });
+
   group('SoumissionProjet.toJson', () {
     test('modèle du catalogue : pas de champs de modèle personnalisé', () {
       final json = const SoumissionProjet(

@@ -11,7 +11,7 @@ class ReservationRepository {
   Future<List<ReservationModel>> getReservationsByAcquereur(
       int acquereurId) async {
     final response = await _apiClient
-        .get<Map<String, dynamic>>('/reservations/acquereur/$acquereurId');
+        .get<Map<String, dynamic>>(ApiEndpoints.reservationsByAcquereur(acquereurId));
     final apiResponse = ApiResponse<List<dynamic>>.fromJson(
       response.data!,
       (data) => data as List<dynamic>,
@@ -44,33 +44,47 @@ class ReservationRepository {
     throw Exception(apiResponse.message);
   }
 
-  Future<ReservationModel> reserverBien(int bienId, int acquereurId) async {
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      '/reservations',
-      data: {
-        'bienId': bienId,
-        'acquereurId': acquereurId,
-        'dateReservation': DateTime.now().toIso8601String(),
-      },
-    );
-    final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
-      response.data!,
-      (data) => data as Map<String, dynamic>,
-    );
-
-    if (apiResponse.success && apiResponse.data != null) {
-      return ReservationModel.fromJson(apiResponse.data!);
-    }
-    throw Exception(apiResponse.message);
+  /// Montant, durée et disponibilité d'un bien avant de le réserver.
+  Future<ConditionsReservation> conditions(int bienId) async {
+    final response = await _apiClient
+        .get<Map<String, dynamic>>(ApiEndpoints.conditionsReservation(bienId));
+    return ConditionsReservation.fromJson(_donnees(response.data!));
   }
 
-  /// Annule la réservation de l'acquéreur (PATCH /reservations/{id}/annuler) — réservation en attente uniquement.
-  Future<void> annuler(int reservationId) async {
-    final response = await _apiClient.patch<Map<String, dynamic>>('/reservations/$reservationId/annuler');
+  /// Réserve le bien ; pour un lot ou une parcelle, le paiement Orange Money est simulé côté serveur.
+  Future<ReservationModel> reserverBien(int bienId, int acquereurId) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      ApiEndpoints.reservations,
+      data: {'bienId': bienId, 'acquereurId': acquereurId},
+    );
+    return ReservationModel.fromJson(_donnees(response.data!));
+  }
+
+  /// Désistement de l'acquéreur (en attente ou en cours) : le montant payé n'est pas remboursé.
+  Future<void> annuler(int reservationId) =>
+      _action(ApiEndpoints.annulerReservation(reservationId));
+
+  /// L'agent chargé du dossier démarre le décompte de la réservation.
+  Future<ReservationModel> demarrerDecompte(int reservationId) =>
+      _action(ApiEndpoints.demarrerReservation(reservationId));
+
+  /// Vente conclue avant l'échéance.
+  Future<ReservationModel> conclureVente(int reservationId) =>
+      _action(ApiEndpoints.vendreReservation(reservationId));
+
+  Future<ReservationModel> _action(String chemin) async {
+    final response = await _apiClient.patch<Map<String, dynamic>>(chemin);
+    return ReservationModel.fromJson(_donnees(response.data!));
+  }
+
+  Map<String, dynamic> _donnees(Map<String, dynamic> body) {
     final apiResponse = ApiResponse<Map<String, dynamic>>.fromJson(
-      response.data!,
+      body,
       (data) => data as Map<String, dynamic>,
     );
-    if (!apiResponse.success) throw Exception(apiResponse.message);
+    if (!apiResponse.success || apiResponse.data == null) {
+      throw Exception(apiResponse.message);
+    }
+    return apiResponse.data!;
   }
 }

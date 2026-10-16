@@ -20,6 +20,8 @@ class ProgrammeFoncier {
   final bool? voirieBitumee;
   final int? societeId;
   final String? societeNom;
+  /// Logo de la société promotrice (chemin relatif servi par le backend).
+  final String? societeLogoUrl;
   final int? totalLots;
   final int? planMasseId;
 
@@ -41,6 +43,7 @@ class ProgrammeFoncier {
     this.voirieBitumee,
     this.societeId,
     this.societeNom,
+    this.societeLogoUrl,
     this.totalLots,
     this.planMasseId,
   });
@@ -68,6 +71,7 @@ class ProgrammeFoncier {
       voirieBitumee: json['voirieBitumee'] as bool?,
       societeId: (json['societeId'] as num?)?.toInt(),
       societeNom: json['societeNom'] as String?,
+      societeLogoUrl: json['societeLogoUrl'] as String?,
       totalLots: (json['totalLots'] as num?)?.toInt() ??
           (json['lotsTotal'] as num?)?.toInt(),
       planMasseId: (json['planMasseId'] as num?)?.toInt(),

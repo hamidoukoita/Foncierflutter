@@ -5,7 +5,6 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
-import '../../../domain/projet_construction.dart';
 import '../../controllers/champs_projet.dart';
 import '../../controllers/soumission_controller.dart';
 import 'entete_etape.dart';
@@ -19,9 +18,6 @@ class EtapeRecapitulatif extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final etat = ref.watch(soumissionControllerProvider);
     final budget = ChampsProjet.nombre(champs.budget);
-    final pieces = etat.modelePersonnalise
-        ? etat.pieces
-        : etat.piecesDeType({TypeFichierProjet.titreFoncier});
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,13 +55,6 @@ class EtapeRecapitulatif extends ConsumerWidget {
                   ? ['Comme la maison clé en main « ${etat.maison!.titre} »']
                   : [etat.modele?.libelle ?? '—'],
           onModifier: () => ref.read(soumissionControllerProvider.notifier).allerA(EtapeSoumission.modele),
-        ),
-        _Bloc(
-          icone: Icons.attach_file_rounded,
-          titre: 'Pièces jointes',
-          lignes: pieces.isEmpty
-              ? ['Aucune pièce jointe']
-              : [for (final p in pieces) '${p.type.libelle} · ${p.fichier.name}'],
         ),
         const SizedBox(height: AppSpacing.sm),
         Text('Message au promoteur', style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700)),

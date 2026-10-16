@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/creneau_model.dart';
@@ -33,6 +34,12 @@ final mesVisitesProvider =
 final mediasBienProvider = FutureProvider.autoDispose
     .family<List<MediaModel>, int>((ref, bienId) async {
   return ref.watch(mediaRepositoryProvider).getByBien(bienId);
+});
+
+/// Points de passage de la visite virtuelle d'un bien (maisons clés en main).
+final liensPanoramasProvider = FutureProvider.autoDispose
+    .family<List<LienPanoramaModel>, int>((ref, bienId) async {
+  return ref.watch(mediaRepositoryProvider).getLiensByBien(bienId);
 });
 
 /// Créneaux de visite disponibles d'une société promotrice.

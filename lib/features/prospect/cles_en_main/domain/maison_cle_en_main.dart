@@ -20,6 +20,8 @@ class MaisonCleEnMain {
   final int nombrePanoramas;
   final int? societeId;
   final String? societeNom;
+  /// Logo de la société promotrice (chemin relatif servi par le backend).
+  final String? societeLogoUrl;
   final List<String> equipements;
 
   const MaisonCleEnMain({
@@ -43,6 +45,7 @@ class MaisonCleEnMain {
     this.nombrePanoramas = 0,
     this.societeId,
     this.societeNom,
+    this.societeLogoUrl,
     this.equipements = const [],
   });
 
@@ -83,6 +86,7 @@ class MaisonCleEnMain {
       nombrePanoramas: i('nombrePanoramas') ?? 0,
       societeId: i('societeId'),
       societeNom: json['societeNom'] as String?,
+      societeLogoUrl: json['societeLogoUrl'] as String?,
       equipements: ((json['equipements'] as List?) ?? const []).map((e) => e.toString()).toList(),
     );
   }

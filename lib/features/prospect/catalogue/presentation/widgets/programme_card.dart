@@ -7,6 +7,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain/programme_foncier.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/societe_logo.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
 import 'programme_cover.dart';
@@ -67,6 +68,11 @@ class ProgrammeCard extends StatelessWidget {
                       left: AppSpacing.md - AppSpacing.xs,
                       bottom: AppSpacing.md - AppSpacing.xs,
                       child: Badge360(nombre: programme.nombrePanoramas),
+                    ),
+                    Positioned(
+                      right: AppSpacing.md - AppSpacing.xs,
+                      bottom: AppSpacing.md - AppSpacing.xs,
+                      child: SocieteLogo(logoUrl: programme.societeLogoUrl, nom: programme.societeNom, taille: 34, surPhoto: true),
                     ),
                   ],
                 ),

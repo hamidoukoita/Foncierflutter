@@ -3,24 +3,25 @@ import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart
 
 /// Démarches en cours de l'acquéreur, résumées sur l'accueil.
 class SuiviAcquereur {
-  /// Option posée, encore dans son délai de gel.
+  /// Réservation qui bloque encore le bien : décompte en cours (le plus proche de l'échéance)
+  /// ou, à défaut, en attente de prise en charge par un agent.
   final ReservationModel? reservationEnCours;
 
-  /// Réservation acceptée par la société (dossier à finaliser au siège).
-  final ReservationModel? reservationConfirmee;
+  /// Dernière vente conclue.
+  final ReservationModel? reservationVendue;
 
   /// Prochaine visite non refusée.
   final RendezVousModel? prochaineVisite;
 
   const SuiviAcquereur({
     this.reservationEnCours,
-    this.reservationConfirmee,
+    this.reservationVendue,
     this.prochaineVisite,
   });
 
   bool get estVide =>
       reservationEnCours == null &&
-      reservationConfirmee == null &&
+      reservationVendue == null &&
       prochaineVisite == null;
 
   factory SuiviAcquereur.depuis(
@@ -28,15 +29,16 @@ class SuiviAcquereur {
     List<RendezVousModel> visites,
     DateTime maintenant,
   ) {
-    final enCours = reservations
-        .where((r) =>
-            r.statut == 'EN_ATTENTE' && maintenant.isBefore(r.dateExpiration))
-        .toList()
-      ..sort((a, b) => a.dateExpiration.compareTo(b.dateExpiration));
-    final confirmees = reservations
-        .where((r) => r.statut == 'CONFIRMER')
-        .toList()
+    // Un décompte échu attend son expiration côté serveur : il ne bloque plus rien.
+    bool enVigueur(ReservationModel r) =>
+        r.isEnAttente || (r.isEnCours && (r.dateExpiration == null || maintenant.isBefore(r.dateExpiration!)));
+    final decomptes = reservations.where((r) => r.isEnCours && enVigueur(r)).toList()
+      ..sort((a, b) => (a.dateExpiration ?? maintenant).compareTo(b.dateExpiration ?? maintenant));
+    final enAttente = reservations.where((r) => r.isEnAttente).toList()
       ..sort((a, b) => b.dateReservation.compareTo(a.dateReservation));
+    final enCours = [...decomptes, ...enAttente];
+    final vendues = reservations.where((r) => r.isVendue).toList()
+      ..sort((a, b) => (b.dateConclusion ?? b.dateReservation).compareTo(a.dateConclusion ?? a.dateReservation));
     final aVenir = visites
         .where((v) => !v.isRefuse && v.fin.isAfter(maintenant))
         .toList()
@@ -44,7 +46,7 @@ class SuiviAcquereur {
 
     return SuiviAcquereur(
       reservationEnCours: enCours.isEmpty ? null : enCours.first,
-      reservationConfirmee: confirmees.isEmpty ? null : confirmees.first,
+      reservationVendue: vendues.isEmpty ? null : vendues.first,
       prochaineVisite: aVenir.isEmpty ? null : aVenir.first,
     );
   }

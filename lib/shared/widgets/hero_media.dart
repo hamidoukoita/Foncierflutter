@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/panorama_viewer_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,6 +19,9 @@ class DetailSliverAppBar extends StatefulWidget {
   final VoidCallback onBack;
   final double expandedHeight;
 
+  /// Points de passage entre panoramas (visite virtuelle d'une maison clé en main).
+  final List<LienPanoramaModel> liensPanoramas;
+
   const DetailSliverAppBar({
     super.key,
     required this.title,
@@ -25,6 +29,7 @@ class DetailSliverAppBar extends StatefulWidget {
     required this.onBack,
     this.loading = false,
     this.expandedHeight = 280,
+    this.liensPanoramas = const [],
   });
 
   @override
@@ -185,7 +190,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                               titre: 'Visite 360°',
                               sousTitre: panos.length > 1 ? '${panos.length} vues panoramiques' : 'Vue panoramique',
                               principal: true,
-                              onTap: () => PanoramaViewerScreen.show(context, panos),
+                              onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
                             ),
                         ],
                       ),
@@ -214,7 +219,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                           if (panos.isNotEmpty)
                             _CircleBtn(
                               icon: Icons.threesixty,
-                              onTap: () => PanoramaViewerScreen.show(context, panos),
+                              onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
                             ),
                         ],
                       ),

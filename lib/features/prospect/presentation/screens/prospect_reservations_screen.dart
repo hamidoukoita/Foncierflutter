@@ -9,6 +9,21 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/wid
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/empty_state_view.dart';
 
+/// Regroupement des réservations par étape, pour les filtres.
+enum _FiltreReservation {
+  toutes,
+  enCours,
+  vendues,
+  terminees;
+
+  bool accepte(ReservationModel r) => switch (this) {
+        _FiltreReservation.toutes => true,
+        _FiltreReservation.enCours => r.estActive,
+        _FiltreReservation.vendues => r.isVendue,
+        _FiltreReservation.terminees => r.isExpiree || r.isAnnulee,
+      };
+}
+
 class ProspectReservationsScreen extends ConsumerStatefulWidget {
   const ProspectReservationsScreen({super.key});
 
@@ -19,8 +34,7 @@ class ProspectReservationsScreen extends ConsumerStatefulWidget {
 
 class _ProspectReservationsScreenState
     extends ConsumerState<ProspectReservationsScreen> {
-  /// TOUTES | EN_ATTENTE | CONFIRMER | REFUSER
-  String _filtre = 'TOUTES';
+  _FiltreReservation _filtre = _FiltreReservation.toutes;
 
   @override
   Widget build(BuildContext context) {
@@ -48,10 +62,8 @@ class _ProspectReservationsScreenState
 
           final sorted = [...all]
             ..sort((a, b) => b.dateReservation.compareTo(a.dateReservation));
-          final list = _filtre == 'TOUTES'
-              ? sorted
-              : sorted.where((r) => r.statut == _filtre).toList();
-          int count(String s) => all.where((r) => r.statut == s).length;
+          final list = sorted.where(_filtre.accepte).toList();
+          int count(_FiltreReservation f) => all.where(f.accepte).length;
 
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(mesReservationsProvider),
@@ -63,20 +75,20 @@ class _ProspectReservationsScreenState
                 AppSpacing.lg,
               ),
               children: [
-                AppFilterBar<String>(
+                AppFilterBar<_FiltreReservation>(
                   padding: EdgeInsets.zero,
                   selected: _filtre,
                   onChanged: (v) => setState(() => _filtre = v),
                   options: [
-                    AppFilterOption('TOUTES', 'Toutes (${all.length})'),
-                    AppFilterOption(
-                        'EN_ATTENTE', 'En attente (${count('EN_ATTENTE')})',
+                    AppFilterOption(_FiltreReservation.toutes, 'Toutes (${all.length})'),
+                    AppFilterOption(_FiltreReservation.enCours,
+                        'En cours (${count(_FiltreReservation.enCours)})',
                         color: AppColors.ambreReservation24h),
-                    AppFilterOption(
-                        'CONFIRMER', 'Confirmées (${count('CONFIRMER')})',
+                    AppFilterOption(_FiltreReservation.vendues,
+                        'Vendues (${count(_FiltreReservation.vendues)})',
                         color: AppColors.successGreen),
-                    AppFilterOption(
-                        'REFUSER', 'Refusées / annulées (${count('REFUSER')})',
+                    AppFilterOption(_FiltreReservation.terminees,
+                        'Expirées / annulées (${count(_FiltreReservation.terminees)})',
                         color: AppColors.errorRed),
                   ],
                 ),

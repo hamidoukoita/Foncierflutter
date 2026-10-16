@@ -8,6 +8,7 @@ import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart
 import 'package:flutter_mobile_prospect_agent/features/prospect/accueil/presentation/widgets/annonce_artwork.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/societe_logo.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
 import '../../domain/maison_cle_en_main.dart';
 
@@ -70,6 +71,11 @@ class MaisonCard extends StatelessWidget {
                     left: AppSpacing.md - AppSpacing.xs,
                     bottom: AppSpacing.md - AppSpacing.xs,
                     child: Badge360(nombre: maison.nombrePanoramas),
+                  ),
+                  Positioned(
+                    right: AppSpacing.md - AppSpacing.xs,
+                    bottom: AppSpacing.md - AppSpacing.xs,
+                    child: SocieteLogo(logoUrl: maison.societeLogoUrl, nom: maison.societeNom, taille: 34, surPhoto: true),
                   ),
                 ],
               ),

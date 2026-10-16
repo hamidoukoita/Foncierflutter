@@ -76,9 +76,8 @@ class _ProspectParcelleDetailScreenState
       ),
       data: (b) {
         final fam = familleDeStatut(b.statut);
-        final maReservation = maReservationEnAttente(
+        final maReservation = maReservationActive(
             ref.watch(mesReservationsProvider).valueOrNull, b.id);
-        final prixM2 = b.superficie > 0 ? b.prix / b.superficie : null;
 
         return DetailPage(
           title: b.designation,
@@ -126,12 +125,13 @@ class _ProspectParcelleDetailScreenState
               title: b.designation,
               statusLabel: libelleFamille(fam),
               statusColor: couleurFamille(fam),
-              subtitle: b.societeNom,
-              subtitleIcon: Icons.business_rounded,
+              subtitle: b.localisation,
               tags: [
                 if ((b.numeroTitreFoncier ?? '').isNotEmpty)
                   'TF : ${b.numeroTitreFoncier}',
               ],
+              societeNom: b.societeNom,
+              societeLogoUrl: b.societeLogoUrl,
             ),
             StatStrip(
               items: [
@@ -140,9 +140,6 @@ class _ProspectParcelleDetailScreenState
                 StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(b.prix),
                     'prix de vente',
                     highlight: true),
-                if (prixM2 != null)
-                  StatItem(Icons.calculate_outlined,
-                      CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
               ],
             ),
             DetailSection(

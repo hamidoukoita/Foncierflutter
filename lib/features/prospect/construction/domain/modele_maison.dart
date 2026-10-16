@@ -4,6 +4,8 @@ class ModeleMaison {
   final String libelle;
   final String? description;
   final String? imageUrl;
+  /// Panoramas 360° de la galerie du modèle.
+  final int nombrePanoramas;
   final double? surfaceTerrainMin;
   final double? surfaceTerrainMax;
   final double? surfaceConstruite;
@@ -16,6 +18,7 @@ class ModeleMaison {
     required this.libelle,
     this.description,
     this.imageUrl,
+    this.nombrePanoramas = 0,
     this.surfaceTerrainMin,
     this.surfaceTerrainMax,
     this.surfaceConstruite,
@@ -55,6 +58,7 @@ class ModeleMaison {
       libelle: json['libeller'] as String? ?? 'Modèle',
       description: json['description'] as String?,
       imageUrl: json['imageUrl'] as String?,
+      nombrePanoramas: i('nombrePanoramas') ?? 0,
       surfaceTerrainMin: d('surfaceTerrainMin'),
       surfaceTerrainMax: d('surfaceTerrainMax'),
       surfaceConstruite: d('surfaceConstruite'),

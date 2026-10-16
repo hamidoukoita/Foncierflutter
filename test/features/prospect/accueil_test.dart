@@ -30,7 +30,8 @@ void main() {
     ReservationModel res(String statut, DateTime expiration) => ReservationModel(
           id: 1,
           numeroDossier: 'D1',
-          dateReservation: expiration.subtract(const Duration(hours: 24)),
+          dateReservation: expiration.subtract(const Duration(hours: 48)),
+          dateDebutDecompte: expiration.subtract(const Duration(hours: 24)),
           dateExpiration: expiration,
           statut: statut,
         );
@@ -38,9 +39,9 @@ void main() {
     RendezVousModel rdv(int id, DateTime date, String statut) =>
         RendezVousModel(id: id, dateRendezVous: date, typeRDV: 'CHANTIER', statut: statut);
 
-    test('réservation expirée et visite refusée ne remontent pas', () {
+    test('décompte échu et visite refusée ne remontent pas', () {
       final suivi = SuiviAcquereur.depuis(
-        [res('EN_ATTENTE', now.subtract(const Duration(hours: 1)))],
+        [res('EN_COURS', now.subtract(const Duration(hours: 1))), res('EXPIREE', now)],
         [rdv(1, now.add(const Duration(days: 1)), 'REFUSER')],
         now,
       );
@@ -49,7 +50,7 @@ void main() {
 
     test('prochaine visite = la plus proche à venir', () {
       final suivi = SuiviAcquereur.depuis(
-        [res('EN_ATTENTE', now.add(const Duration(hours: 5)))],
+        [res('EN_COURS', now.add(const Duration(hours: 5)))],
         [
           rdv(1, now.add(const Duration(days: 3)), 'ACCEPTER'),
           rdv(2, now.add(const Duration(days: 1)), 'EN_ATTENTE'),

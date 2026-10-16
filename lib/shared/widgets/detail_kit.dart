@@ -6,8 +6,10 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/hero_media.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/societe_logo.dart';
 
 /// Gabarit commun des pages de détail (cité, lot, parcelle) : même hero, mêmes cartes, même barre d'actions.
 class DetailPage extends StatelessWidget {
@@ -19,6 +21,9 @@ class DetailPage extends StatelessWidget {
   final Widget? bottomBar;
   final Future<void> Function()? onRefresh;
 
+  /// Points de passage entre panoramas, pour une visite pièce par pièce.
+  final List<LienPanoramaModel> liensPanoramas;
+
   const DetailPage({
     super.key,
     required this.title,
@@ -28,6 +33,7 @@ class DetailPage extends StatelessWidget {
     this.mediasLoading = false,
     this.bottomBar,
     this.onRefresh,
+    this.liensPanoramas = const [],
   });
 
   @override
@@ -35,7 +41,13 @@ class DetailPage extends StatelessWidget {
     final scroll = CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        DetailSliverAppBar(title: title, medias: medias, loading: mediasLoading, onBack: onBack),
+        DetailSliverAppBar(
+          title: title,
+          medias: medias,
+          loading: mediasLoading,
+          onBack: onBack,
+          liensPanoramas: liensPanoramas,
+        ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md + AppSpacing.xs,
@@ -202,6 +214,10 @@ class DetailHeader extends StatelessWidget {
   final VoidCallback? onSubtitleTap;
   final List<String> tags;
 
+  /// Société qui publie le bien : logo et nom affichés sous le titre (« Publié par »).
+  final String? societeNom;
+  final String? societeLogoUrl;
+
   const DetailHeader({
     super.key,
     required this.title,
@@ -211,6 +227,8 @@ class DetailHeader extends StatelessWidget {
     this.subtitleIcon = Icons.location_on_outlined,
     this.onSubtitleTap,
     this.tags = const [],
+    this.societeNom,
+    this.societeLogoUrl,
   });
 
   @override
@@ -250,6 +268,18 @@ class DetailHeader extends StatelessWidget {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
               children: [for (final t in tags) _Tag(t)],
+            ),
+          ],
+          if ((societeNom ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm + AppSpacing.xxs),
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: AppRadius.radiusLg,
+                border: Border.all(color: AppColors.borderLight),
+              ),
+              child: SocieteSignature(logoUrl: societeLogoUrl, nom: societeNom),
             ),
           ],
         ],

@@ -76,6 +76,19 @@ class DateFormatter {
     return '${duree.inMinutes} min';
   }
 
+  /// « 3 j », « 1 j 12 h », « 5 h 03 », « 12 min » : durées de réservation et temps restant.
+  static String dureeLisible(Duration duree) {
+    final heures = duree.inHours;
+    final minutes = duree.inMinutes % 60;
+    if (heures >= 24) {
+      final jours = heures ~/ 24;
+      final reste = heures % 24;
+      return reste == 0 ? '$jours j' : '$jours j $reste h';
+    }
+    if (heures >= 1) return minutes == 0 ? '$heures h' : '$heures h ${_deuxChiffres(minutes)}';
+    return '${duree.inMinutes} min';
+  }
+
   static bool estMemeJour(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 

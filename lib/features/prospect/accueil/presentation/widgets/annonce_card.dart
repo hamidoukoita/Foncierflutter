@@ -6,6 +6,7 @@ import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/societe_logo.dart';
 import '../../domain/annonce_accueil.dart';
 import 'annonce_artwork.dart';
 
@@ -56,6 +57,16 @@ class AnnonceCard extends StatelessWidget {
                     nombre: annonce.programme?.nombrePanoramas ??
                         annonce.bien?.nombrePanoramas ??
                         0),
+              ),
+              Positioned(
+                left: AppSpacing.xs,
+                top: AppSpacing.xs,
+                child: SocieteLogo(
+                  logoUrl: annonce.programme?.societeLogoUrl ?? annonce.bien?.societeLogoUrl,
+                  nom: annonce.programme?.societeNom ?? annonce.bien?.societeNom,
+                  taille: 24,
+                  surPhoto: true,
+                ),
               ),
             ],
           ),

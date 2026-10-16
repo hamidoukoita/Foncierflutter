@@ -88,7 +88,7 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
             ? ref.watch(programmeDetailProvider(programmeId)).valueOrNull
             : null;
         final fam = familleDeStatut(lot.statut);
-        final maReservation = maReservationEnAttente(
+        final maReservation = maReservationActive(
             ref.watch(mesReservationsProvider).valueOrNull, lot.id);
         final numero =
             (lot.numeroLot ?? '').isNotEmpty ? lot.numeroLot! : '${lot.id}';
@@ -96,10 +96,6 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
             numero.toLowerCase().startsWith('lot') ? numero : 'Lot $numero';
         final hasPlan = programmeId != null &&
             PlanGeometry.parse(lot.geometryJson)?.isPolygon == true;
-        final prixM2 =
-            (lot.superficie != null && lot.prix != null && lot.superficie! > 0)
-                ? lot.prix! / lot.superficie!
-                : null;
 
         return DetailPage(
           title: titre,
@@ -157,6 +153,8 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
                 if ((lot.numeroIlot ?? '').isNotEmpty)
                   'ÎLOT : ${lot.numeroIlot}',
               ],
+              societeNom: lot.societeNom,
+              societeLogoUrl: lot.societeLogoUrl,
             ),
             StatStrip(
               items: [
@@ -167,9 +165,6 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
                 StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(lot.prix),
                     'prix de vente',
                     highlight: true),
-                if (prixM2 != null)
-                  StatItem(Icons.calculate_outlined,
-                      CurrencyFormatter.fcfa(prixM2), 'prix au m²'),
               ],
             ),
             DetailSection(

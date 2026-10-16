@@ -55,6 +55,7 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
   Future<void> _rafraichir() async {
     ref.invalidate(maisonDetailProvider(widget.maisonId));
     ref.invalidate(mediasBienProvider(widget.maisonId));
+    ref.invalidate(liensPanoramasProvider(widget.maisonId));
     ref.invalidate(localisationBienProvider(widget.maisonId));
   }
 
@@ -83,12 +84,13 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
       ),
       data: (m) {
         final famille = familleDeStatut(m.statut);
-        final maReservation = maReservationEnAttente(ref.watch(mesReservationsProvider).valueOrNull, m.id);
+        final maReservation = maReservationActive(ref.watch(mesReservationsProvider).valueOrNull, m.id);
 
         return DetailPage(
           title: m.titre,
           medias: medias.valueOrNull ?? const [],
           mediasLoading: medias.isLoading,
+          liensPanoramas: ref.watch(liensPanoramasProvider(widget.maisonId)).valueOrNull ?? const [],
           onBack: () => context.pop(),
           onRefresh: _rafraichir,
           bottomBar: DetailActionBar(
@@ -128,13 +130,14 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
               title: m.titre,
               statusLabel: libelleFamille(famille),
               statusColor: couleurFamille(famille),
-              subtitle: m.societeNom,
-              subtitleIcon: Icons.business_rounded,
+              subtitle: m.adresse,
               tags: [
                 'Clé en main',
                 if (m.niveaux != null) m.niveaux!,
                 if ((m.numeroTitreFoncier ?? '').isNotEmpty) 'TF : ${m.numeroTitreFoncier}',
               ],
+              societeNom: m.societeNom,
+              societeLogoUrl: m.societeLogoUrl,
             ),
             StatStrip(
               items: [

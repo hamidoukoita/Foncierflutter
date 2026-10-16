@@ -114,15 +114,13 @@ class ProgrammeDetailScreen extends ConsumerWidget {
               title: programme.nom,
               statusLabel: status.$1,
               statusColor: status.$2,
-              subtitle: [
-                if ((programme.lieu ?? '').isNotEmpty) programme.lieu!,
-                if ((programme.societeNom ?? '').isNotEmpty)
-                  programme.societeNom!,
-              ].join(' • '),
+              subtitle: programme.lieu,
               tags: [
                 if ((programme.numeroTitreMere ?? '').isNotEmpty)
                   'TF MÈRE : ${programme.numeroTitreMere}',
               ],
+              societeNom: programme.societeNom,
+              societeLogoUrl: programme.societeLogoUrl,
             ),
             StatStrip(
               items: [

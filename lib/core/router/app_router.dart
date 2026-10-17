@@ -32,6 +32,7 @@ import 'package:flutter_mobile_prospect_agent/features/agent/shell/agent_shell.d
 
 import 'package:flutter_mobile_prospect_agent/features/agent/dashboard/presentation/views/agent_dashboard_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/reservations/presentation/views/agent_reservations_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/reservations/presentation/views/reservation_detail_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/shared/agent_routes.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/visites/presentation/views/agent_visites_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/agent/visites/presentation/views/visite_detail_screen.dart';
@@ -246,6 +247,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AgentRoutes.visiteDetailPattern,
         builder: (context, state) => VisiteDetailScreen(
           visiteId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: AgentRoutes.reservationDetailPattern,
+        builder: (context, state) => ReservationDetailScreen(
+          reservationId: int.parse(state.pathParameters['id']!),
         ),
       ),
       GoRoute(

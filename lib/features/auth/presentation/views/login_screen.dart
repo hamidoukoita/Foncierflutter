@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -40,7 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final ok = await ref.read(authProvider.notifier).login(
-          _phoneCtrl.text,
+          TelephoneMali.chiffres(_phoneCtrl.text),
           _passwordCtrl.text,
         );
     if (!mounted) return;
@@ -83,9 +84,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         keyboardType: TextInputType.phone,
                         hintText: '76 12 34 56',
                         prefixIcon: const TelephoneMaliPrefixe(),
-                        validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Numéro obligatoire'
-                            : null,
+                        inputFormatters: [TelephoneMaliFormatter()],
+                        validator: TelephoneMali.valider,
                       ),
 
                       const SizedBox(height: AppSpacing.md),

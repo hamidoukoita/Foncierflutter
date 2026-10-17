@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -28,7 +29,6 @@ class RegisterScreen extends ConsumerStatefulWidget {
 
 class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   static const int _longueurMinMotDePasse = 6;
-  static const int _chiffresMinTelephone = 8;
 
   final _formKey = GlobalKey<FormState>();
   final _nom = TextEditingController();
@@ -50,20 +50,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   /// Numéro sans espaces ni séparateurs, tel qu'il sera utilisé pour se connecter.
-  String get _telephone => _phone.text.replaceAll(RegExp(r'[\s.-]'), '');
+  String get _telephone => TelephoneMali.chiffres(_phone.text);
 
   String? _obligatoire(String? v) =>
       v == null || v.trim().isEmpty ? 'Obligatoire' : null;
-
-  String? _validerTelephone(String? _) {
-    final numero = _telephone;
-    if (numero.isEmpty) return 'Numéro obligatoire';
-    if (!RegExp(r'^\d+$').hasMatch(numero)) return 'Chiffres uniquement';
-    if (numero.length < _chiffresMinTelephone) {
-      return '$_chiffresMinTelephone chiffres minimum';
-    }
-    return null;
-  }
 
   String? _validerMotDePasse(String? v) =>
       v == null || v.length < _longueurMinMotDePasse
@@ -165,7 +155,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         keyboardType: TextInputType.phone,
                         hintText: '76 12 34 56',
                         prefixIcon: const TelephoneMaliPrefixe(),
-                        validator: _validerTelephone,
+                        inputFormatters: [TelephoneMaliFormatter()],
+                        validator: TelephoneMali.valider,
                       ),
                       const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
                       Text(

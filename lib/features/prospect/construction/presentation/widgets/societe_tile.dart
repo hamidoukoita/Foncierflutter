@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
@@ -38,7 +38,7 @@ class SocieteTile extends StatelessWidget {
               height: 48,
               child: logo == null
                   ? initiales
-                  : CachedNetworkImage(imageUrl: logo, fit: BoxFit.cover, errorWidget: (_, __, ___) => initiales),
+                  : ImageReseau(url: logo, attente: initiales),
             ),
           ),
           const SizedBox(width: AppSpacing.md - AppSpacing.xs),

@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/actions_bien.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -90,6 +91,11 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
         final fam = familleDeStatut(lot.statut);
         final maReservation = maReservationActive(
             ref.watch(mesReservationsProvider).valueOrNull, lot.id);
+        final actions = ActionsBien.depuis(
+          ref.watch(conditionsReservationProvider(widget.lotId)).valueOrNull,
+          vendu: fam == LotFamille.vendu,
+          reservableParStatut: lot.peutEtreReserve,
+        );
         final numero =
             (lot.numeroLot ?? '').isNotEmpty ? lot.numeroLot! : '${lot.id}';
         final titre =
@@ -106,38 +112,42 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
             ref.invalidate(lotDetailProvider(widget.lotId));
             ref.invalidate(mediasBienProvider(widget.lotId));
           },
-          bottomBar: DetailActionBar(
-            actions: [
-              if (maReservation != null)
-                DetailButton(
-                  label: 'Annuler ma réservation',
-                  icon: Icons.close_rounded,
-                  danger: true,
-                  loading: _annulant,
-                  onPressed: () => _annuler(maReservation),
-                )
-              else if (lot.peutEtreReserve)
-                DetailButton(
-                  label: 'Réserver ce lot',
-                  icon: Icons.bookmark_add_outlined,
-                  loading: _reserving,
-                  onPressed: () => _reserver(lot),
+          // Bien vendu ou complet : plus de barre d'actions, le motif est affiché dans la fiche.
+          bottomBar: maReservation == null && actions.aucuneAction
+              ? null
+              : DetailActionBar(
+                  actions: [
+                    if (maReservation != null)
+                      DetailButton(
+                        label: 'Annuler ma réservation',
+                        icon: Icons.close_rounded,
+                        danger: true,
+                        loading: _annulant,
+                        onPressed: () => _annuler(maReservation),
+                      )
+                    else if (actions.peutReserver)
+                      DetailButton(
+                        label: 'Réserver ce lot',
+                        icon: Icons.bookmark_add_outlined,
+                        loading: _reserving,
+                        onPressed: () => _reserver(lot),
+                      ),
+                    if (actions.peutVisiter)
+                      DetailButton(
+                        label: 'Prendre RDV',
+                        icon: Icons.event_available_outlined,
+                        color: AppColors.primaryBlueAnthracite,
+                        onPressed: () => RdvBookingSheet.show(
+                          context,
+                          bienId: lot.id,
+                          societeId: programme?.societeId,
+                          bienLabel: titre,
+                          societeNom: programme?.societeNom,
+                          chantierLabel: lot.programmeNom,
+                        ),
+                      ),
+                  ],
                 ),
-              DetailButton(
-                label: 'Prendre RDV',
-                icon: Icons.event_available_outlined,
-                color: AppColors.primaryBlueAnthracite,
-                onPressed: () => RdvBookingSheet.show(
-                  context,
-                  bienId: lot.id,
-                  societeId: programme?.societeId,
-                  bienLabel: titre,
-                  societeNom: programme?.societeNom,
-                  chantierLabel: lot.programmeNom,
-                ),
-              ),
-            ],
-          ),
           children: [
             DetailHeader(
               title: titre,
@@ -221,10 +231,12 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
               InfoBanner.reservationEnAttente(
                   numeroDossier: maReservation.numeroDossier),
             ],
-            const SizedBox(height: 14),
-            ReservationRuleBanner(
-                reservationMultiple: lot.reservationMultiple,
-                isReserve: lot.isReserve),
+            if (!actions.vendu) ...[
+              const SizedBox(height: AppSpacing.md),
+              ReservationRuleBanner(
+                  reservationMultiple: lot.reservationMultiple,
+                  isReserve: lot.isReserve),
+            ],
             if (hasPlan) ...[
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -236,11 +248,14 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
                     minimumSize: const Size.fromHeight(AppSizes.buttonMedium)),
               ),
             ],
-            if (!lot.peutEtreReserve) ...[
+            if (actions.motif != null) ...[
               const SizedBox(height: AppSpacing.md - AppSpacing.xs),
-              const InfoBanner(
-                icone: Icons.block_rounded,
-                message: 'Ce lot n\'est pas réservable pour le moment.',
+              InfoBanner(
+                icone:
+                    actions.vendu ? Icons.sell_outlined : Icons.block_rounded,
+                message: actions.vendu
+                    ? 'Ce bien est vendu : vous pouvez consulter ses caractéristiques, mais plus le réserver ni le visiter.'
+                    : actions.motif!,
               ),
             ],
           ],

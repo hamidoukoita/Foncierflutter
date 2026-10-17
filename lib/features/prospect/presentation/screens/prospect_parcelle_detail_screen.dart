@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/actions_bien.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,6 +79,13 @@ class _ProspectParcelleDetailScreenState
         final fam = familleDeStatut(b.statut);
         final maReservation = maReservationActive(
             ref.watch(mesReservationsProvider).valueOrNull, b.id);
+        final actions = ActionsBien.depuis(
+          ref
+              .watch(conditionsReservationProvider(widget.parcelleId))
+              .valueOrNull,
+          vendu: fam == LotFamille.vendu,
+          reservableParStatut: b.peutEtreReserve,
+        );
 
         return DetailPage(
           title: b.designation,
@@ -88,38 +96,42 @@ class _ProspectParcelleDetailScreenState
             ref.invalidate(bienDetailProvider(widget.parcelleId));
             ref.invalidate(mediasBienProvider(widget.parcelleId));
           },
-          bottomBar: DetailActionBar(
-            actions: [
-              if (maReservation != null)
-                DetailButton(
-                  label: 'Annuler ma réservation',
-                  icon: Icons.close_rounded,
-                  danger: true,
-                  loading: _annulant,
-                  onPressed: () => _annuler(maReservation),
-                )
-              else if (b.peutEtreReserve)
-                DetailButton(
-                  label: 'Réserver',
-                  icon: Icons.bookmark_add_outlined,
-                  loading: _reserving,
-                  onPressed: () => _reserver(b),
+          // Bien vendu ou complet : plus de barre d'actions, le motif est affiché dans la fiche.
+          bottomBar: maReservation == null && actions.aucuneAction
+              ? null
+              : DetailActionBar(
+                  actions: [
+                    if (maReservation != null)
+                      DetailButton(
+                        label: 'Annuler ma réservation',
+                        icon: Icons.close_rounded,
+                        danger: true,
+                        loading: _annulant,
+                        onPressed: () => _annuler(maReservation),
+                      )
+                    else if (actions.peutReserver)
+                      DetailButton(
+                        label: 'Réserver',
+                        icon: Icons.bookmark_add_outlined,
+                        loading: _reserving,
+                        onPressed: () => _reserver(b),
+                      ),
+                    if (actions.peutVisiter)
+                      DetailButton(
+                        label: 'Prendre RDV',
+                        icon: Icons.event_available_outlined,
+                        color: AppColors.primaryBlueAnthracite,
+                        onPressed: () => RdvBookingSheet.show(
+                          context,
+                          bienId: b.id,
+                          societeId: b.societeId,
+                          bienLabel: b.designation,
+                          societeNom: b.societeNom,
+                          chantierLabel: b.localisation,
+                        ),
+                      ),
+                  ],
                 ),
-              DetailButton(
-                label: 'Prendre RDV',
-                icon: Icons.event_available_outlined,
-                color: AppColors.primaryBlueAnthracite,
-                onPressed: () => RdvBookingSheet.show(
-                  context,
-                  bienId: b.id,
-                  societeId: b.societeId,
-                  bienLabel: b.designation,
-                  societeNom: b.societeNom,
-                  chantierLabel: b.localisation,
-                ),
-              ),
-            ],
-          ),
           children: [
             DetailHeader(
               title: b.designation,
@@ -142,13 +154,14 @@ class _ProspectParcelleDetailScreenState
                     highlight: true),
               ],
             ),
-            DetailSection(
-              title: 'Localisation',
-              child: LocalisationPreviewCard(
-                lieu: LieuCarteBuilder.pourBien(b),
-                onOuvrir: () => context.push(LocalisationRoutes.bien(b.id)),
+            if (!actions.vendu)
+              DetailSection(
+                title: 'Localisation',
+                child: LocalisationPreviewCard(
+                  lieu: LieuCarteBuilder.pourBien(b),
+                  onOuvrir: () => context.push(LocalisationRoutes.bien(b.id)),
+                ),
               ),
-            ),
             DetailSection(
               title: 'Caractéristiques de la parcelle',
               child: InfoRows(
@@ -214,15 +227,20 @@ class _ProspectParcelleDetailScreenState
               InfoBanner.reservationEnAttente(
                   numeroDossier: maReservation.numeroDossier),
             ],
-            const SizedBox(height: AppSpacing.md),
-            ReservationRuleBanner(
-                reservationMultiple: b.reservationMultiple,
-                isReserve: b.isReserve),
-            if (!b.peutEtreReserve) ...[
+            if (!actions.vendu) ...[
+              const SizedBox(height: AppSpacing.md),
+              ReservationRuleBanner(
+                  reservationMultiple: b.reservationMultiple,
+                  isReserve: b.isReserve),
+            ],
+            if (actions.motif != null) ...[
               const SizedBox(height: AppSpacing.md - AppSpacing.xs),
-              const InfoBanner(
-                icone: Icons.block_rounded,
-                message: 'Cette parcelle n\'est pas réservable pour le moment.',
+              InfoBanner(
+                icone:
+                    actions.vendu ? Icons.sell_outlined : Icons.block_rounded,
+                message: actions.vendu
+                    ? 'Ce bien est vendu : vous pouvez consulter ses caractéristiques, mais plus le réserver ni le visiter.'
+                    : actions.motif!,
               ),
             ],
           ],

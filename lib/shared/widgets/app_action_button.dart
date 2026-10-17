@@ -82,26 +82,32 @@ class AppActionButton extends StatelessWidget {
             onTap: onPressed,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm + AppSpacing.xs),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 17, color: texte),
-                    const SizedBox(width: AppSpacing.sm - AppSpacing.xxs),
-                  ],
-                  Flexible(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.label.copyWith(color: texte, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  if (trailingIcon != null) ...[
-                    const SizedBox(width: AppSpacing.xs),
-                    Icon(trailingIcon, size: 17, color: texte),
-                  ],
-                ],
+              // Largeur imposée (Expanded, colonne étirée) : le libellé se tronque.
+              // Largeur libre (Positioned sans left, Row) : le bouton prend la taille de son contenu.
+              child: LayoutBuilder(
+                builder: (context, contraintes) {
+                  final libelle = Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.label.copyWith(color: texte, fontWeight: FontWeight.w700),
+                  );
+                  return Row(
+                    mainAxisSize: contraintes.hasBoundedWidth ? MainAxisSize.max : MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (icon != null) ...[
+                        Icon(icon, size: 17, color: texte),
+                        const SizedBox(width: AppSpacing.sm - AppSpacing.xxs),
+                      ],
+                      if (contraintes.hasBoundedWidth) Flexible(child: libelle) else libelle,
+                      if (trailingIcon != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Icon(trailingIcon, size: 17, color: texte),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           ),

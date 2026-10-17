@@ -99,7 +99,9 @@ class _DashboardContenu extends StatelessWidget {
               : () => context.push(AgentRoutes.visiteDetail(prochaine.id)),
           onAppeler: () =>
               AgentActions.appeler(context, prochaine?.acquereurTelephone),
-          onItineraire: () => AgentActions.itineraireIndisponible(context),
+          onItineraire: prochaine == null
+              ? null
+              : () => AgentActions.itineraire(context, bienId: prochaine.isChantier ? prochaine.bienId : null, adresseSecours: prochaine.lieu),
         ),
         const SizedBox(height: AppSpacing.lg),
         SectionHeader(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/shared/agent_routes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
@@ -41,6 +43,7 @@ class _ReservationSuiviCardState extends ConsumerState<ReservationSuiviCard> {
     final progression = r.isEnCours ? r.progression() : null;
 
     return AppCard(
+      onTap: () => context.push(AgentRoutes.reservationDetail(r.id)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

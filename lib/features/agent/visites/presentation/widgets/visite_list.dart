@@ -51,7 +51,7 @@ class VisiteList extends StatelessWidget {
               afficherJour: onglet != OngletVisites.ceJour,
               onAppeler: () =>
                   AgentActions.appeler(context, visite.acquereurTelephone),
-              onItineraire: () => AgentActions.itineraireIndisponible(context),
+              onItineraire: () => AgentActions.itineraire(context, bienId: visite.isChantier ? visite.bienId : null, adresseSecours: visite.lieu),
               onDetails: () =>
                   context.push(AgentRoutes.visiteDetail(visite.id)),
             ),

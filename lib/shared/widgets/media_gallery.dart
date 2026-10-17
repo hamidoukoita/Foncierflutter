@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
@@ -74,19 +74,20 @@ class _PhotoCarouselState extends State<_PhotoCarousel> {
               itemCount: widget.photos.length,
               onPageChanged: (i) => setState(() => _index = i),
               itemBuilder: (context, i) {
-                return CachedNetworkImage(
-                  imageUrl: widget.photos[i].urlAbsolue,
-                  fit: BoxFit.cover,
+                return SizedBox(
                   width: double.infinity,
-                  placeholder: (_, __) => Container(
-                    color: AppColors.backgroundOffWhite,
-                    child: const Center(
-                      child: Icon(Icons.landscape_rounded, color: AppColors.successGreen, size: 36),
+                  child: ImageReseau(
+                    url: widget.photos[i].urlAbsolue,
+                    attente: Container(
+                      color: AppColors.backgroundOffWhite,
+                      child: const Center(
+                        child: Icon(Icons.landscape_rounded, color: AppColors.successGreen, size: 36),
+                      ),
                     ),
-                  ),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.backgroundOffWhite,
-                    child: const Icon(Icons.broken_image_outlined, color: AppColors.grey400, size: 36),
+                    secours: Container(
+                      color: AppColors.backgroundOffWhite,
+                      child: const Icon(Icons.broken_image_outlined, color: AppColors.grey400, size: 36),
+                    ),
                   ),
                 );
               },

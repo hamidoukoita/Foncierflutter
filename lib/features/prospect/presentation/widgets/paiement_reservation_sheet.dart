@@ -11,7 +11,7 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 
 /// Réservation d'un bien : récapitulatif des conditions, paiement Orange Money (simulé)
-/// puis reçu. Une réservation gratuite (maison clé en main) se confirme sans paiement.
+/// puis reçu. Si la société a fixé un prix de zéro, la réservation se confirme sans paiement.
 class PaiementReservationSheet extends StatefulWidget {
   final String libelle;
   final ConditionsReservation conditions;

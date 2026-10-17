@@ -123,7 +123,7 @@ class ProspectDashboardScreen extends ConsumerWidget {
                   ),
                 ],
                 _bloc(
-                    HeroBanner(onExplore: () => context.go('/prospect/cites'))),
+                    HeroBanner(onExplore: () => context.go('/prospect/parcelles'))),
                 _bloc(ConstructionCallout(
                   onTap: () => context.push(ConstructionRoutes.nouveau),
                 )),

@@ -5,7 +5,9 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/contact_launcher.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
@@ -63,6 +65,10 @@ class _ReservationCardState extends ConsumerState<ReservationCard> {
           _Chiffres(reservation: r),
           const SizedBox(height: AppSpacing.md - AppSpacing.xxs),
           _EtapeEnCours(reservation: r, style: style),
+          if (r.agentNom != null && (r.estActive || r.isVendue)) ...[
+            const SizedBox(height: AppSpacing.md - AppSpacing.xs),
+            _VotreAgent(nom: r.agentNom!, telephone: r.agentTelephone),
+          ],
           if (r.estActive) ...[
             const SizedBox(height: AppSpacing.md),
             DetailButton(
@@ -199,6 +205,52 @@ class _EtapeEnCours extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// L'agent qui suit le dossier, avec un appel direct.
+class _VotreAgent extends StatelessWidget {
+  final String nom;
+  final String? telephone;
+  const _VotreAgent({required this.nom, this.telephone});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: AppRadius.radiusLg,
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 18,
+            backgroundColor: AppColors.primaryBlueAnthracite,
+            child: Icon(Icons.support_agent_rounded, size: 20, color: AppColors.white),
+          ),
+          const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('VOTRE AGENT', style: AppTextStyles.overline),
+                Text(nom, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitle),
+                if (telephone != null)
+                  Text(TelephoneMali.formater(telephone!), style: AppTextStyles.bodySmall),
+              ],
+            ),
+          ),
+          if (telephone != null)
+            IconButton.filledTonal(
+              tooltip: 'Appeler $nom',
+              onPressed: () => ContactLauncher.appeler(telephone),
+              icon: const Icon(Icons.call_rounded, color: AppColors.successGreen),
+            ),
         ],
       ),
     );

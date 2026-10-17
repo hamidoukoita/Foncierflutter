@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
@@ -8,7 +9,6 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/catalogue/domain
 import 'package:flutter_mobile_prospect_agent/shared/widgets/soft_badge.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/badge_360.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/societe_logo.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
 import 'programme_cover.dart';
 
@@ -227,11 +227,6 @@ class _Couverture extends StatelessWidget {
     final url = UrlMedia.absolue(programme.imageUrl);
     final illustration = ProgrammeCover(seed: programme.id);
     if (url == null) return illustration;
-    return CachedNetworkImage(
-      imageUrl: url,
-      fit: BoxFit.cover,
-      placeholder: (_, __) => illustration,
-      errorWidget: (_, __, ___) => illustration,
-    );
+    return ImageReseau(url: url, attente: illustration);
   }
 }

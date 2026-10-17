@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/actions_bien.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,7 +41,8 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
 
   Future<void> _reserver(MaisonCleEnMain m) async {
     setState(() => _reservation = true);
-    await reserverBienAvecConfirmation(context, ref, bienId: m.id, libelle: m.titre);
+    await reserverBienAvecConfirmation(context, ref,
+        bienId: m.id, libelle: m.titre);
     ref.invalidate(maisonDetailProvider(widget.maisonId));
     if (mounted) setState(() => _reservation = false);
   }
@@ -59,18 +61,21 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
     ref.invalidate(localisationBienProvider(widget.maisonId));
   }
 
-  static String _n(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+  static String _n(double v) =>
+      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(maisonDetailProvider(widget.maisonId));
     final medias = ref.watch(mediasBienProvider(widget.maisonId));
-    final lieu = ref.watch(localisationBienProvider(widget.maisonId)).valueOrNull;
+    final lieu =
+        ref.watch(localisationBienProvider(widget.maisonId)).valueOrNull;
 
     return async.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundOffWhite,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primaryOcre)),
+        body: Center(
+            child: CircularProgressIndicator(color: AppColors.primaryOcre)),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: AppColors.backgroundOffWhite,
@@ -84,47 +89,59 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
       ),
       data: (m) {
         final famille = familleDeStatut(m.statut);
-        final maReservation = maReservationActive(ref.watch(mesReservationsProvider).valueOrNull, m.id);
+        final maReservation = maReservationActive(
+            ref.watch(mesReservationsProvider).valueOrNull, m.id);
+        final actions = ActionsBien.depuis(
+          ref.watch(conditionsReservationProvider(widget.maisonId)).valueOrNull,
+          vendu: famille == LotFamille.vendu,
+          reservableParStatut: m.peutEtreReserve,
+        );
 
         return DetailPage(
           title: m.titre,
           medias: medias.valueOrNull ?? const [],
           mediasLoading: medias.isLoading,
-          liensPanoramas: ref.watch(liensPanoramasProvider(widget.maisonId)).valueOrNull ?? const [],
+          liensPanoramas:
+              ref.watch(liensPanoramasProvider(widget.maisonId)).valueOrNull ??
+                  const [],
           onBack: () => context.pop(),
           onRefresh: _rafraichir,
-          bottomBar: DetailActionBar(
-            actions: [
-              if (maReservation != null)
-                DetailButton(
-                  label: 'Annuler ma réservation',
-                  icon: Icons.close_rounded,
-                  danger: true,
-                  loading: _annulation,
-                  onPressed: () => _annuler(maReservation),
-                )
-              else if (m.peutEtreReserve)
-                DetailButton(
-                  label: 'Réserver',
-                  icon: Icons.bookmark_add_outlined,
-                  loading: _reservation,
-                  onPressed: () => _reserver(m),
+          // Bien vendu ou complet : plus de barre d'actions, le motif est affiché dans la fiche.
+          bottomBar: maReservation == null && actions.aucuneAction
+              ? null
+              : DetailActionBar(
+                  actions: [
+                    if (maReservation != null)
+                      DetailButton(
+                        label: 'Annuler ma réservation',
+                        icon: Icons.close_rounded,
+                        danger: true,
+                        loading: _annulation,
+                        onPressed: () => _annuler(maReservation),
+                      )
+                    else if (actions.peutReserver)
+                      DetailButton(
+                        label: 'Réserver',
+                        icon: Icons.bookmark_add_outlined,
+                        loading: _reservation,
+                        onPressed: () => _reserver(m),
+                      ),
+                    if (actions.peutVisiter)
+                      DetailButton(
+                        label: 'Visiter',
+                        icon: Icons.event_available_outlined,
+                        color: AppColors.primaryBlueAnthracite,
+                        onPressed: () => RdvBookingSheet.show(
+                          context,
+                          bienId: m.id,
+                          societeId: m.societeId,
+                          bienLabel: m.titre,
+                          societeNom: m.societeNom,
+                          chantierLabel: m.adresse,
+                        ),
+                      ),
+                  ],
                 ),
-              DetailButton(
-                label: 'Visiter',
-                icon: Icons.event_available_outlined,
-                color: AppColors.primaryBlueAnthracite,
-                onPressed: () => RdvBookingSheet.show(
-                  context,
-                  bienId: m.id,
-                  societeId: m.societeId,
-                  bienLabel: m.titre,
-                  societeNom: m.societeNom,
-                  chantierLabel: m.adresse,
-                ),
-              ),
-            ],
-          ),
           children: [
             DetailHeader(
               title: m.titre,
@@ -134,34 +151,45 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
               tags: [
                 'Clé en main',
                 if (m.niveaux != null) m.niveaux!,
-                if ((m.numeroTitreFoncier ?? '').isNotEmpty) 'TF : ${m.numeroTitreFoncier}',
+                if ((m.numeroTitreFoncier ?? '').isNotEmpty)
+                  'TF : ${m.numeroTitreFoncier}',
               ],
               societeNom: m.societeNom,
               societeLogoUrl: m.societeLogoUrl,
             ),
             StatStrip(
               items: [
-                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(m.prix), 'prix de vente', highlight: true),
-                if (m.nombreChambres != null) StatItem(Icons.bed_outlined, '${m.nombreChambres}', 'chambres'),
+                StatItem(Icons.sell_outlined, CurrencyFormatter.fcfa(m.prix),
+                    'prix de vente',
+                    highlight: true),
+                if (m.nombreChambres != null)
+                  StatItem(
+                      Icons.bed_outlined, '${m.nombreChambres}', 'chambres'),
                 if (m.surfaceHabitable != null)
-                  StatItem(Icons.home_outlined, '${_n(m.surfaceHabitable!)} m²', 'habitables'),
+                  StatItem(Icons.home_outlined, '${_n(m.surfaceHabitable!)} m²',
+                      'habitables'),
               ],
             ),
             if ((m.description ?? '').isNotEmpty)
               DetailSection(
                 title: 'La maison',
-                child: Text(m.description!, style: AppTextStyles.bodyMedium.copyWith(height: 1.5)),
+                child: Text(m.description!,
+                    style: AppTextStyles.bodyMedium.copyWith(height: 1.5)),
               ),
             DetailSection(
               title: 'Caractéristiques',
               child: InfoRows(
                 rows: [
-                  if (m.nombreChambres != null) ('Chambres', '${m.nombreChambres}'),
-                  if (m.nombreSallesBain != null) ('Salles de bain', '${m.nombreSallesBain}'),
+                  if (m.nombreChambres != null)
+                    ('Chambres', '${m.nombreChambres}'),
+                  if (m.nombreSallesBain != null)
+                    ('Salles de bain', '${m.nombreSallesBain}'),
                   if (m.niveaux != null) ('Niveaux', m.niveaux!),
-                  if (m.surfaceHabitable != null) ('Surface habitable', '${_n(m.surfaceHabitable!)} m²'),
+                  if (m.surfaceHabitable != null)
+                    ('Surface habitable', '${_n(m.surfaceHabitable!)} m²'),
                   ('Terrain', '${_n(m.superficie)} m²'),
-                  if ((m.numeroTitreFoncier ?? '').isNotEmpty) ('Titre foncier', m.numeroTitreFoncier!),
+                  if ((m.numeroTitreFoncier ?? '').isNotEmpty)
+                    ('Titre foncier', m.numeroTitreFoncier!),
                   ('Disponibilité', libelleFamille(famille)),
                 ],
               ),
@@ -175,17 +203,19 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
                   children: [
                     for (final eq in m.equipements)
                       Chip(
-                        avatar: const Icon(Icons.check_rounded, size: 16, color: AppColors.successGreen),
+                        avatar: const Icon(Icons.check_rounded,
+                            size: 16, color: AppColors.successGreen),
                         label: Text(eq),
                         backgroundColor: AppColors.successGreenSoft,
                         side: BorderSide.none,
-                        labelStyle: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.successGreen, fontWeight: FontWeight.w700),
+                        labelStyle: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.successGreen,
+                            fontWeight: FontWeight.w700),
                       ),
                   ],
                 ),
               ),
-            if (lieu != null) ...[
+            if (lieu != null && !actions.vendu) ...[
               DetailSection(
                 title: 'Localisation',
                 child: LocalisationPreviewCard(
@@ -215,22 +245,31 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
                       label: 'Construire une maison comme celle-ci',
                       icon: Icons.home_work_outlined,
                       variant: AppActionVariant.dark,
-                      onPressed: () => context.push(ConstructionRoutes.nouveau, extra: m),
+                      onPressed: () =>
+                          context.push(ConstructionRoutes.nouveau, extra: m),
                     ),
                   ],
                 ),
               ),
             if (maReservation != null) ...[
               const SizedBox(height: AppSpacing.md),
-              InfoBanner.reservationEnAttente(numeroDossier: maReservation.numeroDossier),
+              InfoBanner.reservationEnAttente(
+                  numeroDossier: maReservation.numeroDossier),
             ],
-            const SizedBox(height: AppSpacing.md),
-            ReservationRuleBanner(reservationMultiple: m.reservationMultiple, isReserve: m.isReserve),
-            if (!m.peutEtreReserve) ...[
+            if (!actions.vendu) ...[
+              const SizedBox(height: AppSpacing.md),
+              ReservationRuleBanner(
+                  reservationMultiple: m.reservationMultiple,
+                  isReserve: m.isReserve),
+            ],
+            if (actions.motif != null) ...[
               const SizedBox(height: AppSpacing.md - AppSpacing.xs),
-              const InfoBanner(
-                icone: Icons.block_rounded,
-                message: 'Cette maison n\'est pas réservable pour le moment.',
+              InfoBanner(
+                icone:
+                    actions.vendu ? Icons.sell_outlined : Icons.block_rounded,
+                message: actions.vendu
+                    ? 'Ce bien est vendu : vous pouvez consulter ses caractéristiques, mais plus le réserver ni le visiter.'
+                    : actions.motif!,
               ),
             ],
           ],

@@ -125,7 +125,7 @@ class _VisiteDetailContenuState extends ConsumerState<_VisiteDetailContenu> {
           bien: bien,
           onAppeler: () =>
               AgentActions.appeler(context, visite.acquereurTelephone),
-          onLocaliser: () => AgentActions.itineraireIndisponible(context),
+          onLocaliser: () => AgentActions.itineraire(context, bienId: visite.isChantier ? visite.bienId : null, adresseSecours: visite.lieu),
         ),
         if (bien != null) ...[
           const SizedBox(height: AppSpacing.md),

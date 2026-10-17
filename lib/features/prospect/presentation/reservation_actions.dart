@@ -57,7 +57,10 @@ void _rafraichir(WidgetRef ref, int? bienId) {
   ref.invalidate(mesReservationsProvider);
   ref.invalidate(prospectDashboardProvider);
   ref.invalidate(parcellesProvider);
-  if (bienId != null) ref.invalidate(bienDetailProvider(bienId));
+  if (bienId != null) {
+    ref.invalidate(bienDetailProvider(bienId));
+    ref.invalidate(conditionsReservationProvider(bienId));
+  }
 }
 
 /// Ma réservation encore active sur ce bien (null si aucune) : « Annuler » remplace alors « Réserver ».
@@ -128,6 +131,7 @@ Future<bool> annulerRendezVousAvecConfirmation(
   try {
     await ref.read(rendezVousRepositoryProvider).annuler(rendezVousId);
     ref.invalidate(mesVisitesProvider);
+    ref.invalidate(conditionsReservationProvider);
     messenger.showSnackBar(const SnackBar(content: Text('Rendez-vous annulé')));
     return true;
   } catch (e) {

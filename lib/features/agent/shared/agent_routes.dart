@@ -6,6 +6,8 @@ class AgentRoutes {
   static const String visites = '/agent/visites';
   static const String reservations = '/agent/reservations';
   static const String visiteDetailPattern = '/agent/visite/:id';
+  static const String reservationDetailPattern = '/agent/reservation/:id';
 
   static String visiteDetail(int id) => '/agent/visite/$id';
+  static String reservationDetail(int id) => '/agent/reservation/$id';
 }

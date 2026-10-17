@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -16,6 +17,7 @@ class AppTextField extends StatefulWidget {
     this.prefixIcon,
     this.prefix,
     this.validator,
+    this.inputFormatters,
   });
 
   final String label;
@@ -26,6 +28,7 @@ class AppTextField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? prefix;
   final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<AppTextField> createState() => _AppTextFieldState();
@@ -46,6 +49,7 @@ class _AppTextFieldState extends State<AppTextField> {
           obscureText: _obscureText,
           keyboardType: widget.keyboardType,
           validator: widget.validator,
+          inputFormatters: widget.inputFormatters,
           style: AppTextStyles.bodyLarge.copyWith(
             color: AppColors.primaryBlueAnthracite,
             fontWeight: FontWeight.w500,

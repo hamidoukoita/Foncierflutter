@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
@@ -40,6 +41,12 @@ final mediasBienProvider = FutureProvider.autoDispose
 final liensPanoramasProvider = FutureProvider.autoDispose
     .family<List<LienPanoramaModel>, int>((ref, bienId) async {
   return ref.watch(mediaRepositoryProvider).getLiensByBien(bienId);
+});
+
+/// Ce que l'acquéreur connecté peut faire sur un bien : réserver, visiter, ou pourquoi pas.
+final conditionsReservationProvider = FutureProvider.autoDispose
+    .family<ConditionsReservation, int>((ref, bienId) async {
+  return ref.watch(reservationRepositoryProvider).conditions(bienId);
 });
 
 /// Créneaux de visite disponibles d'une société promotrice.

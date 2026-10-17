@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
@@ -52,11 +52,7 @@ class SocieteLogo extends StatelessWidget {
         child: ClipOval(
           child: url == null
               ? initiales
-              : CachedNetworkImage(
-                  imageUrl: url,
-                  fit: BoxFit.contain,
-                  errorWidget: (_, __, ___) => initiales,
-                ),
+              : ImageReseau(url: url, fit: BoxFit.contain, attente: initiales),
         ),
       ),
     );

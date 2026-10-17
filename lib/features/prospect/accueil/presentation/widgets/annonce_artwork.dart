@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
@@ -33,12 +33,7 @@ class AnnonceArtwork extends StatelessWidget {
         width: largeur,
         height: hauteur,
         child: url != null
-            ? CachedNetworkImage(
-                imageUrl: url,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => remplacement,
-                errorWidget: (_, __, ___) => remplacement,
-              )
+            ? ImageReseau(url: url, attente: remplacement)
             : remplacement,
       ),
     );

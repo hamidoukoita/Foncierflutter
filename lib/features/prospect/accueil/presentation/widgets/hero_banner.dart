@@ -104,7 +104,7 @@ class _ExplorerPill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Explorer les cités',
+                Text('Explorer les terrains',
                     style: AppTextStyles.label.copyWith(
                         color: AppColors.white, fontWeight: FontWeight.w700)),
                 const SizedBox(width: AppSpacing.xs),

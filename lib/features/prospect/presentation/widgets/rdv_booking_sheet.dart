@@ -153,6 +153,8 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
             lieu: _lieuTexte,
           );
       ref.invalidate(mesVisitesProvider);
+      // Un rendez-vous prévu ferme la prise d'un second sur ce bien.
+      ref.invalidate(conditionsReservationProvider(widget.bienId));
       navigator.pop();
       messenger.showSnackBar(
         const SnackBar(

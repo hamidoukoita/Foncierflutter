@@ -62,6 +62,7 @@ class ReservationModel extends Equatable {
 
   final int? agentId;
   final String? agentNom;
+  final String? agentTelephone;
 
   const ReservationModel({
     required this.id,
@@ -88,6 +89,7 @@ class ReservationModel extends Equatable {
     this.acquereurTelephone,
     this.agentId,
     this.agentNom,
+    this.agentTelephone,
   });
 
   StatutReservation get etape => StatutReservation.depuis(statut);
@@ -149,6 +151,7 @@ class ReservationModel extends Equatable {
       acquereurTelephone: json['acquereurTelephone'] as String?,
       agentId: (json['agentId'] as num?)?.toInt(),
       agentNom: json['agentNom'] as String?,
+      agentTelephone: json['agentTelephone'] as String?,
     );
   }
 
@@ -178,6 +181,7 @@ class ReservationModel extends Equatable {
         acquereurTelephone,
         agentId,
         agentNom,
+        agentTelephone,
       ];
 }
 
@@ -191,6 +195,12 @@ class ConditionsReservation {
   final bool reservable;
   final String? motifIndisponibilite;
   final String? societeNom;
+  final int reservationsMax;
+  final int reservationsEnCours;
+  final bool dejaReserveParMoi;
+  final bool vendu;
+  final bool visitePossible;
+  final String? motifVisiteImpossible;
 
   const ConditionsReservation({
     required this.bienId,
@@ -201,6 +211,12 @@ class ConditionsReservation {
     required this.reservable,
     this.motifIndisponibilite,
     this.societeNom,
+    this.reservationsMax = 1,
+    this.reservationsEnCours = 0,
+    this.dejaReserveParMoi = false,
+    this.vendu = false,
+    this.visitePossible = true,
+    this.motifVisiteImpossible,
   });
 
   factory ConditionsReservation.fromJson(Map<String, dynamic> json) {
@@ -213,6 +229,12 @@ class ConditionsReservation {
       reservable: json['reservable'] as bool? ?? false,
       motifIndisponibilite: json['motifIndisponibilite'] as String?,
       societeNom: json['societeNom'] as String?,
+      reservationsMax: (json['reservationsMax'] as num?)?.toInt() ?? 1,
+      reservationsEnCours: (json['reservationsEnCours'] as num?)?.toInt() ?? 0,
+      dejaReserveParMoi: json['dejaReserveParMoi'] as bool? ?? false,
+      vendu: json['vendu'] as bool? ?? false,
+      visitePossible: json['visitePossible'] as bool? ?? true,
+      motifVisiteImpossible: json['motifVisiteImpossible'] as String?,
     );
   }
 }

@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
@@ -94,11 +94,10 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                 PageView.builder(
                   itemCount: photos.length,
                   onPageChanged: (i) => setState(() => _page = i),
-                  itemBuilder: (_, i) => CachedNetworkImage(
-                    imageUrl: photos[i].urlAbsolue,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => Container(color: AppColors.grey200),
-                    errorWidget: (_, __, ___) => Container(
+                  itemBuilder: (_, i) => ImageReseau(
+                    url: photos[i].urlAbsolue,
+                    attente: Container(color: AppColors.grey200),
+                    secours: Container(
                       color: AppColors.grey200,
                       child: const Icon(Icons.broken_image_outlined, color: AppColors.grey400, size: 36),
                     ),

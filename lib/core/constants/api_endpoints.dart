@@ -7,6 +7,10 @@ class ApiEndpoints {
   static const String registerAcquereur = '/auth/register';
   static const String registerSociete = '/auth/register-societe';
   static String identiteAcquereur(int id) => '/acquereurs/$id/identite';
+  static const String monTelephone = '/comptes/moi/telephone';
+  static const String monMotDePasse = '/comptes/moi/mot-de-passe';
+  static const String motDePasseOublie = '/auth/mot-de-passe-oublie';
+  static const String motDePasseOublieConfirmer = '/auth/mot-de-passe-oublie/confirmer';
 
   // Programmes & lots
   static const String programmes = '/programmes-fonciers';

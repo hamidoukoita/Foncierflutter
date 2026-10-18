@@ -8,7 +8,9 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_action_button.dart';
 import '../../prospect_session.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/compte/changer_mot_de_passe_dialog.dart';
 import 'modifier_nom_dialog.dart';
+import 'modifier_telephone_dialog.dart';
 import 'profil_header.dart';
 import 'profil_infos.dart';
 
@@ -84,6 +86,8 @@ class ProfilSheet extends ConsumerWidget {
                     child: ProfilInfos(
                       user: user,
                       onModifierNom: () => ModifierNomDialog.show(context),
+                      onModifierTelephone: () => ModifierTelephoneDialog.show(context),
+                      onChangerMotDePasse: () => ChangerMotDePasseDialog.show(context),
                     ),
                   ),
                 ),

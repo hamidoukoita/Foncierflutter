@@ -9,6 +9,7 @@ class AuthRoutes {
   static const String onboarding3 = '/ombording3';
   static const String login = '/login';
   static const String register = '/register';
+  static const String motDePasseOublie = '/mot-de-passe-oublie';
 
   /// Pages de présentation, montrées seulement à la première ouverture.
   static const Set<String> pagesOnboarding = {
@@ -23,6 +24,7 @@ class AuthRoutes {
     splash,
     ...pagesOnboarding,
     login,
-    register
+    register,
+    motDePasseOublie,
   };
 }

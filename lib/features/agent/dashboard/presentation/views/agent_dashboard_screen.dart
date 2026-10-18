@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/compte/changer_mot_de_passe_dialog.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/foncier_logo.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,6 +44,7 @@ class AgentDashboardScreen extends ConsumerWidget {
             AgentProfileHeader(
               agent: agent,
               onDeconnexion: () => AgentSession.deconnecter(context, ref),
+              onChangerMotDePasse: () => ChangerMotDePasseDialog.show(context),
             ),
             const SizedBox(height: AppSpacing.lg),
             AgentAsyncView<AgentDashboardState>(

@@ -9,6 +9,7 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/control
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/login_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/register_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/splash_screen.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/mot_de_passe_oublie_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/auth_routes.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/providers/demarrage_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/redirection_demarrage.dart';
@@ -85,6 +86,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: AuthRoutes.register,
           builder: (_, __) => const RegisterScreen()),
+      GoRoute(
+          path: AuthRoutes.motDePasseOublie,
+          builder: (_, __) => const MotDePasseOublieScreen()),
       GoRoute(
         path: '/prospect/programmes/:id',
         builder: (context, state) {

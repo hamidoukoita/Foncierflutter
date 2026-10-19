@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/dashboard/presentation/controllers/agent_dashboard_controller.dart';
+import 'package:flutter_mobile_prospect_agent/features/agent/shared/providers/agent_data_providers.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/surveillance_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/floating_nav_bar.dart';
 
 /// Navigation de l'agent collaborateur : barre flottante à deux onglets.
+/// Les nouvelles notifications (dossier attribué, annulation…) s'affichent sur le téléphone.
 class AgentShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -24,15 +28,22 @@ class AgentShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundOffWhite,
-      body: navigationShell,
-      bottomNavigationBar: FloatingNavBar(
-        items: _items,
-        currentIndex: navigationShell.currentIndex,
-        onSelect: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
+    return SurveillanceNotifications(
+      onNouvelles: (ref) {
+        ref.invalidate(agentReservationsProvider);
+        ref.invalidate(agentVisitesProvider);
+        ref.invalidate(agentDashboardProvider);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundOffWhite,
+        body: navigationShell,
+        bottomNavigationBar: FloatingNavBar(
+          items: _items,
+          currentIndex: navigationShell.currentIndex,
+          onSelect: (index) => navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
+          ),
         ),
       ),
     );

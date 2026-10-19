@@ -11,8 +11,8 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets
 class ModifierNomDialog extends ConsumerStatefulWidget {
   const ModifierNomDialog({super.key});
 
-  static Future<void> show(BuildContext context) =>
-      showDialog<void>(context: context, builder: (_) => const ModifierNomDialog());
+  static Future<void> show(BuildContext context) => showDialog<void>(
+      context: context, builder: (_) => const ModifierNomDialog());
 
   @override
   ConsumerState<ModifierNomDialog> createState() => _ModifierNomDialogState();
@@ -20,8 +20,10 @@ class ModifierNomDialog extends ConsumerStatefulWidget {
 
 class _ModifierNomDialogState extends ConsumerState<ModifierNomDialog> {
   final _formKey = GlobalKey<FormState>();
-  late final _prenom = TextEditingController(text: ref.read(authProvider).user?.prenom ?? '');
-  late final _nom = TextEditingController(text: ref.read(authProvider).user?.nom ?? '');
+  late final _prenom =
+      TextEditingController(text: ref.read(authProvider).user?.prenom ?? '');
+  late final _nom =
+      TextEditingController(text: ref.read(authProvider).user?.nom ?? '');
   bool _enCours = false;
 
   @override
@@ -35,7 +37,9 @@ class _ModifierNomDialogState extends ConsumerState<ModifierNomDialog> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _enCours = true);
     try {
-      await ref.read(authProvider.notifier).modifierIdentite(nom: _nom.text, prenom: _prenom.text);
+      await ref
+          .read(authProvider.notifier)
+          .modifierIdentite(nom: _nom.text, prenom: _prenom.text);
       if (!mounted) return;
       Navigator.of(context).pop();
       AppSnackbar.success(context, 'Votre nom a été mis à jour.');

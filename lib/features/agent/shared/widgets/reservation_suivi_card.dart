@@ -82,7 +82,7 @@ class _ReservationSuiviCardState extends ConsumerState<ReservationSuiviCard> {
                         const SizedBox(width: AppSpacing.sm),
                         const Spacer(),
                         Text(
-                          r.estPayante ? CurrencyFormatter.fcfaCompact(r.montantReservation) : 'Gratuite',
+                          r.estPayante ? CurrencyFormatter.fcfaCompact(r.montantReservation) : 'Sans frais',
                           style: AppTextStyles.bodyMedium.copyWith(
                             fontWeight: FontWeight.w700,
                             color: AppColors.primaryOcre,

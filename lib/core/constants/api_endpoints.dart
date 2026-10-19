@@ -35,6 +35,11 @@ class ApiEndpoints {
   static String annulerReservation(int id) => '/reservations/$id/annuler';
   static String demarrerReservation(int id) => '/reservations/$id/demarrer';
   static String vendreReservation(int id) => '/reservations/$id/vendre';
+  // Bien vendu à un autre acquéreur : report sur un autre bien ou remboursement.
+  static String biensRemplacement(int id) => '/reservations/$id/biens-remplacement';
+  static String rembourserReservation(int id) => '/reservations/$id/remboursement';
+  static String remplacerReservation(int id, int bienId) =>
+      '/reservations/$id/remplacement/$bienId';
 
   // Notifications
   static String notificationsByUtilisateur(int utilisateurId) =>

@@ -12,14 +12,16 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets
 class ModifierTelephoneDialog extends ConsumerStatefulWidget {
   const ModifierTelephoneDialog({super.key});
 
-  static Future<void> show(BuildContext context) =>
-      showDialog<void>(context: context, builder: (_) => const ModifierTelephoneDialog());
+  static Future<void> show(BuildContext context) => showDialog<void>(
+      context: context, builder: (_) => const ModifierTelephoneDialog());
 
   @override
-  ConsumerState<ModifierTelephoneDialog> createState() => _ModifierTelephoneDialogState();
+  ConsumerState<ModifierTelephoneDialog> createState() =>
+      _ModifierTelephoneDialogState();
 }
 
-class _ModifierTelephoneDialogState extends ConsumerState<ModifierTelephoneDialog> {
+class _ModifierTelephoneDialogState
+    extends ConsumerState<ModifierTelephoneDialog> {
   final _formKey = GlobalKey<FormState>();
   final _telephone = TextEditingController();
   final _motDePasse = TextEditingController();
@@ -36,7 +38,9 @@ class _ModifierTelephoneDialogState extends ConsumerState<ModifierTelephoneDialo
     final erreur = TelephoneMali.valider(v);
     if (erreur != null) return erreur;
     final actuel = ref.read(authProvider).user?.telephone;
-    return TelephoneMali.chiffres(v!) == actuel ? 'C’est déjà votre numéro' : null;
+    return TelephoneMali.chiffres(v!) == actuel
+        ? 'C’est déjà votre numéro'
+        : null;
   }
 
   Future<void> _enregistrer() async {
@@ -49,7 +53,8 @@ class _ModifierTelephoneDialogState extends ConsumerState<ModifierTelephoneDialo
           );
       if (!mounted) return;
       Navigator.of(context).pop();
-      AppSnackbar.success(context, 'Numéro mis à jour : utilisez-le pour vous connecter.');
+      AppSnackbar.success(
+          context, 'Numéro mis à jour : utilisez-le pour vous connecter.');
     } catch (e) {
       if (!mounted) return;
       setState(() => _enCours = false);
@@ -62,7 +67,8 @@ class _ModifierTelephoneDialogState extends ConsumerState<ModifierTelephoneDialo
     return CompteDialog(
       icone: Icons.phone_iphone_rounded,
       titre: 'Changer de numéro',
-      sousTitre: 'Votre nouveau numéro deviendra votre identifiant de connexion.',
+      sousTitre:
+          'Votre nouveau numéro deviendra votre identifiant de connexion.',
       formKey: _formKey,
       libelleAction: 'Changer de numéro',
       enCours: _enCours,
@@ -82,7 +88,8 @@ class _ModifierTelephoneDialogState extends ConsumerState<ModifierTelephoneDialo
           controller: _motDePasse,
           isPassword: true,
           prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
-          validator: (v) => (v ?? '').isEmpty ? 'Confirmez avec votre mot de passe' : null,
+          validator: (v) =>
+              (v ?? '').isEmpty ? 'Confirmez avec votre mot de passe' : null,
         ),
       ],
     );

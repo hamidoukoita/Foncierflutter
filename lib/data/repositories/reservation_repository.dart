@@ -1,5 +1,6 @@
 import 'package:flutter_mobile_prospect_agent/core/constants/api_endpoints.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/api_client.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/bien_remplacement_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
 
@@ -71,6 +72,30 @@ class ReservationRepository {
   /// Vente conclue avant l'échéance.
   Future<ReservationModel> conclureVente(int reservationId) =>
       _action(ApiEndpoints.vendreReservation(reservationId));
+
+  /// Biens disponibles de la même société pour reporter une réservation (bien vendu à un autre).
+  Future<List<BienRemplacementModel>> biensRemplacement(int reservationId) async {
+    final response = await _apiClient
+        .get<Map<String, dynamic>>(ApiEndpoints.biensRemplacement(reservationId));
+    final apiResponse = ApiResponse<List<dynamic>>.fromJson(
+      response.data!,
+      (data) => data as List<dynamic>,
+    );
+    if (apiResponse.success && apiResponse.data != null) {
+      return apiResponse.data!
+          .map((json) => BienRemplacementModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    }
+    throw Exception(apiResponse.message);
+  }
+
+  /// Remboursement sous 24 h du montant payé.
+  Future<ReservationModel> demanderRemboursement(int reservationId) =>
+      _action(ApiEndpoints.rembourserReservation(reservationId));
+
+  /// Report du montant payé sur un autre bien de la société ; retourne la nouvelle réservation.
+  Future<ReservationModel> remplacer(int reservationId, int bienId) =>
+      _action(ApiEndpoints.remplacerReservation(reservationId, bienId));
 
   Future<ReservationModel> _action(String chemin) async {
     final response = await _apiClient.patch<Map<String, dynamic>>(chemin);

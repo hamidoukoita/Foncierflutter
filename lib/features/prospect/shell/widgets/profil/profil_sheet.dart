@@ -86,8 +86,10 @@ class ProfilSheet extends ConsumerWidget {
                     child: ProfilInfos(
                       user: user,
                       onModifierNom: () => ModifierNomDialog.show(context),
-                      onModifierTelephone: () => ModifierTelephoneDialog.show(context),
-                      onChangerMotDePasse: () => ChangerMotDePasseDialog.show(context),
+                      onModifierTelephone: () =>
+                          ModifierTelephoneDialog.show(context),
+                      onChangerMotDePasse: () =>
+                          ChangerMotDePasseDialog.show(context),
                     ),
                   ),
                 ),

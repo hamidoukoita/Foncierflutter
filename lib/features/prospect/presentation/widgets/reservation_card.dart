@@ -10,6 +10,7 @@ import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/suite_vente/presentation/widgets/choix_suite_vente_dialog.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/reservation_statut_style.dart';
@@ -69,6 +70,15 @@ class _ReservationCardState extends ConsumerState<ReservationCard> {
             const SizedBox(height: AppSpacing.md - AppSpacing.xs),
             _VotreAgent(nom: r.agentNom!, telephone: r.agentTelephone),
           ],
+          if (r.choixAttendu) ...[
+            const SizedBox(height: AppSpacing.md),
+            DetailButton(
+              label: 'Choisir : autre bien ou remboursement',
+              icon: Icons.swap_horiz_rounded,
+              compact: true,
+              onPressed: () => ChoixSuiteVenteDialog.afficher(context, r),
+            ),
+          ],
           if (r.estActive) ...[
             const SizedBox(height: AppSpacing.md),
             DetailButton(
@@ -104,7 +114,7 @@ class _Chiffres extends StatelessWidget {
           Expanded(
             child: _Chiffre(
               r.estPayante ? 'Réservation payée' : 'Réservation',
-              r.estPayante ? CurrencyFormatter.fcfa(r.montantReservation) : 'Gratuite',
+              r.estPayante ? CurrencyFormatter.fcfa(r.montantReservation) : 'Sans frais',
             ),
           ),
         ],
@@ -165,9 +175,26 @@ class _EtapeEnCours extends StatelessWidget {
       case StatutReservation.expiree:
         return 'Le délai est écoulé sans vente : le bien est de nouveau disponible et le montant de la réservation n’est pas rendu.';
       case StatutReservation.annulee:
-        return r.rembourse
-            ? 'Le bien a été vendu à un autre acquéreur : votre réservation vous est remboursée.'
-            : r.motifAnnulation ?? 'Réservation annulée.';
+        final montant = CurrencyFormatter.fcfa(r.montantReservation);
+        switch (r.suiteVente) {
+          case SuiteVente.aChoisir:
+            final limite = r.dateLimiteChoix;
+            return 'Le bien a été vendu à un autre acquéreur. Reportez vos $montant sur un autre bien '
+                'ou demandez leur remboursement'
+                '${limite == null ? '' : ' (remboursés d’office le ${DateFormatter.date(limite)} à ${DateFormatter.heure(limite)})'}.';
+          case SuiteVente.remboursementEnCours:
+            final prevue = r.dateRemboursementPrevue;
+            return 'Remboursement de $montant sur Orange Money en cours'
+                '${prevue == null ? '' : ', au plus tard le ${DateFormatter.date(prevue)} à ${DateFormatter.heure(prevue)}'}.';
+          case SuiteVente.remboursee:
+            return 'Le bien a été vendu à un autre acquéreur : vos $montant vous ont été remboursés.';
+          case SuiteVente.remplacee:
+            return 'Le bien a été vendu à un autre acquéreur : votre paiement a été reporté sur un autre bien.';
+          case null:
+            return r.rembourse
+                ? 'Le bien a été vendu à un autre acquéreur : votre réservation vous est remboursée.'
+                : r.motifAnnulation ?? 'Réservation annulée.';
+        }
     }
   }
 

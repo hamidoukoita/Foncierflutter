@@ -84,8 +84,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         keyboardType: TextInputType.phone,
                         hintText: '76 12 34 56',
                         prefixIcon: const TelephoneMaliPrefixe(),
-                        inputFormatters: [TelephoneMaliFormatter()],
-                        validator: TelephoneMali.valider,
+                        // inputFormatters: [TelephoneMaliFormatter()],
+                        // validator: TelephoneMali.valider,
                       ),
 
                       const SizedBox(height: AppSpacing.md),

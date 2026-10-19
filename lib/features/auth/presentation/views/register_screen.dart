@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/nom_personne.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
@@ -51,9 +52,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   /// Numéro sans espaces ni séparateurs, tel qu'il sera utilisé pour se connecter.
   String get _telephone => TelephoneMali.chiffres(_phone.text);
-
-  String? _obligatoire(String? v) =>
-      v == null || v.trim().isEmpty ? 'Obligatoire' : null;
 
   String? _validerMotDePasse(String? v) =>
       v == null || v.length < _longueurMinMotDePasse
@@ -134,7 +132,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               label: 'Prénom',
                               controller: _prenom,
                               hintText: 'Amadou',
-                              validator: _obligatoire,
+                              inputFormatters: [NomPersonne.formatter],
+                              validator: (v) =>
+                                  NomPersonne.valider(v, libelle: 'Prénom'),
                             ),
                           ),
                           const SizedBox(width: AppSpacing.md - AppSpacing.xs),
@@ -143,7 +143,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               label: 'Nom',
                               controller: _nom,
                               hintText: 'Traoré',
-                              validator: _obligatoire,
+                              inputFormatters: [NomPersonne.formatter],
+                              validator: (v) =>
+                                  NomPersonne.valider(v, libelle: 'Nom'),
                             ),
                           ),
                         ],

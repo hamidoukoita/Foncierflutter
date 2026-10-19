@@ -28,6 +28,30 @@ enum StatutReservation {
   }
 }
 
+/// Suite d'une réservation payée dont le bien a été vendu à un autre acquéreur.
+enum SuiteVente {
+  /// L'acquéreur doit choisir : report sur un autre bien ou remboursement (d'office après 48 h).
+  aChoisir,
+  remboursementEnCours,
+  remboursee,
+  remplacee;
+
+  static SuiteVente? depuis(String? code) {
+    switch (code) {
+      case 'A_CHOISIR':
+        return SuiteVente.aChoisir;
+      case 'REMBOURSEMENT_EN_COURS':
+        return SuiteVente.remboursementEnCours;
+      case 'REMBOURSEE':
+        return SuiteVente.remboursee;
+      case 'REMPLACEE':
+        return SuiteVente.remplacee;
+      default:
+        return null;
+    }
+  }
+}
+
 class ReservationModel extends Equatable {
   final int id;
   final String numeroDossier;
@@ -64,6 +88,14 @@ class ReservationModel extends Equatable {
   final String? agentNom;
   final String? agentTelephone;
 
+  /// Bien vendu à un autre acquéreur : choix de l'acquéreur et échéances.
+  final SuiteVente? suiteVente;
+  final DateTime? dateLimiteChoix;
+  final DateTime? dateRemboursementPrevue;
+
+  /// Réservation reportée depuis une autre, sans nouveau paiement.
+  final int? reservationOrigineId;
+
   const ReservationModel({
     required this.id,
     required this.numeroDossier,
@@ -90,6 +122,10 @@ class ReservationModel extends Equatable {
     this.agentId,
     this.agentNom,
     this.agentTelephone,
+    this.suiteVente,
+    this.dateLimiteChoix,
+    this.dateRemboursementPrevue,
+    this.reservationOrigineId,
   });
 
   StatutReservation get etape => StatutReservation.depuis(statut);
@@ -104,6 +140,9 @@ class ReservationModel extends Equatable {
   bool get estActive => isEnAttente || isEnCours;
 
   bool get estPayante => montantReservation > 0;
+
+  /// Le bien a été vendu à un autre : l'acquéreur doit choisir remboursement ou report.
+  bool get choixAttendu => suiteVente == SuiteVente.aChoisir;
 
   bool get decompteDemarre => dateDebutDecompte != null && dateExpiration != null;
 
@@ -152,6 +191,10 @@ class ReservationModel extends Equatable {
       agentId: (json['agentId'] as num?)?.toInt(),
       agentNom: json['agentNom'] as String?,
       agentTelephone: json['agentTelephone'] as String?,
+      suiteVente: SuiteVente.depuis(json['suiteVente'] as String?),
+      dateLimiteChoix: _date(json['dateLimiteChoix']),
+      dateRemboursementPrevue: _date(json['dateRemboursementPrevue']),
+      reservationOrigineId: (json['reservationOrigineId'] as num?)?.toInt(),
     );
   }
 
@@ -182,6 +225,10 @@ class ReservationModel extends Equatable {
         agentId,
         agentNom,
         agentTelephone,
+        suiteVente,
+        dateLimiteChoix,
+        dateRemboursementPrevue,
+        reservationOrigineId,
       ];
 }
 

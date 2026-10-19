@@ -33,9 +33,22 @@ class ReservationStatutStyle {
       case StatutReservation.expiree:
         return const ReservationStatutStyle('Expirée', AppColors.errorRed, AppColors.errorRedSoft, Icons.timer_off_outlined);
       case StatutReservation.annulee:
-        return r.rembourse
-            ? const ReservationStatutStyle('Remboursée', AppColors.grey700, AppColors.grey100, Icons.currency_exchange_rounded)
-            : const ReservationStatutStyle('Annulée', AppColors.grey600, AppColors.grey100, Icons.block_rounded);
+        switch (r.suiteVente) {
+          case SuiteVente.aChoisir:
+            return const ReservationStatutStyle('Votre choix', AppColors.ambreReservation24h,
+                AppColors.warningAmberSoft, Icons.swap_horiz_rounded);
+          case SuiteVente.remboursementEnCours:
+            return const ReservationStatutStyle('Remboursement', AppColors.primaryBlueAnthracite,
+                AppColors.grey100, Icons.schedule_rounded);
+          case SuiteVente.remplacee:
+            return const ReservationStatutStyle('Reportée', AppColors.primaryBlueAnthracite,
+                AppColors.grey100, Icons.swap_horiz_rounded);
+          case SuiteVente.remboursee:
+          case null:
+            return r.rembourse
+                ? const ReservationStatutStyle('Remboursée', AppColors.grey700, AppColors.grey100, Icons.currency_exchange_rounded)
+                : const ReservationStatutStyle('Annulée', AppColors.grey600, AppColors.grey100, Icons.block_rounded);
+        }
     }
   }
 }

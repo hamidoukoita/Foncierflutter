@@ -168,7 +168,7 @@ class _Recapitulatif extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
               Expanded(
                 child: Text(
-                  conditions.payante ? 'Montant de la réservation' : 'Réservation gratuite',
+                  conditions.payante ? 'Montant de la réservation' : 'Réservation sans frais',
                   style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),

@@ -131,6 +131,18 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(user: misAJour);
   }
 
+  /// Nouveau numéro de connexion : la session est remplacée (nouveau jeton).
+  Future<void> changerTelephone(
+      {required String nouveauTelephone, required String motDePasse}) async {
+    final user = await _repo.changerTelephone(
+        nouveauTelephone: nouveauTelephone, motDePasse: motDePasse);
+    state = state.copyWith(user: user);
+  }
+
+  Future<void> changerMotDePasse(
+          {required String ancien, required String nouveau}) =>
+      _repo.changerMotDePasse(ancien: ancien, nouveau: nouveau);
+
   Future<void> logout() async {
     await _repo.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);

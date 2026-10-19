@@ -7,6 +7,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/floating_nav_bar.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/pastille_compteur.dart';
 
 /// Barre de navigation de l'acquéreur, sur deux étages :
 /// - devant : les onglets principaux de part et d'autre d'un bouton « + » central ;
@@ -19,12 +20,17 @@ class ProspectNavBar extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onSelect;
 
+  /// Éléments en attente par entrée de « Mes dossiers » (index dans [dossiers]) ;
+  /// leur total s'affiche sur le « + » tant que la rangée est fermée.
+  final Map<int, int> pastilles;
+
   const ProspectNavBar({
     super.key,
     required this.principaux,
     required this.dossiers,
     required this.currentIndex,
     required this.onSelect,
+    this.pastilles = const {},
   });
 
   static const Duration duree = Duration(milliseconds: 340);
@@ -92,6 +98,7 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
                     opacity: _ouvert ? 1 : 0,
                     child: _RangeeDossiers(
                       items: widget.dossiers,
+                      pastilles: widget.pastilles,
                       actif: widget.currentIndex - n,
                       onSelect: (i) => widget.onSelect(n + i),
                     ),
@@ -119,6 +126,8 @@ class _ProspectNavBarState extends State<ProspectNavBar> {
                       _BoutonDossiers(
                           ouvert: _ouvert,
                           surUnDossier: _surUnDossier,
+                          enAttente:
+                              widget.pastilles.values.fold(0, (a, b) => a + b),
                           onTap: _basculer),
                       for (var i = moitie; i < n; i++) _entreeAvant(i),
                     ],
@@ -206,10 +215,14 @@ class _EntreeAvant extends StatelessWidget {
 class _BoutonDossiers extends StatelessWidget {
   final bool ouvert;
   final bool surUnDossier;
+  final int enAttente;
   final VoidCallback onTap;
 
   const _BoutonDossiers(
-      {required this.ouvert, required this.surUnDossier, required this.onTap});
+      {required this.ouvert,
+      required this.surUnDossier,
+      required this.enAttente,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -220,28 +233,31 @@ class _BoutonDossiers extends StatelessWidget {
         label: ouvert ? 'Fermer mes dossiers' : 'Mes dossiers',
         child: GestureDetector(
           onTap: onTap,
-          child: AnimatedContainer(
-            duration: ProspectNavBar.duree,
-            curve: ProspectNavBar.courbe,
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: ouvert ? AppGradients.navy : AppGradients.cta,
-              shape: BoxShape.circle,
-              boxShadow: AppShadows.cta,
-              border: Border.all(
-                color: surUnDossier && !ouvert
-                    ? AppColors.primaryBlueAnthracite
-                    : AppColors.white,
-                width: 3,
-              ),
-            ),
-            child: AnimatedRotation(
+          child: PastilleCompteur(
+            nombre: ouvert ? 0 : enAttente,
+            child: AnimatedContainer(
               duration: ProspectNavBar.duree,
               curve: ProspectNavBar.courbe,
-              turns: ouvert ? 0.125 : 0,
-              child: const Icon(Icons.add_rounded,
-                  color: AppColors.white, size: 28),
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: ouvert ? AppGradients.navy : AppGradients.cta,
+                shape: BoxShape.circle,
+                boxShadow: AppShadows.cta,
+                border: Border.all(
+                  color: surUnDossier && !ouvert
+                      ? AppColors.primaryBlueAnthracite
+                      : AppColors.white,
+                  width: 3,
+                ),
+              ),
+              child: AnimatedRotation(
+                duration: ProspectNavBar.duree,
+                curve: ProspectNavBar.courbe,
+                turns: ouvert ? 0.125 : 0,
+                child: const Icon(Icons.add_rounded,
+                    color: AppColors.white, size: 28),
+              ),
             ),
           ),
         ),
@@ -254,11 +270,15 @@ class _BoutonDossiers extends StatelessWidget {
 /// icône au-dessus du libellé, le dossier ouvert ressort sur une pastille blanche.
 class _RangeeDossiers extends StatelessWidget {
   final List<FloatingNavItem> items;
+  final Map<int, int> pastilles;
   final int actif;
   final ValueChanged<int> onSelect;
 
   const _RangeeDossiers(
-      {required this.items, required this.actif, required this.onSelect});
+      {required this.items,
+      required this.pastilles,
+      required this.actif,
+      required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
@@ -276,7 +296,10 @@ class _RangeeDossiers extends StatelessWidget {
           for (var i = 0; i < items.length; i++)
             Expanded(
               child: _EntreeDossier(
-                  item: items[i], active: i == actif, onTap: () => onSelect(i)),
+                  item: items[i],
+                  active: i == actif,
+                  enAttente: pastilles[i] ?? 0,
+                  onTap: () => onSelect(i)),
             ),
         ],
       ),
@@ -287,10 +310,14 @@ class _RangeeDossiers extends StatelessWidget {
 class _EntreeDossier extends StatelessWidget {
   final FloatingNavItem item;
   final bool active;
+  final int enAttente;
   final VoidCallback onTap;
 
   const _EntreeDossier(
-      {required this.item, required this.active, required this.onTap});
+      {required this.item,
+      required this.active,
+      required this.enAttente,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -318,8 +345,11 @@ class _EntreeDossier extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(active ? item.activeIcon : item.icon,
-                  size: 22, color: couleurIcone),
+              PastilleCompteur(
+                nombre: enAttente,
+                child: Icon(active ? item.activeIcon : item.icon,
+                    size: 22, color: couleurIcone),
+              ),
               const SizedBox(height: AppSpacing.xxs),
               Text(
                 item.label,

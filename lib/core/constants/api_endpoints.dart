@@ -7,6 +7,10 @@ class ApiEndpoints {
   static const String registerAcquereur = '/auth/register';
   static const String registerSociete = '/auth/register-societe';
   static String identiteAcquereur(int id) => '/acquereurs/$id/identite';
+  static const String monTelephone = '/comptes/moi/telephone';
+  static const String monMotDePasse = '/comptes/moi/mot-de-passe';
+  static const String motDePasseOublie = '/auth/mot-de-passe-oublie';
+  static const String motDePasseOublieConfirmer = '/auth/mot-de-passe-oublie/confirmer';
 
   // Programmes & lots
   static const String programmes = '/programmes-fonciers';
@@ -31,6 +35,11 @@ class ApiEndpoints {
   static String annulerReservation(int id) => '/reservations/$id/annuler';
   static String demarrerReservation(int id) => '/reservations/$id/demarrer';
   static String vendreReservation(int id) => '/reservations/$id/vendre';
+  // Bien vendu à un autre acquéreur : report sur un autre bien ou remboursement.
+  static String biensRemplacement(int id) => '/reservations/$id/biens-remplacement';
+  static String rembourserReservation(int id) => '/reservations/$id/remboursement';
+  static String remplacerReservation(int id, int bienId) =>
+      '/reservations/$id/remplacement/$bienId';
 
   // Notifications
   static String notificationsByUtilisateur(int utilisateurId) =>

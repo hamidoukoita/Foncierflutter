@@ -31,7 +31,7 @@ final mesVisitesProvider =
       .getRendezVousByAcquereur(user.id);
 });
 
-/// Photos / panoramas 360° / visites virtuelles d'un bien.
+/// Photos et panoramas 360° d'un bien.
 final mediasBienProvider = FutureProvider.autoDispose
     .family<List<MediaModel>, int>((ref, bienId) async {
   return ref.watch(mediaRepositoryProvider).getByBien(bienId);
@@ -55,7 +55,7 @@ final creneauxSocieteProvider = FutureProvider.autoDispose
   return ref.watch(creneauRepositoryProvider).getDisponibles(societeId);
 });
 
-/// Photos / panoramas 360° / visites virtuelles d'un programme (cité).
+/// Photos et panoramas 360° d'un programme (cité).
 final programmeMediasProvider = FutureProvider.autoDispose
     .family<List<MediaModel>, int>((ref, programmeId) async {
   return ref.watch(mediaRepositoryProvider).getByProgramme(programmeId);

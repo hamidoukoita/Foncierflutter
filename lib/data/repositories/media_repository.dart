@@ -8,7 +8,7 @@ class MediaRepository {
   MediaRepository(this._api);
   final ApiClient _api;
 
-  /// Photos, panoramas 360° et visites virtuelles d'un bien (lot ou parcelle).
+  /// Photos et panoramas 360° d'un bien (lot ou parcelle).
   Future<List<MediaModel>> getByBien(int bienId) =>
       _fetch(ApiEndpoints.mediasByBien(bienId));
 

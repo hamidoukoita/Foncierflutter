@@ -8,7 +8,7 @@ import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/panorama_viewer_screen.dart';
 
-/// Galerie d'un bien : carrousel de photos + liste des panoramas 360° / visites virtuelles.
+/// Galerie d'un bien : carrousel de photos + liste des panoramas 360°.
 /// N'affiche rien tant qu'aucun média n'existe (ou si le chargement échoue).
 class MediaGallery extends ConsumerWidget {
   final int bienId;

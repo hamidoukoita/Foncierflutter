@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/url_media.dart';
 
-/// Média d'un bien (photo, panorama 360°, visite virtuelle) — miroir de `MediaFoncierResponse`.
+/// Média d'un bien (photo ou panorama 360°) — miroir de `MediaFoncierResponse`.
 class MediaModel extends Equatable {
   final int id;
-  final String type; // PHOTO | PANORAMA_360 | VISITE_VIRTUELLE
+  final String type; // PHOTO | PANORAMA_360
   final String? titre;
   final String? description;
   final String url;
@@ -21,7 +21,6 @@ class MediaModel extends Equatable {
 
   bool get isPhoto => type == 'PHOTO';
   bool get isPanorama => type == 'PANORAMA_360';
-  bool get isVisiteVirtuelle => type == 'VISITE_VIRTUELLE';
 
   /// URL absolue : les fichiers téléversés sont servis par le backend sous « /uploads/... ».
   String get urlAbsolue => UrlMedia.absolue(url) ?? '';

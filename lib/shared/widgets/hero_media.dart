@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/panorama_viewer_screen.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Barre supérieure repliable des pages de détail (cité, lot) : la photo occupe le haut, puis se réduit en
 /// barre de titre au défilement — le contenu ne passe jamais « sous » l'image.
@@ -43,7 +41,6 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
   Widget build(BuildContext context) {
     final photos = widget.medias.where((m) => m.isPhoto).toList();
     final panos = widget.medias.where((m) => m.isPanorama).toList();
-    final visites = widget.medias.where((m) => m.isVisiteVirtuelle).toList();
 
     final top = MediaQuery.of(context).padding.top;
     final collapsedH = kToolbarHeight + top;
@@ -63,7 +60,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
       ),
       actions: [
         // Place réservée aux icônes de la barre repliée (dessinées dans flexibleSpace).
-        SizedBox(width: 12 + (panos.isNotEmpty ? 46 : 0) + (visites.isNotEmpty ? 46 : 0)),
+        SizedBox(width: 12 + (panos.isNotEmpty ? 46 : 0)),
       ],
       flexibleSpace: LayoutBuilder(
         builder: (context, c) {
@@ -162,7 +159,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                     ),
                   ),
                 ),
-              if (panos.isNotEmpty || visites.isNotEmpty) ...[
+              if (panos.isNotEmpty) ...[
                 // Déplié : appels à l'action bien visibles sur la photo.
                 Positioned(
                   right: 16,
@@ -171,27 +168,11 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                     ignoring: t < 0.5,
                     child: Opacity(
                       opacity: t,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          if (visites.isNotEmpty)
-                            _BoutonImmersif(
-                              icone: Icons.view_in_ar_rounded,
-                              titre: 'Visite virtuelle',
-                              sousTitre: 'Parcourir en ligne',
-                              principal: panos.isEmpty,
-                              onTap: () => _ouvrirVisite(context, visites.first),
-                            ),
-                          if (panos.isNotEmpty && visites.isNotEmpty) const SizedBox(height: 8),
-                          if (panos.isNotEmpty)
-                            _BoutonImmersif(
-                              icone: Icons.threesixty_rounded,
-                              titre: 'Visite 360°',
-                              sousTitre: panos.length > 1 ? '${panos.length} vues panoramiques' : 'Vue panoramique',
-                              principal: true,
-                              onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
-                            ),
-                        ],
+                      child: _BoutonImmersif(
+                        icone: Icons.threesixty_rounded,
+                        titre: 'Visite 360°',
+                        sousTitre: panos.length > 1 ? '${panos.length} vues panoramiques' : 'Vue panoramique',
+                        onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
                       ),
                     ),
                   ),
@@ -205,22 +186,9 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                     ignoring: t >= 0.5,
                     child: Opacity(
                       opacity: (1 - t).clamp(0.0, 1.0),
-                      child: Row(
-                        children: [
-                          if (visites.isNotEmpty)
-                            Padding(
-                              padding: EdgeInsets.only(right: panos.isNotEmpty ? 8 : 0),
-                              child: _CircleBtn(
-                                icon: Icons.view_in_ar_rounded,
-                                onTap: () => _ouvrirVisite(context, visites.first),
-                              ),
-                            ),
-                          if (panos.isNotEmpty)
-                            _CircleBtn(
-                              icon: Icons.threesixty,
-                              onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
-                            ),
-                        ],
+                      child: _CircleBtn(
+                        icon: Icons.threesixty,
+                        onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
                       ),
                     ),
                   ),
@@ -272,41 +240,25 @@ class _CircleBtn extends StatelessWidget {
   }
 }
 
-/// Ouvre la visite virtuelle dans le navigateur ; à défaut, copie le lien.
-Future<void> _ouvrirVisite(BuildContext context, MediaModel visite) async {
-  final ouvert = await launchUrl(Uri.parse(visite.urlAbsolue), mode: LaunchMode.externalApplication)
-      .catchError((_) => false);
-  if (ouvert) return;
-  await Clipboard.setData(ClipboardData(text: visite.urlAbsolue));
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Impossible d’ouvrir la visite : lien copié, collez-le dans votre navigateur')),
-    );
-  }
-}
-
-/// Grand bouton posé sur la photo (visite 360°, visite virtuelle).
-/// [principal] : fond ocre ; sinon fond blanc, pour hiérarchiser deux boutons.
+/// Grand bouton posé sur la photo (visite 360°).
 class _BoutonImmersif extends StatelessWidget {
   final IconData icone;
   final String titre;
   final String sousTitre;
-  final bool principal;
   final VoidCallback onTap;
 
   const _BoutonImmersif({
     required this.icone,
     required this.titre,
     required this.sousTitre,
-    required this.principal,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final texte = principal ? AppColors.white : AppColors.primaryBlueAnthracite;
+    const texte = AppColors.white;
     return Material(
-      color: principal ? AppColors.primaryOcre : AppColors.white,
+      color: AppColors.primaryOcre,
       shape: const StadiumBorder(),
       elevation: 4,
       shadowColor: AppColors.black.withValues(alpha: 0.4),
@@ -318,13 +270,13 @@ class _BoutonImmersif extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icone, size: 22, color: principal ? AppColors.white : AppColors.primaryOcre),
+              Icon(icone, size: 22, color: texte),
               const SizedBox(width: 8),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(titre, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: texte)),
+                  Text(titre, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: texte)),
                   Text(sousTitre,
                       style: TextStyle(
                           fontSize: 10.5, fontWeight: FontWeight.w600, color: texte.withValues(alpha: 0.8))),

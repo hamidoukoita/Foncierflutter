@@ -6,8 +6,8 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_shadows.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
-import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/visite_virtuelle_model.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/hero_media.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/societe_logo.dart';
 
@@ -21,8 +21,8 @@ class DetailPage extends StatelessWidget {
   final Widget? bottomBar;
   final Future<void> Function()? onRefresh;
 
-  /// Points de passage entre panoramas, pour une visite pièce par pièce.
-  final List<LienPanoramaModel> liensPanoramas;
+  /// Visite pièce par pièce (maisons clés en main) : pièce de départ et points de passage.
+  final VisiteVirtuelleModel visite;
 
   const DetailPage({
     super.key,
@@ -33,7 +33,7 @@ class DetailPage extends StatelessWidget {
     this.mediasLoading = false,
     this.bottomBar,
     this.onRefresh,
-    this.liensPanoramas = const [],
+    this.visite = VisiteVirtuelleModel.vide,
   });
 
   @override
@@ -46,7 +46,7 @@ class DetailPage extends StatelessWidget {
           medias: medias,
           loading: mediasLoading,
           onBack: onBack,
-          liensPanoramas: liensPanoramas,
+          visite: visite,
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(

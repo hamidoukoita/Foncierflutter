@@ -1,12 +1,16 @@
 /// Point de passage d'une visite virtuelle : posé dans un panorama (source), il mène à un autre (cible).
 /// Sa position est une direction dans la sphère, en degrés (azimut, élévation).
+/// La vue d'arrivée, facultative, est la direction regardée en entrant dans la pièce cible.
 class LienPanoramaModel {
   final int id;
   final int sourceId;
   final int cibleId;
   final double azimut;
   final double elevation;
-  final String libelle;
+  /// Libellé saisi par la société ; null : le nom de la pièce d'arrivée.
+  final String? libelle;
+  final double? azimutArrivee;
+  final double? elevationArrivee;
 
   const LienPanoramaModel({
     required this.id,
@@ -14,7 +18,9 @@ class LienPanoramaModel {
     required this.cibleId,
     required this.azimut,
     required this.elevation,
-    required this.libelle,
+    this.libelle,
+    this.azimutArrivee,
+    this.elevationArrivee,
   });
 
   factory LienPanoramaModel.fromJson(Map<String, dynamic> json) => LienPanoramaModel(
@@ -23,6 +29,8 @@ class LienPanoramaModel {
         cibleId: (json['cibleId'] as num).toInt(),
         azimut: (json['azimut'] as num?)?.toDouble() ?? 0,
         elevation: (json['elevation'] as num?)?.toDouble() ?? 0,
-        libelle: json['libelle'] as String? ?? 'Pièce suivante',
+        libelle: json['libelle'] as String?,
+        azimutArrivee: (json['azimutArrivee'] as num?)?.toDouble(),
+        elevationArrivee: (json['elevationArrivee'] as num?)?.toDouble(),
       );
 }

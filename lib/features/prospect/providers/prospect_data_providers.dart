@@ -1,5 +1,5 @@
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
-import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/visite_virtuelle_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/bien_foncier_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/creneau_model.dart';
@@ -37,10 +37,10 @@ final mediasBienProvider = FutureProvider.autoDispose
   return ref.watch(mediaRepositoryProvider).getByBien(bienId);
 });
 
-/// Points de passage de la visite virtuelle d'un bien (maisons clés en main).
-final liensPanoramasProvider = FutureProvider.autoDispose
-    .family<List<LienPanoramaModel>, int>((ref, bienId) async {
-  return ref.watch(mediaRepositoryProvider).getLiensByBien(bienId);
+/// Visite virtuelle d'une maison clé en main : pièce de départ et points de passage.
+final visiteVirtuelleProvider = FutureProvider.autoDispose
+    .family<VisiteVirtuelleModel, int>((ref, bienId) async {
+  return ref.watch(mediaRepositoryProvider).getVisiteByBien(bienId);
 });
 
 /// Ce que l'acquéreur connecté peut faire sur un bien : réserver, visiter, ou pourquoi pas.

@@ -56,7 +56,7 @@ class ApiEndpoints {
       '/medias/programme/$programmeId';
   static String mediasByBien(int bienId) => '/medias/bien/$bienId';
   static String mediasByModele(int modeleId) => '/medias/modele/$modeleId';
-  static String liensPanoramasByBien(int bienId) => '/medias/bien/$bienId/liens';
+  static String visiteVirtuelleByBien(int bienId) => '/medias/bien/$bienId/visite';
   static String proximitesByProgramme(int programmeId) =>
       '/proximites-commodites/programme/$programmeId';
   static String proximitesByBien(int bienId) =>

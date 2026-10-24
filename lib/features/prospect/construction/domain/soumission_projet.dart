@@ -1,3 +1,5 @@
+import 'description_maison.dart';
+
 /// Données saisies dans le formulaire « Soumettre mon projet ».
 class SoumissionProjet {
   final int societeId;
@@ -10,10 +12,9 @@ class SoumissionProjet {
   final String? typeTerrain;
   final double? budgetEstime;
   final String? description;
-  final String? descriptionModelePersonnalise;
-  final int? nombreChambres;
-  final int? nombreSallesBain;
-  final double? surfaceConstruite;
+
+  /// Questionnaire de la maison souhaitée, envoyé seulement pour un modèle personnalisé.
+  final DescriptionMaison? maisonSouhaitee;
 
   const SoumissionProjet({
     required this.societeId,
@@ -25,10 +26,7 @@ class SoumissionProjet {
     this.typeTerrain,
     this.budgetEstime,
     this.description,
-    this.descriptionModelePersonnalise,
-    this.nombreChambres,
-    this.nombreSallesBain,
-    this.surfaceConstruite,
+    this.maisonSouhaitee,
   });
 
   bool get estPersonnalise => modeleId == null && maisonId == null;
@@ -43,11 +41,6 @@ class SoumissionProjet {
         if (typeTerrain != null) 'typeTerrain': typeTerrain,
         if (budgetEstime != null) 'budgetEstime': budgetEstime,
         if (description != null) 'description': description,
-        if (estPersonnalise) ...{
-          'descriptionModelePersonnalise': descriptionModelePersonnalise,
-          if (nombreChambres != null) 'nombreChambresSouhaitees': nombreChambres,
-          if (nombreSallesBain != null) 'nombreSallesBainSouhaitees': nombreSallesBain,
-          if (surfaceConstruite != null) 'surfaceConstruiteSouhaitee': surfaceConstruite,
-        },
+        if (estPersonnalise && maisonSouhaitee != null) 'maisonSouhaitee': maisonSouhaitee!.toJson(),
       };
 }

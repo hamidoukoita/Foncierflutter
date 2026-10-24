@@ -5,6 +5,9 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/surveillance_notifications.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/providers/construction_providers.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/notifications/presentation/widgets/cloche_notifications.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/notifications/providers/notifications_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_dashboard_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/suite_vente/presentation/widgets/suite_vente_ecouteur.dart';
@@ -79,6 +82,8 @@ class ProspectShell extends ConsumerWidget {
       onNouvelles: (ref) {
         ref.invalidate(mesReservationsProvider);
         ref.invalidate(prospectDashboardProvider);
+        ref.invalidate(mesNotificationsProvider);
+        ref.invalidate(mesProjetsProvider);
       },
       child: SuiteVenteEcouteur(
         child: Scaffold(
@@ -96,6 +101,8 @@ class ProspectShell extends ConsumerWidget {
                     ],
                   ),
                   actions: const [
+                    ClocheNotifications(),
+                    SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
                     Padding(
                       padding:
                           EdgeInsets.only(right: AppSpacing.pageHorizontal),

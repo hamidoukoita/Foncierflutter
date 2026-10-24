@@ -48,6 +48,25 @@ class ConfirmDialog extends StatelessWidget {
     return result ?? false;
   }
 
+  /// Marge intérieure horizontale d'un [AppActionButton] (des deux côtés).
+  static const double _margeBouton = 2 * (AppSpacing.sm + AppSpacing.xs);
+
+  /// Vrai si [libelle] s'écrit en entier dans un bouton de largeur [largeur].
+  static bool _tient(BuildContext context, String libelle, double largeur) {
+    final mesure = TextPainter(
+      text: TextSpan(
+        text: libelle,
+        style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700),
+      ),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final tient = mesure.width <= largeur - _margeBouton;
+    mesure.dispose();
+    return tient;
+  }
+
   @override
   Widget build(BuildContext context) {
     final accent = destructive ? AppColors.errorRed : AppColors.primaryOcre;
@@ -80,27 +99,42 @@ class ConfirmDialog extends StatelessWidget {
               style: AppTextStyles.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: AppActionButton(
-                    label: cancelLabel,
-                    height: 48,
-                    onPressed: () => Navigator.of(context).pop(false),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: AppActionButton(
-                    label: confirmLabel,
-                    height: 48,
-                    variant: destructive
-                        ? AppActionVariant.danger
-                        : AppActionVariant.accent,
-                    onPressed: () => Navigator.of(context).pop(true),
-                  ),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, contraintes) {
+                final annuler = AppActionButton(
+                  label: cancelLabel,
+                  height: 48,
+                  onPressed: () => Navigator.of(context).pop(false),
+                );
+                final confirmer = AppActionButton(
+                  label: confirmLabel,
+                  height: 48,
+                  variant: destructive
+                      ? AppActionVariant.danger
+                      : AppActionVariant.accent,
+                  onPressed: () => Navigator.of(context).pop(true),
+                );
+                // Côte à côte si les deux libellés tiennent en entier, sinon l'un sous l'autre.
+                final demiLargeur = (contraintes.maxWidth - AppSpacing.md) / 2;
+                if (_tient(context, confirmLabel, demiLargeur) &&
+                    _tient(context, cancelLabel, demiLargeur)) {
+                  return Row(
+                    children: [
+                      Expanded(child: annuler),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(child: confirmer),
+                    ],
+                  );
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    confirmer,
+                    const SizedBox(height: AppSpacing.sm),
+                    annuler,
+                  ],
+                );
+              },
             ),
           ],
         ),

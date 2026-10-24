@@ -7,11 +7,14 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/regle_remboursement.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/recu_reservation.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_error_banner.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 
 /// Réservation d'un bien : récapitulatif des conditions, paiement Orange Money (simulé)
-/// puis reçu. Si la société a fixé un prix de zéro, la réservation se confirme sans paiement.
+/// puis reçu, que l'acquéreur retrouve ensuite sur sa réservation.
+/// Si la société a fixé un prix de zéro, la réservation se confirme sans paiement.
 class PaiementReservationSheet extends StatefulWidget {
   final String libelle;
   final ConditionsReservation conditions;
@@ -98,7 +101,13 @@ class _PaiementReservationSheetState extends State<PaiementReservationSheet> {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               child: _recu != null
-                  ? _Recu(key: const ValueKey('recu'), reservation: _recu!, libelle: widget.libelle)
+                  ? RecuReservation(
+                      key: const ValueKey('recu'),
+                      reservation: _recu!,
+                      libelle: widget.libelle,
+                      enTete: true,
+                      onTerminer: () => Navigator.of(context).pop(_recu),
+                    )
                   : _Recapitulatif(
                       key: const ValueKey('recap'),
                       libelle: widget.libelle,
@@ -136,8 +145,14 @@ class _Recapitulatif extends StatelessWidget {
     final duree = DateFormatter.dureeLisible(Duration(hours: conditions.dureeHeures));
     final regles = [
       if (conditions.payante)
-        (Icons.money_off_rounded, 'Montant non remboursable si vous annulez votre réservation.'),
-      (Icons.support_agent_rounded, 'Un agent de ${conditions.societeNom ?? 'la société'} prend ensuite votre dossier en charge.'),
+        (
+          conditions.pourcentageRemboursement > 0 ? Icons.currency_exchange_rounded : Icons.money_off_rounded,
+          RegleRemboursement.avantReservation(conditions.pourcentageRemboursement, conditions.montant),
+        ),
+      (
+        Icons.support_agent_rounded,
+        'Un agent de ${conditions.societeNom ?? 'la société'} prend ensuite votre dossier en charge.'
+      ),
       (
         Icons.timer_outlined,
         'Dès qu’il démarre le suivi, le bien vous est réservé $duree pour conclure la vente. '
@@ -242,94 +257,6 @@ class _PaiementEnCours extends StatelessWidget {
               style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700, color: AppColors.primaryBlueAnthracite)),
         ],
       ),
-    );
-  }
-}
-
-/// Reçu affiché après le paiement (ou la confirmation d'une réservation gratuite).
-class _Recu extends StatelessWidget {
-  final ReservationModel reservation;
-  final String libelle;
-
-  const _Recu({super.key, required this.reservation, required this.libelle});
-
-  @override
-  Widget build(BuildContext context) {
-    final r = reservation;
-    final lignes = [
-      ('Bien', libelle),
-      ('Dossier', r.numeroDossier),
-      if (r.estPayante) ...[
-        ('Montant payé', CurrencyFormatter.fcfa(r.montantReservation)),
-        ('Moyen', 'Orange Money'),
-        ('Référence', r.referencePaiement ?? '—'),
-      ],
-      ('Date', '${DateFormatter.date(r.datePaiement ?? r.dateReservation)} à ${DateFormatter.heure(r.datePaiement ?? r.dateReservation)}'),
-    ];
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Center(
-          child: CircleAvatar(
-            radius: 30,
-            backgroundColor: AppColors.successGreenSoft,
-            child: Icon(Icons.check_rounded, size: 34, color: AppColors.successGreen),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          r.estPayante ? 'Paiement accepté' : 'Réservation enregistrée',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.pageTitle.copyWith(fontSize: 22),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          'Un agent va prendre votre dossier en charge. Suivez-le dans « Réservations ».',
-          textAlign: TextAlign.center,
-          style: AppTextStyles.bodySmall,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.md - AppSpacing.xs),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundOffWhite,
-            borderRadius: AppRadius.radiusLg,
-            border: Border.all(color: AppColors.borderLight),
-          ),
-          child: Column(
-            children: [
-              for (final (libelleLigne, valeur) in lignes)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(libelleLigne, style: AppTextStyles.bodySmall),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          valeur,
-                          textAlign: TextAlign.right,
-                          style: AppTextStyles.label.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryBlueAnthracite,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        DetailButton(
-          label: 'Terminé',
-          icon: Icons.check_rounded,
-          onPressed: () => Navigator.of(context).pop(r),
-        ),
-      ],
     );
   }
 }

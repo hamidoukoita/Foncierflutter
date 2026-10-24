@@ -23,6 +23,10 @@ class ProgrammeFoncier {
   /// Logo de la société promotrice (chemin relatif servi par le backend).
   final String? societeLogoUrl;
   final int? totalLots;
+
+  /// Lots libres à la réservation et lots vendus (null si le serveur ne les donne pas).
+  final int? lotsDisponibles;
+  final int? lotsVendus;
   final int? planMasseId;
 
   const ProgrammeFoncier({
@@ -45,6 +49,8 @@ class ProgrammeFoncier {
     this.societeNom,
     this.societeLogoUrl,
     this.totalLots,
+    this.lotsDisponibles,
+    this.lotsVendus,
     this.planMasseId,
   });
 
@@ -72,6 +78,8 @@ class ProgrammeFoncier {
       societeId: (json['societeId'] as num?)?.toInt(),
       societeNom: json['societeNom'] as String?,
       societeLogoUrl: json['societeLogoUrl'] as String?,
+      lotsDisponibles: (json['lotsDisponibles'] as num?)?.toInt(),
+      lotsVendus: (json['lotsVendus'] as num?)?.toInt(),
       totalLots: (json['totalLots'] as num?)?.toInt() ??
           (json['lotsTotal'] as num?)?.toInt(),
       planMasseId: (json['planMasseId'] as num?)?.toInt(),

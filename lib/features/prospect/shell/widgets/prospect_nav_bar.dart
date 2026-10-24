@@ -212,7 +212,9 @@ class _EntreeAvant extends StatelessWidget {
 }
 
 /// Bouton « + » central : ouvre ou referme la rangée « Mes dossiers ».
-class _BoutonDossiers extends StatelessWidget {
+/// Fermé, il « respire » (léger zoom en boucle) pour signaler qu'il se touche ;
+/// sous le doigt, il s'enfonce légèrement.
+class _BoutonDossiers extends StatefulWidget {
   final bool ouvert;
   final bool surUnDossier;
   final int enAttente;
@@ -225,38 +227,121 @@ class _BoutonDossiers extends StatelessWidget {
       required this.onTap});
 
   @override
+  State<_BoutonDossiers> createState() => _BoutonDossiersState();
+}
+
+class _BoutonDossiersState extends State<_BoutonDossiers>
+    with SingleTickerProviderStateMixin {
+  static const Duration _dureePulsation = Duration(milliseconds: 800);
+  static const double _zoomPulsation = 1.15;
+
+  /// Halo orange autour du bouton, au plus fort de la pulsation.
+  static const double _haloEtendue = 7;
+  static const double _haloFlou = 16;
+  static const double _haloOpacite = 0.45;
+  static const double _zoomAppui = 0.9;
+
+  late final AnimationController _pulsation =
+      AnimationController(vsync: this, duration: _dureePulsation);
+  late final Animation<double> _zoom = Tween<double>(begin: 1, end: _zoomPulsation)
+      .animate(CurvedAnimation(parent: _pulsation, curve: Curves.easeInOut));
+  bool _appuye = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _mettreAJourPulsation();
+  }
+
+  @override
+  void didUpdateWidget(covariant _BoutonDossiers ancien) {
+    super.didUpdateWidget(ancien);
+    if (ancien.ouvert != widget.ouvert) _mettreAJourPulsation();
+  }
+
+  /// Pulsation seulement quand la rangée est fermée, et jamais si l'utilisateur
+  /// a demandé à réduire les animations.
+  void _mettreAJourPulsation() {
+    final animer = !widget.ouvert && !MediaQuery.of(context).disableAnimations;
+    if (animer && !_pulsation.isAnimating) {
+      _pulsation.repeat(reverse: true);
+    } else if (!animer) {
+      _pulsation.animateTo(0, duration: ProspectNavBar.duree);
+    }
+  }
+
+  void _appui(bool appuye) => setState(() => _appuye = appuye);
+
+  @override
+  void dispose() {
+    _pulsation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Semantics(
         button: true,
-        label: ouvert ? 'Fermer mes dossiers' : 'Mes dossiers',
+        label: widget.ouvert ? 'Fermer mes dossiers' : 'Mes dossiers',
         child: GestureDetector(
-          onTap: onTap,
-          child: PastilleCompteur(
-            nombre: ouvert ? 0 : enAttente,
-            child: AnimatedContainer(
-              duration: ProspectNavBar.duree,
-              curve: ProspectNavBar.courbe,
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: ouvert ? AppGradients.navy : AppGradients.cta,
-                shape: BoxShape.circle,
-                boxShadow: AppShadows.cta,
-                border: Border.all(
-                  color: surUnDossier && !ouvert
-                      ? AppColors.primaryBlueAnthracite
-                      : AppColors.white,
-                  width: 3,
+          onTap: widget.onTap,
+          onTapDown: (_) => _appui(true),
+          onTapUp: (_) => _appui(false),
+          onTapCancel: () => _appui(false),
+          child: AnimatedScale(
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            scale: _appuye ? _zoomAppui : 1,
+            child: AnimatedBuilder(
+              animation: _zoom,
+              // Le halo grandit et s'éclaircit avec le zoom.
+              builder: (context, enfant) {
+                final t = _pulsation.value;
+                return Transform.scale(
+                  scale: _zoom.value,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryOcre.withValues(alpha: _haloOpacite * t),
+                          blurRadius: _haloFlou * t,
+                          spreadRadius: _haloEtendue * t,
+                        ),
+                      ],
+                    ),
+                    child: enfant,
+                  ),
+                );
+              },
+              child: PastilleCompteur(
+                nombre: widget.ouvert ? 0 : widget.enAttente,
+                child: AnimatedContainer(
+                  duration: ProspectNavBar.duree,
+                  curve: ProspectNavBar.courbe,
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    gradient: widget.ouvert ? AppGradients.navy : AppGradients.cta,
+                    shape: BoxShape.circle,
+                    boxShadow: AppShadows.cta,
+                    border: Border.all(
+                      color: widget.surUnDossier && !widget.ouvert
+                          ? AppColors.primaryBlueAnthracite
+                          : AppColors.white,
+                      width: 3,
+                    ),
+                  ),
+                  child: AnimatedRotation(
+                    duration: ProspectNavBar.duree,
+                    curve: ProspectNavBar.courbe,
+                    turns: widget.ouvert ? 0.125 : 0,
+                    child: const Icon(Icons.add_rounded,
+                        color: AppColors.white, size: 28),
+                  ),
                 ),
-              ),
-              child: AnimatedRotation(
-                duration: ProspectNavBar.duree,
-                curve: ProspectNavBar.courbe,
-                turns: ouvert ? 0.125 : 0,
-                child: const Icon(Icons.add_rounded,
-                    color: AppColors.white, size: 28),
               ),
             ),
           ),

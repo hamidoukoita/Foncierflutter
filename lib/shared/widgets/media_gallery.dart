@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -163,9 +164,7 @@ class _VisiteTile extends StatelessWidget {
                 : () async {
                     await Clipboard.setData(ClipboardData(text: media.urlAbsolue));
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Lien copié : ouvrez-le dans votre navigateur')),
-                      );
+                      AppSnackbar.success(context, 'Lien copié : ouvrez-le dans votre navigateur');
                     }
                   },
             icon: Icon(media.isPanorama ? Icons.threesixty : Icons.link_rounded, size: 18, color: AppColors.primaryOcre),

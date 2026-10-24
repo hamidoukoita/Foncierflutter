@@ -125,19 +125,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               color: AppColors.grey700,
                             ),
                           ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () {
-                              // context.push('/forgot-password');
-                            },
-                            child: Text(
-                              'Mot de passe oublié ?',
-                              style: AppTextStyles.bodySmall.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryBlueAnthracite,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
 
@@ -178,33 +165,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Bouton Google
-                  OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(AppSizes.buttonLarge),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.network(
-                          'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/768px-Google_%22G%22_logo.svg.png',
-                          height: 20,
-                          width: 20,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.g_mobiledata, size: 24),
-                        ),
-                        AppSpacing.gapSm,
-                        Text(
-                          'Se connecter avec Google',
-                          style: AppTextStyles.bodyMedium.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryBlueAnthracite,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+               
 
                   const SizedBox(height: AppSpacing.xl),
 

@@ -132,7 +132,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               label: 'Prénom',
                               controller: _prenom,
                               hintText: 'Amadou',
-                              inputFormatters: [NomPersonne.formatter],
+                              inputFormatters: NomPersonne.formatters,
                               validator: (v) =>
                                   NomPersonne.valider(v, libelle: 'Prénom'),
                             ),
@@ -143,7 +143,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                               label: 'Nom',
                               controller: _nom,
                               hintText: 'Traoré',
-                              inputFormatters: [NomPersonne.formatter],
+                              inputFormatters: NomPersonne.formatters,
                               validator: (v) =>
                                   NomPersonne.valider(v, libelle: 'Nom'),
                             ),

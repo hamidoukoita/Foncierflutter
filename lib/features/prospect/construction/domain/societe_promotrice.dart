@@ -7,6 +7,9 @@ class SocietePromotrice {
   final String? logoUrl;
   final String? description;
 
+  /// Budget minimum d'un projet de construction chez cette société (null = pas de minimum).
+  final double? budgetMinimumConstruction;
+
   const SocietePromotrice({
     required this.id,
     required this.nom,
@@ -14,6 +17,7 @@ class SocietePromotrice {
     this.telephone,
     this.logoUrl,
     this.description,
+    this.budgetMinimumConstruction,
   });
 
   String get initiales {
@@ -30,6 +34,7 @@ class SocietePromotrice {
       telephone: json['telephone'] as String?,
       logoUrl: json['logoUrl'] as String?,
       description: json['description'] as String?,
+      budgetMinimumConstruction: (json['budgetMinimumConstruction'] as num?)?.toDouble(),
     );
   }
 }

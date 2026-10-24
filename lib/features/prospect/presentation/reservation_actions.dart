@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
-import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/providers/repository_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/mes_reservations_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_dashboard_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/regle_remboursement.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/confirm_dialog.dart';
 import 'widgets/paiement_reservation_sheet.dart';
@@ -72,15 +71,13 @@ ReservationModel? maReservationActive(List<ReservationModel>? mesReservations, i
   return null;
 }
 
-/// Désistement de l'acquéreur, avec confirmation : le montant payé n'est pas remboursé.
+/// Désistement de l'acquéreur, avec confirmation : il est remboursé selon la règle de la société.
 Future<bool> annulerReservationAvecConfirmation(
   BuildContext context,
   WidgetRef ref,
   ReservationModel reservation,
 ) async {
-  final perte = reservation.estPayante
-      ? '\n\nLes ${CurrencyFormatter.fcfa(reservation.montantReservation)} payés pour la réservation ne vous seront pas remboursés.'
-      : '';
+  final perte = reservation.estPayante ? '\n\n${RegleRemboursement.avantAnnulation(reservation)}' : '';
   final ok = await ConfirmDialog.show(
     context,
     icon: Icons.bookmark_remove_rounded,
@@ -106,40 +103,26 @@ Future<bool> annulerReservationAvecConfirmation(
 /// Annulation d'un rendez-vous de visite, avec confirmation.
 Future<bool> annulerRendezVousAvecConfirmation(
     BuildContext context, WidgetRef ref, int rendezVousId) async {
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Annuler ce rendez-vous ?'),
-      content:
-          const Text('La société promotrice sera informée de l\'annulation.'),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Garder')),
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(true),
-          child: const Text('Annuler le rendez-vous',
-              style: TextStyle(
-                  color: AppColors.errorRed, fontWeight: FontWeight.w800)),
-        ),
-      ],
-    ),
+  final ok = await ConfirmDialog.show(
+    context,
+    icon: Icons.event_busy_rounded,
+    title: 'Annuler ce rendez-vous ?',
+    message: 'La société promotrice sera informée de l’annulation.',
+    confirmLabel: 'Annuler la visite',
+    cancelLabel: 'Garder',
+    destructive: true,
   );
-  if (ok != true || !context.mounted) return false;
+  if (!ok || !context.mounted) return false;
 
   final messenger = ScaffoldMessenger.of(context);
   try {
     await ref.read(rendezVousRepositoryProvider).annuler(rendezVousId);
     ref.invalidate(mesVisitesProvider);
     ref.invalidate(conditionsReservationProvider);
-    messenger.showSnackBar(const SnackBar(content: Text('Rendez-vous annulé')));
+    AppSnackbar.successSur(messenger, 'Rendez-vous annulé');
     return true;
   } catch (e) {
-    messenger.showSnackBar(
-      SnackBar(
-          content: Text(ErrorHandler.messageOf(e)),
-          backgroundColor: AppColors.errorRed),
-    );
+    AppSnackbar.errorSur(messenger, ErrorHandler.messageOf(e));
     return false;
   }
 }

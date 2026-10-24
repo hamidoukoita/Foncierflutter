@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
@@ -20,6 +19,7 @@ import '../../controllers/soumission_controller.dart';
 import '../carrousel_choix.dart';
 import '../carte_choix_maison.dart';
 import '../carte_selectionnable.dart';
+import '../questionnaire_maison.dart';
 import 'entete_etape.dart';
 
 /// Étape 3 : un modèle du catalogue de la société, une de ses maisons clés en main comme
@@ -69,7 +69,7 @@ class EtapeModele extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Proposer mon propre modèle', style: AppTextStyles.cardTitle),
-                      Text('Décrivez la maison que vous souhaitez faire construire.',
+                      Text('Répondez à quelques questions sur la maison que vous souhaitez.',
                           style: AppTextStyles.bodySmall),
                     ],
                   ),
@@ -80,7 +80,7 @@ class EtapeModele extends ConsumerWidget {
         ),
         if (etat.modelePersonnalise) ...[
           const SizedBox(height: AppSpacing.md),
-          _ModelePersonnalise(champs: champs, formKey: formKey),
+          QuestionnaireMaison(champs: champs, formKey: formKey),
         ],
       ],
     );
@@ -196,67 +196,6 @@ class _MaisonsDeReference extends ConsumerWidget {
             onTap: () => ref.read(soumissionControllerProvider.notifier).choisirMaison(m),
           );
         },
-      ),
-    );
-  }
-}
-
-class _ModelePersonnalise extends StatelessWidget {
-  final ChampsProjet champs;
-  final GlobalKey<FormState> formKey;
-  const _ModelePersonnalise({required this.champs, required this.formKey});
-
-  @override
-  Widget build(BuildContext context) {
-    final entiers = [FilteringTextInputFormatter.digitsOnly];
-
-    InputDecoration deco(String indice) => InputDecoration(hintText: indice);
-    Widget libelle(String t) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: Text(t, style: AppTextStyles.label.copyWith(fontWeight: FontWeight.w700)),
-        );
-
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          libelle('Description de la maison *'),
-          TextFormField(
-            controller: champs.descriptionModele,
-            minLines: 3,
-            maxLines: 6,
-            maxLength: 3000,
-            decoration: deco('Style, nombre de niveaux, pièces, terrasse, garage…'),
-            validator: (v) => (v ?? '').trim().length < 10 ? 'Décrivez la maison en quelques phrases' : null,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              for (final (titre, ctrl, indice) in [
-                ('Chambres', champs.chambres, '3'),
-                ('Salles de bain', champs.sallesBain, '2'),
-                ('Surface (m²)', champs.surfaceConstruite, '150'),
-              ]) ...[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      libelle(titre),
-                      TextFormField(
-                        controller: ctrl,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: entiers,
-                        decoration: deco(indice),
-                      ),
-                    ],
-                  ),
-                ),
-                if (titre != 'Surface (m²)') const SizedBox(width: AppSpacing.sm),
-              ],
-            ],
-          ),
-        ],
       ),
     );
   }

@@ -33,7 +33,10 @@ class CompteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: AppColors.white,
+      surfaceTintColor: AppColors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.card),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(

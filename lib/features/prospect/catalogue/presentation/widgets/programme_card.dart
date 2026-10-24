@@ -90,6 +90,8 @@ class ProgrammeCard extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     _Localisation(programme: programme),
+                    const SizedBox(height: AppSpacing.sm),
+                    _DisponibiliteLots(programme: programme),
                     const SizedBox(height: AppSpacing.md - AppSpacing.xs),
                     _Pied(programme: programme),
                   ],
@@ -125,6 +127,53 @@ class _Localisation extends StatelessWidget {
               style: AppTextStyles.bodyMedium),
         ),
       ],
+    );
+  }
+}
+
+/// Où en sont les lots de la cité : combien restent libres, ou tout est vendu / réservé.
+/// Couleurs du plan : vert disponible, orange réservé, rouge vendu.
+class _DisponibiliteLots extends StatelessWidget {
+  final ProgrammeFoncier programme;
+  const _DisponibiliteLots({required this.programme});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = programme.totalLots ?? 0;
+    final libres = programme.lotsDisponibles;
+    if (total == 0 || libres == null) return const SizedBox.shrink();
+
+    final (couleur, icone, texte) = switch (libres) {
+      > 0 => (
+          AppColors.lotDisponible,
+          Icons.check_circle_rounded,
+          libres == 1 ? '1 lot disponible sur $total' : '$libres lots disponibles sur $total',
+        ),
+      _ when (programme.lotsVendus ?? 0) >= total =>
+        (AppColors.lotVendu, Icons.do_not_disturb_on_rounded, 'Tous les lots sont vendus'),
+      _ => (AppColors.lotReserve, Icons.schedule_rounded, 'Aucun lot libre : tous réservés ou vendus'),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: couleur.withValues(alpha: 0.12),
+        borderRadius: AppRadius.radiusRound,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icone, size: 15, color: couleur),
+          const SizedBox(width: AppSpacing.xs),
+          Flexible(
+            child: Text(
+              texte,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.label.copyWith(color: couleur, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

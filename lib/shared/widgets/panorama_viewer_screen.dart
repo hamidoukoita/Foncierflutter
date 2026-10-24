@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/panorama_geometrie.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
@@ -198,10 +200,7 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen>
           if (_shader == null) _error = e;
         });
         if (_shader != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Impossible de charger cette pièce. Réessayez.')),
-          );
+          AppSnackbar.error(context, 'Impossible de charger cette pièce. Réessayez.');
         }
       },
     );
@@ -234,8 +233,7 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen>
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
       builder: (context) => _MenuPieces(
         piece: _titre(media),
         portes: [

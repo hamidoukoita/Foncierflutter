@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/ombordin1_screen.dart';
-import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/ombording2_screen.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/ombordingMain_screen.dart';
-import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/onbording3_screnn.dart';
+import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/onboarding_diapos_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/notifications/notifications_routes.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/notifications/presentation/screens/notifications_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/views/login_screen.dart';
@@ -75,13 +75,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           builder: (_, __) => const OnboardingPage()),
       GoRoute(
           path: AuthRoutes.onboarding1,
-          builder: (_, __) => const OnboardingOnePage()),
-      GoRoute(
-          path: AuthRoutes.onboarding2,
-          builder: (_, __) => const OnboardingTwoPage()),
-      GoRoute(
-          path: AuthRoutes.onboarding3,
-          builder: (_, __) => const OnboardingThreePage()),
+          builder: (_, __) => const OnboardingDiaposPage()),
       GoRoute(path: AuthRoutes.login, builder: (_, __) => const LoginScreen()),
       GoRoute(
           path: AuthRoutes.register,
@@ -148,6 +142,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             maisonDeReference: state.extra is MaisonCleEnMain
                 ? state.extra as MaisonCleEnMain
                 : null),
+      ),
+      GoRoute(
+        path: NotificationsRoutes.liste,
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: ConstructionRoutes.detailPattern,

@@ -6,12 +6,14 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/back_title_header.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/confirm_dialog.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/primary_button.dart';
 import '../../construction_routes.dart';
 import '../../domain/societe_promotrice.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/domain/maison_cle_en_main.dart';
 import '../controllers/champs_projet.dart';
 import '../controllers/soumission_controller.dart';
+import '../../providers/construction_providers.dart';
 import '../widgets/etapes/etape_modele.dart';
 import '../widgets/etapes/etape_recapitulatif.dart';
 import '../widgets/etapes/etape_societe.dart';
@@ -40,12 +42,18 @@ class _SoumettreProjetScreenState extends ConsumerState<SoumettreProjetScreen> {
     final maison = widget.maisonDeReference;
     if (maison != null && maison.societeId != null) {
       // Après la première image : un provider ne se modifie pas pendant la construction de l'arbre.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
-        _controller.preselectionner(
-          SocietePromotrice(id: maison.societeId!, nom: maison.societeNom ?? 'Promoteur'),
-          maison,
-        );
+        final provisoire = SocietePromotrice(id: maison.societeId!, nom: maison.societeNom ?? 'Promoteur');
+        _controller.preselectionner(provisoire, maison);
+        // Fiche complète de la société (budget minimum…), dès que la liste est chargée.
+        try {
+          final societes = await ref.read(societesAgreeesProvider.future);
+          final complete = societes.where((s) => s.id == provisoire.id).firstOrNull;
+          if (mounted && complete != null) _controller.completerSociete(complete);
+        } catch (_) {
+          // Liste indisponible : la société provisoire suffit pour continuer.
+        }
       });
     }
   }
@@ -68,7 +76,7 @@ class _SoumettreProjetScreenState extends ConsumerState<SoumettreProjetScreen> {
       case EtapeSoumission.modele:
         if (!etat.maisonChoisie) return 'Choisissez un modèle, une maison clé en main ou proposez le vôtre.';
         if (etat.modelePersonnalise) {
-          return _formModele.currentState?.validate() == false ? 'Décrivez la maison souhaitée.' : null;
+          return _formModele.currentState?.validate() == false ? 'Vérifiez vos précisions sur la maison.' : null;
         }
         if (etat.maison != null) return null;
         return etat.modele!.convientA(_champs.superficieM2, _champs.typeTerrain.value)
@@ -90,6 +98,16 @@ class _SoumettreProjetScreenState extends ConsumerState<SoumettreProjetScreen> {
       _controller.allerA(EtapeSoumission.values[etat.etape.index + 1]);
       return;
     }
+    final confirme = await ConfirmDialog.show(
+      context,
+      icon: Icons.send_rounded,
+      title: 'Envoyer votre projet ?',
+      message: 'Votre dossier part chez ${etat.societe!.nom}. La société va l’étudier et pourra vous '
+          'poser des questions ou vous faire des propositions, que vous suivrez dans l’application.',
+      confirmLabel: 'Envoyer',
+      cancelLabel: 'Relire',
+    );
+    if (!confirme || !mounted) return;
     try {
       final projet = await _controller.soumettre(
         _champs.versSoumission(

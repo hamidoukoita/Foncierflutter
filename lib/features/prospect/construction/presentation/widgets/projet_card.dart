@@ -72,6 +72,7 @@ class ProjetCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: switch (projet.statut) {
                 StatutProjet.enEtude => 0.08,
+                StatutProjet.enDiscussion => 0.3,
                 StatutProjet.accepte => projet.progression / 100,
                 StatutProjet.refuse => 1,
               },

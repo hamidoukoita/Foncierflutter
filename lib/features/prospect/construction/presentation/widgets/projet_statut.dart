@@ -7,12 +7,14 @@ import '../../domain/projet_construction.dart';
 extension PresentationStatutProjet on StatutProjet {
   String get libelle => switch (this) {
         StatutProjet.enEtude => 'En étude',
+        StatutProjet.enDiscussion => 'En discussion',
         StatutProjet.accepte => 'Accepté',
         StatutProjet.refuse => 'Refusé',
       };
 
   Color get couleur => switch (this) {
         StatutProjet.enEtude => AppColors.warningAmber,
+        StatutProjet.enDiscussion => AppColors.primaryOcre,
         StatutProjet.accepte => AppColors.successGreen,
         StatutProjet.refuse => AppColors.errorRed,
       };

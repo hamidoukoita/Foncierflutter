@@ -1,4 +1,6 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/titre_foncier.dart';
+import '../../domain/description_maison.dart';
 import '../../domain/soumission_projet.dart';
 
 /// Champs texte du formulaire, partagés entre les étapes et libérés avec l'écran.
@@ -8,10 +10,12 @@ class ChampsProjet {
   final superficie = TextEditingController();
   final budget = TextEditingController();
   final message = TextEditingController();
-  final descriptionModele = TextEditingController();
-  final chambres = TextEditingController();
-  final sallesBain = TextEditingController();
-  final surfaceConstruite = TextEditingController();
+
+  /// Précisions libres sur la maison personnalisée, en complément du questionnaire.
+  final precisionsMaison = TextEditingController();
+
+  /// Réponses au questionnaire de la maison personnalisée.
+  final souhaits = ValueNotifier<DescriptionMaison>(DescriptionMaison.parDefaut);
 
   /// Forme du terrain, comparée au « type de terrain compatible » des modèles.
   final typeTerrain = ValueNotifier<String?>(null);
@@ -26,31 +30,30 @@ class ChampsProjet {
 
   double? get superficieM2 => nombre(superficie);
 
+  DescriptionMaison get maisonSouhaitee => souhaits.value.avecPrecisions(precisionsMaison.text);
+
   SoumissionProjet versSoumission({required int societeId, int? modeleId, int? maisonId}) {
     return SoumissionProjet(
       societeId: societeId,
       modeleId: modeleId,
       maisonId: maisonId,
-      numeroTitreFoncier: titreFoncier.text.trim(),
+      numeroTitreFoncier: TitreFoncier.complet(titreFoncier.text),
       localisationTerrain: texte(localisation),
       superficieTerrain: superficieM2 ?? 0,
       typeTerrain: typeTerrain.value,
       budgetEstime: nombre(budget),
       description: texte(message),
-      descriptionModelePersonnalise: texte(descriptionModele),
-      nombreChambres: nombre(chambres)?.round(),
-      nombreSallesBain: nombre(sallesBain)?.round(),
-      surfaceConstruite: nombre(surfaceConstruite),
+      maisonSouhaitee: maisonSouhaitee,
     );
   }
 
   void dispose() {
     for (final c in [
-      titreFoncier, localisation, superficie, budget, message,
-      descriptionModele, chambres, sallesBain, surfaceConstruite,
+      titreFoncier, localisation, superficie, budget, message, precisionsMaison,
     ]) {
       c.dispose();
     }
     typeTerrain.dispose();
+    souhaits.dispose();
   }
 }

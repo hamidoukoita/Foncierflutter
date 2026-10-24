@@ -44,6 +44,11 @@ class ApiEndpoints {
   // Notifications
   static String notificationsByUtilisateur(int utilisateurId) =>
       '/notifications/utilisateur/$utilisateurId';
+  static String lireNotification(int id) => '/notifications/$id/lire';
+  static String toutLireNotifications(int utilisateurId) =>
+      '/notifications/utilisateur/$utilisateurId/tout-lire';
+  static String lireNotificationsCible(String cibleType, int cibleId) =>
+      '/notifications/cible/$cibleType/$cibleId/lire';
 
   // Biens (vue polymorphique), créneaux de visite et médias
   static String bienById(int id) => '/biens-fonciers/$id';
@@ -68,6 +73,10 @@ class ApiEndpoints {
       '/projets-construction/acquereur/$id';
   static String projetsBySociete(int id) => '/projets-construction/societe/$id';
   static String projetById(int id) => '/projets-construction/$id';
+  static String filProjet(int id) => '/projets-construction/$id/fil';
+  static String messagesProjet(int id) => '/projets-construction/$id/messages';
+  static String accepterProposition(int id) => '/projets-construction/propositions/$id/accepter';
+  static String refuserProposition(int id) => '/projets-construction/propositions/$id/refuser';
   static const String modelesMaison = '/modeles-maison';
 
   // Maisons clés en main

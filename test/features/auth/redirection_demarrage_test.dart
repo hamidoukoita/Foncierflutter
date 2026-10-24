@@ -33,7 +33,7 @@ void main() {
 
     test("première ouverture : l'onboarding", () {
       expect(aller(AuthRoutes.splash, deconnecte, pret), AuthRoutes.onboarding);
-      expect(aller(AuthRoutes.onboarding2, deconnecte, pret), isNull);
+      expect(aller(AuthRoutes.onboarding1, deconnecte, pret), isNull);
     });
 
     test(

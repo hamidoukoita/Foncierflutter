@@ -32,6 +32,15 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.1
+
+# Icône de l'appli : `dart run flutter_launcher_icons` après tout changement d'image.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icone/icone_app.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icone/icone_app_premier_plan.png"
 
 flutter:
   uses-material-design: true

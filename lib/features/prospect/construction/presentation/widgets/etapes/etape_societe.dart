@@ -9,7 +9,7 @@ import '../../controllers/soumission_controller.dart';
 import '../societe_tile.dart';
 import 'entete_etape.dart';
 
-/// Étape 1 : choix du promoteur agréé qui recevra le dossier.
+/// Étape 1 : choix de la société promotrice agréée qui recevra le dossier.
 class EtapeSociete extends ConsumerWidget {
   const EtapeSociete({super.key});
 
@@ -22,7 +22,7 @@ class EtapeSociete extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const EnteteEtape(
-          titre: 'Quel promoteur construira votre maison ?',
+          titre: 'Choisissez la société qui construira votre maison',
           texte: 'Seules les sociétés agréées par le ministère peuvent recevoir votre projet. '
               'Vous verrez ensuite leurs modèles de maison.',
         ),

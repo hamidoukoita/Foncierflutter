@@ -3,33 +3,43 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
+import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/panorama_geometrie.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/visite_virtuelle_model.dart';
 
 /// Visionneuse 360° native, même principe que sur le web : image équirectangulaire projetée sur une sphère,
 /// glisser pour regarder autour (haut/bas/gauche/droite) avec inertie, pincer pour zoomer.
 /// Aucune dépendance supplémentaire ; l'état est propre à chaque ouverture (aucun état résiduel au retour).
-/// Avec des points de passage (visite virtuelle d'une maison), on passe d'une pièce à l'autre en les touchant.
+/// Avec une visite (maison clé en main), on part de la pièce de départ et l'on change de pièce
+/// uniquement en touchant les portes, avec un fondu ; le bouton « Pièces » oriente la vue vers les portes.
 class PanoramaViewerScreen extends StatefulWidget {
   final List<MediaModel> panoramas;
   final int initialIndex;
-  final List<LienPanoramaModel> liens;
+  final VisiteVirtuelleModel visite;
 
-  const PanoramaViewerScreen({super.key, required this.panoramas, this.initialIndex = 0, this.liens = const []});
+  const PanoramaViewerScreen({
+    super.key,
+    required this.panoramas,
+    this.initialIndex = 0,
+    this.visite = VisiteVirtuelleModel.vide,
+  });
 
   static Future<void> show(
     BuildContext context,
     List<MediaModel> panoramas, {
     int index = 0,
-    List<LienPanoramaModel> liens = const [],
+    VisiteVirtuelleModel visite = VisiteVirtuelleModel.vide,
   }) {
     return Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (_) => PanoramaViewerScreen(panoramas: panoramas, initialIndex: index, liens: liens),
+        builder: (_) => PanoramaViewerScreen(
+            panoramas: panoramas, initialIndex: index, visite: visite),
       ),
     );
   }
@@ -38,21 +48,36 @@ class PanoramaViewerScreen extends StatefulWidget {
   State<PanoramaViewerScreen> createState() => _PanoramaViewerScreenState();
 }
 
-class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with SingleTickerProviderStateMixin {
+class _PanoramaViewerScreenState extends State<PanoramaViewerScreen>
+    with SingleTickerProviderStateMixin {
   static const double _fovMin = 30 * math.pi / 180;
   static const double _fovMax = 100 * math.pi / 180;
   static const double _fovDefault = 75 * math.pi / 180;
   static const double _pitchMax = 85 * math.pi / 180;
+  static const double _dureeFonduMs = 800;
 
   late final Ticker _ticker;
   final ValueNotifier<int> _repaint = ValueNotifier<int>(0);
 
-  late int _index = widget.initialIndex;
+  late final bool _enVisite = widget.visite.active;
+  late int _index = _enVisite
+      ? widget.visite.indexDepart(widget.panoramas)
+      : widget.initialIndex;
+
+  /// Pièce réellement à l'écran ; [_index] passe à la suivante dès qu'on la demande.
+  late int _affiche = _index;
   ui.Image? _image;
   ui.ImageShader? _shader;
   ImageStream? _stream;
   ImageStreamListener? _listener;
   Object? _error;
+  bool _chargement = false;
+
+  /// Pièce précédente, figée dans sa dernière vue et effacée en fondu au-dessus de la nouvelle.
+  ui.Image? _ancienneImage;
+  ui.ImageShader? _ancienShader;
+  (double, double, double) _ancienneVue = (0, 0, _fovDefault);
+  final ValueNotifier<double> _fondu = ValueNotifier<double>(0);
 
   double _yaw = 0, _pitch = 0, _fov = _fovDefault;
   double _vYaw = 0, _vPitch = 0;
@@ -61,21 +86,25 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
   double _startFov = _fovDefault;
   double _viewHeight = 1;
 
-  /// Orientation à prendre au chargement du panorama suivant (dos à la porte d'entrée).
+  /// Orientation à prendre au chargement de la pièce suivante (vue d'arrivée du point suivi).
   (double, double)? _orientationArrivee;
 
-  List<LienPanoramaModel> get _points =>
-      widget.liens.where((l) => l.sourceId == widget.panoramas[_index].id).toList();
+  /// Orientation de la pièce à son arrivée, reprise par « Recentrer ».
+  (double, double) _orientationInitiale = (0, 0);
 
-  /// Passe dans la pièce visée par le point, orienté dos à la porte par laquelle on revient.
+  /// Orientation vers laquelle la vue tourne en douceur (porte choisie dans « Pièces »).
+  (double, double)? _cible;
+
+  List<LienPanoramaModel> get _points =>
+      widget.visite.pointsDe(widget.panoramas[_affiche].id);
+
+  /// Passe dans la pièce visée par le point, orienté selon la vue d'arrivée.
   void _suivre(LienPanoramaModel lien) {
     final cible = widget.panoramas.indexWhere((p) => p.id == lien.cibleId);
-    if (cible < 0) return;
-    final retour = widget.liens.where((l) => l.sourceId == lien.cibleId && l.cibleId == lien.sourceId);
-    _orientationArrivee = retour.isEmpty
-        ? null
-        : PanoramaGeometrie.orientationVers(
-            DirectionPanorama(PanoramaGeometrie.normaliserAzimut(retour.first.azimut + 180), 0));
+    if (cible < 0 || _chargement) return;
+    final vue = widget.visite.vueArrivee(lien);
+    _orientationArrivee =
+        vue == null ? null : PanoramaGeometrie.orientationVers(vue);
     _index = cible;
     _load();
   }
@@ -90,30 +119,45 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
   @override
   void dispose() {
     _ticker.dispose();
-    _release();
+    _detacherFlux();
+    _shader?.dispose();
+    _image?.dispose();
+    _libererAncienne();
     _repaint.dispose();
+    _fondu.dispose();
     super.dispose();
   }
 
-  void _release() {
-    if (_stream != null && _listener != null) _stream!.removeListener(_listener!);
+  void _detacherFlux() {
+    if (_stream != null && _listener != null) {
+      _stream!.removeListener(_listener!);
+    }
     _stream = null;
     _listener = null;
-    _shader?.dispose();
-    _shader = null;
-    _image?.dispose();
-    _image = null;
   }
 
+  void _libererAncienne() {
+    _ancienShader?.dispose();
+    _ancienShader = null;
+    _ancienneImage?.dispose();
+    _ancienneImage = null;
+  }
+
+  ImageProvider _provider(MediaModel media) => ResizeImage(
+        CachedNetworkImageProvider(media.urlAbsolue),
+        width: 4096,
+        allowUpscaling: false,
+      );
+
+  /// Charge la pièce courante ; la précédente reste affichée jusqu'à ce que la nouvelle soit prête.
   void _load() {
-    _release();
-    setState(() => _error = null);
-    final provider = ResizeImage(
-      CachedNetworkImageProvider(widget.panoramas[_index].urlAbsolue),
-      width: 4096,
-      allowUpscaling: false,
-    );
-    final stream = provider.resolve(ImageConfiguration.empty);
+    _detacherFlux();
+    setState(() {
+      _error = null;
+      _chargement = true;
+    });
+    final stream =
+        _provider(widget.panoramas[_index]).resolve(ImageConfiguration.empty);
     late final ImageStreamListener listener;
     listener = ImageStreamListener(
       (info, _) {
@@ -128,16 +172,36 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
         final (yaw, pitch) = _orientationArrivee ?? (0.0, 0.0);
         _orientationArrivee = null;
         setState(() {
+          if (_shader != null) {
+            _libererAncienne();
+            _ancienneImage = _image;
+            _ancienShader = _shader;
+            _ancienneVue = (_yaw, _pitch, _fov);
+            _fondu.value = 1;
+          }
           _image = img;
           _shader = shader;
+          _affiche = _index;
+          _chargement = false;
           _yaw = yaw;
           _pitch = pitch;
+          _orientationInitiale = (yaw, pitch);
           _fov = _fovDefault;
           _vYaw = _vPitch = 0;
+          _cible = null;
         });
+        _prechargerVoisines();
       },
       onError: (e, _) {
-        if (mounted) setState(() => _error = e);
+        if (!mounted) return;
+        setState(() {
+          _chargement = false;
+          // Une pièce reste affichée : on le signale sans quitter la visite.
+          if (_shader == null) _error = e;
+        });
+        if (_shader != null) {
+          AppSnackbar.error(context, 'Impossible de charger cette pièce. Réessayez.');
+        }
       },
     );
     _stream = stream;
@@ -145,7 +209,51 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
     stream.addListener(listener);
   }
 
-  // ---------------------------------------------------------------- animation (inertie + rotation auto)
+  /// Les pièces accessibles depuis celle-ci sont téléchargées d'avance : le passage est immédiat.
+  void _prechargerVoisines() {
+    final cibles = _points.map((l) => l.cibleId).toSet();
+    for (final media in widget.panoramas.where((p) => cibles.contains(p.id))) {
+      precacheImage(_provider(media), context).ignore();
+    }
+  }
+
+  void _regarderPorte(LienPanoramaModel porte) {
+    final (yaw, pitch) = PanoramaGeometrie.orientationVers(
+        DirectionPanorama(porte.azimut, porte.elevation));
+    // Chemin le plus court autour de l'axe vertical.
+    final ecart = math.atan2(math.sin(yaw - _yaw), math.cos(yaw - _yaw));
+    _cible = (_yaw + ecart, pitch.clamp(-_pitchMax, _pitchMax));
+    _vYaw = _vPitch = 0;
+    if (_auto) setState(() => _auto = false);
+  }
+
+  Future<void> _ouvrirPieces() async {
+    final media = widget.panoramas[_affiche];
+    final porte = await showModalBottomSheet<LienPanoramaModel>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheet),
+      builder: (context) => _MenuPieces(
+        piece: _titre(media),
+        portes: [
+          for (final l in _points)
+            (l, VisiteVirtuelleModel.libellePorte(l, widget.panoramas))
+        ],
+      ),
+    );
+    if (porte != null && mounted) _regarderPorte(porte);
+  }
+
+  /// En visite, le nom de la pièce (« Salon », « Pièce 2 ») ; sinon le titre de la vue.
+  String _titre(MediaModel media) {
+    if (_enVisite) {
+      return VisiteVirtuelleModel.nomPiece(widget.panoramas, media.id);
+    }
+    return media.titre?.isNotEmpty == true ? media.titre! : 'Vue 360°';
+  }
+
+  // ---------------------------------------------------------------- animation (inertie, rotation, fondu)
 
   Duration _last = Duration.zero;
 
@@ -153,7 +261,29 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
     final dt = ((now - _last).inMicroseconds / 16667.0).clamp(0.0, 4.0);
     _last = now;
     var changed = false;
-    if (!_touching) {
+    if (_ancienShader != null) {
+      final reste = _fondu.value - dt * 16.667 / _dureeFonduMs;
+      if (reste <= 0) {
+        _fondu.value = 0;
+        setState(_libererAncienne);
+      } else {
+        _fondu.value = reste;
+      }
+    }
+    if (_touching) _cible = null;
+    if (_cible case (final yaw, final pitch)) {
+      final dYaw = yaw - _yaw, dPitch = pitch - _pitch;
+      if (dYaw.abs() < 0.002 && dPitch.abs() < 0.002) {
+        _yaw = yaw;
+        _pitch = pitch;
+        _cible = null;
+      } else {
+        final f = 1 - math.pow(0.88, dt).toDouble();
+        _yaw += dYaw * f;
+        _pitch += dPitch * f;
+      }
+      changed = true;
+    } else if (!_touching) {
       if (_vYaw.abs() > 0.00005 || _vPitch.abs() > 0.00005) {
         final f = math.pow(0.92, dt).toDouble();
         _vYaw *= f;
@@ -198,16 +328,18 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
   }
 
   void _reset() {
-    _yaw = 0;
-    _pitch = 0;
+    final (yaw, pitch) = _orientationInitiale;
+    _yaw = yaw;
+    _pitch = pitch;
     _fov = _fovDefault;
     _vYaw = _vPitch = 0;
+    _cible = null;
     _repaint.value++;
   }
 
   @override
   Widget build(BuildContext context) {
-    final media = widget.panoramas[_index];
+    final media = widget.panoramas[_affiche];
     return Scaffold(
       backgroundColor: const Color(0xFF0F1A2B),
       body: Stack(
@@ -221,13 +353,17 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.broken_image_outlined, color: Colors.white54, size: 48),
+                      const Icon(Icons.broken_image_outlined,
+                          color: Colors.white54, size: 48),
                       const SizedBox(height: 12),
-                      const Text('Impossible de charger le panorama.', style: TextStyle(color: Colors.white70)),
+                      const Text('Impossible de charger le panorama.',
+                          style: TextStyle(color: Colors.white70)),
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: _load,
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white54)),
+                        style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white54)),
                         child: const Text('Réessayer'),
                       ),
                     ],
@@ -235,7 +371,8 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                 );
               }
               if (_shader == null || _image == null) {
-                return const Center(child: CircularProgressIndicator(color: Color(0xFFE5801A)));
+                return const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFE5801A)));
               }
               final taille = Size(c.maxWidth, c.maxHeight);
               final points = _points;
@@ -259,6 +396,27 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                       ),
                     ),
                   ),
+                  if (_ancienShader != null && _ancienneImage != null)
+                    // Pièce précédente qui s'efface en fondu.
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: ValueListenableBuilder<double>(
+                          valueListenable: _fondu,
+                          builder: (context, opacite, child) => Opacity(
+                              opacity: opacite.clamp(0.0, 1.0), child: child),
+                          child: CustomPaint(
+                            size: Size.infinite,
+                            painter: _PanoPainter(
+                              repaint: _fondu,
+                              shader: _ancienShader!,
+                              imgW: _ancienneImage!.width.toDouble(),
+                              imgH: _ancienneImage!.height.toDouble(),
+                              state: () => _ancienneVue,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   if (points.isNotEmpty)
                     // Les points suivent la vue : repositionnés à chaque image, comme le panorama.
                     ValueListenableBuilder<int>(
@@ -272,35 +430,65 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                               pitch: _pitch,
                               fov: _fov,
                               taille: taille,
-                            ) case final position?)
+                            )
+                                case final position?)
                               Positioned(
+                                key: ValueKey(lien.id),
                                 left: position.dx - _PointPassage.largeur / 2,
                                 top: position.dy - _PointPassage.rayon,
-                                child: _PointPassage(libelle: lien.libelle, onTap: () => _suivre(lien)),
+                                child: _PointPassage(
+                                  libelle: VisiteVirtuelleModel.libellePorte(
+                                      lien, widget.panoramas),
+                                  onTap: () => _suivre(lien),
+                                ),
                               ),
                         ],
                       ),
+                    ),
+                  if (_chargement)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: LinearProgressIndicator(
+                          minHeight: 2,
+                          color: Color(0xFFE5801A),
+                          backgroundColor: Colors.transparent),
                     ),
                 ],
               );
             },
           ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  _RoundBtn(icon: Icons.close_rounded, onTap: () => Navigator.of(context).pop()),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      media.titre?.isNotEmpty == true ? media.titre! : 'Vue 360°',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    _RoundBtn(
+                        icon: Icons.close_rounded,
+                        onTap: () => Navigator.of(context).pop()),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _titre(media),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16),
+                      ),
                     ),
-                  ),
-                ],
+                    if (_enVisite && _shader != null) ...[
+                      const SizedBox(width: 12),
+                      _BoutonPieces(onTap: _ouvrirPieces),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -314,9 +502,11 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _RoundBtn(icon: Icons.add_rounded, onTap: () => _zoom(1 / 1.2)),
+                      _RoundBtn(
+                          icon: Icons.add_rounded, onTap: () => _zoom(1 / 1.2)),
                       const SizedBox(height: 8),
-                      _RoundBtn(icon: Icons.remove_rounded, onTap: () => _zoom(1.2)),
+                      _RoundBtn(
+                          icon: Icons.remove_rounded, onTap: () => _zoom(1.2)),
                       const SizedBox(height: 8),
                       _RoundBtn(
                         icon: Icons.autorenew_rounded,
@@ -324,6 +514,7 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                         onTap: () => setState(() {
                           _auto = !_auto;
                           _vYaw = _vPitch = 0;
+                          _cible = null;
                         }),
                       ),
                       const SizedBox(height: 8),
@@ -343,7 +534,8 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (widget.panoramas.length > 1)
+                    // Hors visite, les vues se choisissent librement ; en visite, on passe par les portes.
+                    if (!_enVisite && widget.panoramas.length > 1)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
                         child: Row(
@@ -358,11 +550,14 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                                   _load();
                                 },
                                 child: Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 4),
                                   width: i == _index ? 22 : 8,
                                   height: 8,
                                   decoration: BoxDecoration(
-                                    color: i == _index ? const Color(0xFFE5801A) : Colors.white54,
+                                    color: i == _index
+                                        ? const Color(0xFFE5801A)
+                                        : Colors.white54,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
@@ -371,14 +566,18 @@ class _PanoramaViewerScreenState extends State<PanoramaViewerScreen> with Single
                         ),
                       ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.55),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        'Glissez pour regarder autour · pincez pour zoomer',
-                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      child: Text(
+                        _enVisite
+                            ? 'Glissez pour regarder autour · touchez une porte pour changer de pièce'
+                            : 'Glissez pour regarder autour · pincez pour zoomer',
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                   ],
@@ -479,7 +678,8 @@ class _PanoPainter extends CustomPainter {
       }
     }
 
-    final vertices = ui.Vertices.raw(VertexMode.triangles, pos, textureCoordinates: tex, indices: idx);
+    final vertices = ui.Vertices.raw(VertexMode.triangles, pos,
+        textureCoordinates: tex, indices: idx);
     canvas.drawVertices(
       vertices,
       BlendMode.src,
@@ -504,8 +704,8 @@ class _PanoPainter extends CustomPainter {
   bool shouldRepaint(covariant _PanoPainter old) => old.shader != shader;
 }
 
-/// Point de passage vers une autre pièce : pastille fléchée et nom de la pièce.
-class _PointPassage extends StatelessWidget {
+/// Point de passage vers une autre pièce : pastille fléchée qui pulse, et nom de la pièce.
+class _PointPassage extends StatefulWidget {
   static const double rayon = 22;
   static const double largeur = 140;
 
@@ -514,42 +714,190 @@ class _PointPassage extends StatelessWidget {
   const _PointPassage({required this.libelle, required this.onTap});
 
   @override
+  State<_PointPassage> createState() => _PointPassageState();
+}
+
+class _PointPassageState extends State<_PointPassage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulsation = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1400))
+    ..repeat();
+
+  @override
+  void dispose() {
+    _pulsation.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    const diametre = _PointPassage.rayon * 2;
     return Semantics(
       button: true,
-      label: 'Aller vers $libelle',
+      label: 'Aller vers ${widget.libelle}',
       child: GestureDetector(
-        onTap: onTap,
+        onTap: widget.onTap,
         child: SizedBox(
-          width: largeur,
+          width: _PointPassage.largeur,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: rayon * 2,
-                height: rayon * 2,
-                decoration: BoxDecoration(
-                  color: AppColors.white.withValues(alpha: 0.92),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.white, width: 2),
-                  boxShadow: [BoxShadow(color: AppColors.black.withValues(alpha: 0.35), blurRadius: 10)],
+              SizedBox(
+                width: diametre,
+                height: diametre,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    // Onde qui s'élargit et s'efface : le point se remarque dans l'image.
+                    AnimatedBuilder(
+                      animation: _pulsation,
+                      builder: (context, _) => Transform.scale(
+                        scale: 1 + _pulsation.value * 0.7,
+                        child: Container(
+                          width: diametre,
+                          height: diametre,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: AppColors.white.withValues(
+                                alpha: 0.55 * (1 - _pulsation.value)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: diametre,
+                      height: diametre,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.92),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                              color: AppColors.black.withValues(alpha: 0.35),
+                              blurRadius: 10)
+                        ],
+                      ),
+                      child: const Icon(Icons.north_rounded,
+                          color: AppColors.primaryBlueAnthracite),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.north_rounded, color: AppColors.primaryBlueAnthracite),
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(
                   color: AppColors.black.withValues(alpha: 0.65),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  libelle,
+                  widget.libelle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bouton « Pièces » de l'en-tête de visite.
+class _BoutonPieces extends StatelessWidget {
+  final VoidCallback onTap;
+  const _BoutonPieces({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withValues(alpha: 0.55),
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.door_front_door_outlined,
+                  color: Colors.white, size: 18),
+              SizedBox(width: 6),
+              Text('Pièces',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Feuille « Pièces » : où l'on est, et les portes de la pièce ; en choisir une tourne la vue vers elle.
+class _MenuPieces extends StatelessWidget {
+  final String piece;
+
+  /// Chaque porte, avec le texte à afficher.
+  final List<(LienPanoramaModel, String)> portes;
+  const _MenuPieces({required this.piece, required this.portes});
+
+  @override
+  Widget build(BuildContext context) {
+    // Défilant et limité en hauteur : la feuille tient aussi en paysage.
+    return ConstrainedBox(
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.7),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'VOUS ÊTES DANS',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
+                    color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 2),
+              Text(piece,
+                  style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryBlueAnthracite)),
+              const SizedBox(height: 12),
+              if (portes.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text('Aucune porte dans cette pièce.',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                )
+              else
+                for (final (porte, libelle) in portes)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.near_me_rounded,
+                        color: AppColors.primaryOcre),
+                    title: Text('Porte vers $libelle',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.primaryBlueAnthracite)),
+                    onTap: () => Navigator.of(context).pop(porte),
+                  ),
             ],
           ),
         ),
@@ -562,17 +910,21 @@ class _RoundBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
   final bool active;
-  const _RoundBtn({required this.icon, required this.onTap, this.active = false});
+  const _RoundBtn(
+      {required this.icon, required this.onTap, this.active = false});
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? const Color(0xFFE5801A) : Colors.black.withValues(alpha: 0.55),
+      color: active
+          ? const Color(0xFFE5801A)
+          : Colors.black.withValues(alpha: 0.55),
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
-        child: SizedBox(width: 44, height: 44, child: Icon(icon, color: Colors.white)),
+        child: SizedBox(
+            width: 44, height: 44, child: Icon(icon, color: Colors.white)),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/providers/repository_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
 import '../data/projet_construction_repository.dart';
+import '../domain/echange_projet.dart';
 import '../domain/modele_maison.dart';
 import '../domain/projet_construction.dart';
 import '../domain/societe_promotrice.dart';
@@ -30,6 +31,11 @@ final mesProjetsProvider = FutureProvider.autoDispose<List<ProjetConstruction>>(
   if (user == null) return const [];
   return ref.watch(projetConstructionRepositoryProvider).mesProjets(user.id);
 });
+
+/// Fil d'échange d'un projet avec sa société.
+final filProjetProvider = FutureProvider.autoDispose.family<List<ElementFil>, int>(
+  (ref, id) => ref.watch(projetConstructionRepositoryProvider).fil(id),
+);
 
 final projetDetailProvider = FutureProvider.autoDispose.family<ProjetConstruction, int>(
   (ref, id) => ref.watch(projetConstructionRepositoryProvider).projet(id),

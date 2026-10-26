@@ -30,7 +30,7 @@ class ConstructionCallout extends StatelessWidget {
                     style: AppTextStyles.bodySmall),
                 const SizedBox(height: AppSpacing.sm),
                 SizedBox(
-                  width: 170,
+                  width: 200,
                   child: AppActionButton(
                     label: 'Soumettre mon projet',
                     variant: AppActionVariant.soft,

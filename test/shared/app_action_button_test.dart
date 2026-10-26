@@ -7,10 +7,10 @@ void main() {
 
   testWidgets('largeur libre (Positioned sans left) : pas d’erreur de mise en page', (tester) async {
     await tester.pumpWidget(page(const Stack(children: [
-      Positioned(right: 8, bottom: 8, child: AppActionButton(label: 'Voir le plan de masse', icon: Icons.map_outlined)),
+      Positioned(right: 8, bottom: 8, child: AppActionButton(label: 'Voir le plan ', icon: Icons.map_outlined)),
     ])));
     expect(tester.takeException(), isNull);
-    expect(find.text('Voir le plan de masse'), findsOneWidget);
+    expect(find.text('Voir le plan '), findsOneWidget);
   });
 
   testWidgets('largeur imposée : le libellé se tronque sans déborder', (tester) async {

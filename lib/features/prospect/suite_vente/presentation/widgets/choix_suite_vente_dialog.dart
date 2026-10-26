@@ -55,6 +55,7 @@ class _ChoixSuiteVenteDialogState extends ConsumerState<ChoixSuiteVenteDialog> {
 
     return Dialog(
       backgroundColor: AppColors.white,
+      surfaceTintColor: AppColors.white,
       insetPadding: const EdgeInsets.all(AppSpacing.lg),
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.card),
       child: SingleChildScrollView(

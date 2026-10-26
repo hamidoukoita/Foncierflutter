@@ -9,13 +9,15 @@ import 'package:flutter_mobile_prospect_agent/core/utils/contact_launcher.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/regle_remboursement.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/widgets/recu_reservation.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/suite_vente/presentation/widgets/choix_suite_vente_dialog.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/reservation_statut_style.dart';
 
-/// Carte d'une réservation de l'acquéreur : statut, bien, paiement, décompte et annulation.
+/// Carte d'une réservation de l'acquéreur : statut, bien, paiement (et son reçu), décompte et annulation.
 class ReservationCard extends ConsumerStatefulWidget {
   final ReservationModel reservation;
 
@@ -69,6 +71,16 @@ class _ReservationCardState extends ConsumerState<ReservationCard> {
           if (r.agentNom != null && (r.estActive || r.isVendue)) ...[
             const SizedBox(height: AppSpacing.md - AppSpacing.xs),
             _VotreAgent(nom: r.agentNom!, telephone: r.agentTelephone),
+          ],
+          if (r.estPayante) ...[
+            const SizedBox(height: AppSpacing.md - AppSpacing.xs),
+            DetailButton(
+              label: 'Voir le reçu',
+              icon: Icons.receipt_long_rounded,
+              outline: true,
+              compact: true,
+              onPressed: () => RecuReservation.afficher(context, r),
+            ),
           ],
           if (r.choixAttendu) ...[
             const SizedBox(height: AppSpacing.md),
@@ -191,6 +203,8 @@ class _EtapeEnCours extends StatelessWidget {
           case SuiteVente.remplacee:
             return 'Le bien a été vendu à un autre acquéreur : votre paiement a été reporté sur un autre bien.';
           case null:
+            // Un montant rendu sans suite de vente : remboursement après annulation par l'acquéreur.
+            if (r.rembourse && r.montantRembourse != null) return RegleRemboursement.apresAnnulation(r);
             return r.rembourse
                 ? 'Le bien a été vendu à un autre acquéreur : votre réservation vous est remboursée.'
                 : r.motifAnnulation ?? 'Réservation annulée.';

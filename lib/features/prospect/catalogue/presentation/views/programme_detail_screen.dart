@@ -15,6 +15,7 @@ import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/loc
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/widgets/localisation_preview_card.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/controllers/localisation_providers.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/domain/plan_masse.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/legende_plan.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/plan/presentation/widgets/plan_masse_view.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/providers/prospect_data_providers.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/detail_kit.dart';
@@ -223,7 +224,7 @@ class ProgrammeDetailScreen extends ConsumerWidget {
                 child: _CommoditesGrid(items: commodites),
               ),
             DetailSection(
-              title: 'Plan de masse',
+              title: 'Plan',
               child: _PlanPreview(
                 lots: lotsAvecGeometrie(lots),
                 elements: planAsync.valueOrNull?.elements
@@ -351,6 +352,19 @@ class _PlanPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniature(),
+        if (lots.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm + AppSpacing.xxs),
+          LegendePlan(lots: lots),
+        ],
+      ],
+    );
+  }
+
+  Widget _miniature() {
     return GestureDetector(
       onTap: lots.isEmpty ? null : onOpenPlan,
       child: ClipRRect(
@@ -367,7 +381,7 @@ class _PlanPreview extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Text(
-                      'Le plan de masse n\'a pas encore été publié par la société.',
+                      'Le plan n\'a pas encore été publié par la société.',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyMedium,
                     ),
@@ -384,7 +398,7 @@ class _PlanPreview extends StatelessWidget {
                   right: AppSpacing.md - AppSpacing.xs,
                   bottom: AppSpacing.md - AppSpacing.xs,
                   child: AppActionButton(
-                    label: 'Voir le plan de masse',
+                    label: 'Voir le plan',
                     icon: Icons.map_outlined,
                     variant: AppActionVariant.dark,
                     height: 36,

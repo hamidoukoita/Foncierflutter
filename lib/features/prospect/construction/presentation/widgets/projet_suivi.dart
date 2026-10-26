@@ -31,6 +31,14 @@ class ProjetSuivi extends StatelessWidget {
           const _Jalon('Décision', _Etat.aVenir),
           const _Jalon('Travaux', _Etat.aVenir),
         ];
+      case StatutProjet.enDiscussion:
+        return [
+          _Jalon('Dossier envoyé', _Etat.fait, envoye),
+          _Jalon('Échanges avec le promoteur', _Etat.enCours,
+              '${projet.societeNom ?? 'Le promoteur'} vous a répondu : consultez la discussion ci-dessous.'),
+          const _Jalon('Accord', _Etat.aVenir),
+          const _Jalon('Travaux', _Etat.aVenir),
+        ];
       case StatutProjet.refuse:
         return [
           _Jalon('Dossier envoyé', _Etat.fait, envoye),
@@ -41,7 +49,13 @@ class ProjetSuivi extends StatelessWidget {
         final termine = projet.progression >= 100;
         return [
           _Jalon('Dossier envoyé', _Etat.fait, envoye),
-          const _Jalon('Projet accepté', _Etat.fait),
+          _Jalon(
+            'Projet accepté',
+            _Etat.fait,
+            projet.propositionRetenue == null
+                ? null
+                : 'Proposition n°${projet.propositionRetenue!.numero} retenue : ${projet.propositionRetenue!.titre}',
+          ),
           _Jalon(
             projet.etapeAvancement ?? 'Travaux',
             termine ? _Etat.fait : _Etat.enCours,

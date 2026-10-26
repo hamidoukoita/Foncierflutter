@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/image_reseau.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
-import 'package:flutter_mobile_prospect_agent/data/models/lien_panorama_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/media_model.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/visite_virtuelle_model.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/panorama_viewer_screen.dart';
 
 /// Barre supérieure repliable des pages de détail (cité, lot) : la photo occupe le haut, puis se réduit en
@@ -17,8 +17,8 @@ class DetailSliverAppBar extends StatefulWidget {
   final VoidCallback onBack;
   final double expandedHeight;
 
-  /// Points de passage entre panoramas (visite virtuelle d'une maison clé en main).
-  final List<LienPanoramaModel> liensPanoramas;
+  /// Visite pièce par pièce (maison clé en main) : pièce de départ et points de passage.
+  final VisiteVirtuelleModel visite;
 
   const DetailSliverAppBar({
     super.key,
@@ -27,7 +27,7 @@ class DetailSliverAppBar extends StatefulWidget {
     required this.onBack,
     this.loading = false,
     this.expandedHeight = 280,
-    this.liensPanoramas = const [],
+    this.visite = VisiteVirtuelleModel.vide,
   });
 
   @override
@@ -172,7 +172,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                         icone: Icons.threesixty_rounded,
                         titre: 'Visite 360°',
                         sousTitre: panos.length > 1 ? '${panos.length} vues panoramiques' : 'Vue panoramique',
-                        onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
+                        onTap: () => PanoramaViewerScreen.show(context, panos, visite: widget.visite),
                       ),
                     ),
                   ),
@@ -188,7 +188,7 @@ class _DetailSliverAppBarState extends State<DetailSliverAppBar> {
                       opacity: (1 - t).clamp(0.0, 1.0),
                       child: _CircleBtn(
                         icon: Icons.threesixty,
-                        onTap: () => PanoramaViewerScreen.show(context, panos, liens: widget.liensPanoramas),
+                        onTap: () => PanoramaViewerScreen.show(context, panos, visite: widget.visite),
                       ),
                     ),
                   ),

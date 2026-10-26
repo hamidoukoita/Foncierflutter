@@ -78,7 +78,8 @@ class SocieteSignature extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('PUBLIÉ PAR', style: AppTextStyles.overline),
-              Text(nom!, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitle),
+              // Nom complet, sur plusieurs lignes si besoin.
+              Text(nom!, style: AppTextStyles.cardTitle),
             ],
           ),
         ),

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
+import 'package:flutter_mobile_prospect_agent/features/prospect/notifications/presentation/widgets/cloche_notifications.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/shell/widgets/prospect_account_menu.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/foncier_logo.dart';
 
-/// En-tête de l'accueil : logo Foncier+, salutation et accès au profil.
+/// En-tête de l'accueil : logo Foncier+, salutation, notifications et accès au profil.
 class AccueilHeader extends StatelessWidget {
   final AuthUser? user;
 
@@ -21,6 +22,8 @@ class AccueilHeader extends StatelessWidget {
           children: [
             const FoncierLogo.horizontal(hauteur: 34),
             const Spacer(),
+            const ClocheNotifications(),
+            const SizedBox(width: AppSpacing.sm + AppSpacing.xxs),
             const ProspectAccountMenu(),
           ],
         ),

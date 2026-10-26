@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
@@ -156,11 +157,7 @@ class _RdvBookingSheetState extends ConsumerState<RdvBookingSheet> {
       // Un rendez-vous prévu ferme la prise d'un second sur ce bien.
       ref.invalidate(conditionsReservationProvider(widget.bienId));
       navigator.pop();
-      messenger.showSnackBar(
-        const SnackBar(
-            content: Text(
-                'Demande envoyée : la société confirmera votre rendez-vous')),
-      );
+      AppSnackbar.successSur(messenger, 'Demande envoyée : la société confirmera votre rendez-vous');
     } catch (e) {
       if (mounted) {
         setState(() {

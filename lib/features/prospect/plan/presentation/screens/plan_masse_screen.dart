@@ -64,9 +64,7 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
       backgroundColor: AppColors.backgroundOffWhite,
       appBar: AppBar(
         title: Text(
-          programme != null
-              ? 'Plan de masse : ${programme.nom}'
-              : 'Plan de masse',
+          programme != null ? 'Plan de  : ${programme.nom}' : 'Plan ',
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
@@ -88,7 +86,7 @@ class _PlanMasseScreenState extends ConsumerState<PlanMasseScreen> {
               title: 'Plan non disponible',
               message: lots.isEmpty
                   ? 'Aucun lot n\'a encore été publié pour cette cité.'
-                  : 'La société n\'a pas encore dessiné le plan de masse. Vous pouvez consulter la liste des lots.',
+                  : 'La société n\'a pas encore dessiné le plan . Vous pouvez consulter la liste des lots.',
             );
           }
           final elements = (planAsync.valueOrNull?.elements ??

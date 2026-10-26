@@ -1,6 +1,7 @@
 import 'package:flutter_mobile_prospect_agent/core/constants/api_endpoints.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/api_client.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
+import '../domain/echange_projet.dart';
 import '../domain/modele_maison.dart';
 import '../domain/projet_construction.dart';
 import '../domain/societe_promotrice.dart';
@@ -41,6 +42,29 @@ class ProjetConstructionRepository {
     final res = await _api.post<Map<String, dynamic>>(ApiEndpoints.projetsConstruction,
         data: soumission.toJson());
     return ProjetConstruction.fromJson(_objet(res.data!));
+  }
+
+  /// Messages et propositions échangés avec la société, par ordre chronologique.
+  Future<List<ElementFil>> fil(int projetId) async {
+    final res = await _api.get<Map<String, dynamic>>(ApiEndpoints.filProjet(projetId));
+    return _liste(res.data!).map(ElementFil.fromJson).whereType<ElementFil>().toList();
+  }
+
+  Future<void> envoyerMessage(int projetId, String texte) async {
+    final res = await _api.post<Map<String, dynamic>>(ApiEndpoints.messagesProjet(projetId), data: {'texte': texte});
+    _objet(res.data!);
+  }
+
+  /// Retenir la proposition : le projet est accepté selon ses conditions.
+  Future<void> accepterProposition(int propositionId) async {
+    final res = await _api.patch<Map<String, dynamic>>(ApiEndpoints.accepterProposition(propositionId));
+    _objet(res.data!);
+  }
+
+  Future<void> refuserProposition(int propositionId, String? commentaire) async {
+    final res = await _api.patch<Map<String, dynamic>>(ApiEndpoints.refuserProposition(propositionId),
+        data: {if (commentaire != null && commentaire.trim().isNotEmpty) 'commentaire': commentaire.trim()});
+    _objet(res.data!);
   }
 
   List<Map<String, dynamic>> _liste(Map<String, dynamic> body) {

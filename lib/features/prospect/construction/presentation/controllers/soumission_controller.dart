@@ -85,6 +85,11 @@ class SoumissionController extends AutoDisposeNotifier<SoumissionState> {
     state = SoumissionState(etape: EtapeSoumission.terrain, societe: societe, maison: maison);
   }
 
+  /// Remplace la société provisoire par sa fiche complète, sans changer d'étape.
+  void completerSociete(SocietePromotrice societe) {
+    if (state.societe?.id == societe.id) state = state.copyWith(societe: societe);
+  }
+
   /// Crée le dossier de construction.
   Future<ProjetConstruction> soumettre(SoumissionProjet soumission) async {
     state = state.copyWith(envoi: true);

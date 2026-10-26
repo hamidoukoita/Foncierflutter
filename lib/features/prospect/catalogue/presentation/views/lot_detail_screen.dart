@@ -243,7 +243,7 @@ class _LotDetailScreenState extends ConsumerState<LotDetailScreen> {
                 onPressed: () => context.push(
                     '/prospect/programmes/$programmeId/plan?lot=${lot.id}'),
                 icon: const Icon(Icons.map_outlined, size: 18),
-                label: const Text('Voir ce lot sur le plan de masse'),
+                label: const Text('Voir ce lot sur le plan'),
                 style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(AppSizes.buttonMedium)),
               ),

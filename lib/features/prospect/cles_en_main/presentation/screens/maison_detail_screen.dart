@@ -7,6 +7,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
+import 'package:flutter_mobile_prospect_agent/data/models/visite_virtuelle_model.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/localisation_routes.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/localisation/presentation/controllers/localisation_providers.dart';
@@ -57,7 +58,7 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
   Future<void> _rafraichir() async {
     ref.invalidate(maisonDetailProvider(widget.maisonId));
     ref.invalidate(mediasBienProvider(widget.maisonId));
-    ref.invalidate(liensPanoramasProvider(widget.maisonId));
+    ref.invalidate(visiteVirtuelleProvider(widget.maisonId));
     ref.invalidate(localisationBienProvider(widget.maisonId));
   }
 
@@ -101,9 +102,8 @@ class _MaisonDetailScreenState extends ConsumerState<MaisonDetailScreen> {
           title: m.titre,
           medias: medias.valueOrNull ?? const [],
           mediasLoading: medias.isLoading,
-          liensPanoramas:
-              ref.watch(liensPanoramasProvider(widget.maisonId)).valueOrNull ??
-                  const [],
+          visite: ref.watch(visiteVirtuelleProvider(widget.maisonId)).valueOrNull ??
+              VisiteVirtuelleModel.vide,
           onBack: () => context.pop(),
           onRefresh: _rafraichir,
           // Bien vendu ou complet : plus de barre d'actions, le motif est affiché dans la fiche.

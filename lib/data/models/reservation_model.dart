@@ -80,6 +80,12 @@ class ReservationModel extends Equatable {
   final DateTime? datePaiement;
   final bool rembourse;
 
+  /// Part rendue si l'acquéreur annule (règle de la société au moment de la réservation).
+  final int pourcentageRemboursement;
+
+  /// Montant effectivement rendu (partiel après une annulation, total après une vente à un autre).
+  final double? montantRembourse;
+
   final int? acquereurId;
   final String? acquereurNom;
   final String? acquereurTelephone;
@@ -116,6 +122,8 @@ class ReservationModel extends Equatable {
     this.referencePaiement,
     this.datePaiement,
     this.rembourse = false,
+    this.pourcentageRemboursement = 0,
+    this.montantRembourse,
     this.acquereurId,
     this.acquereurNom,
     this.acquereurTelephone,
@@ -140,6 +148,9 @@ class ReservationModel extends Equatable {
   bool get estActive => isEnAttente || isEnCours;
 
   bool get estPayante => montantReservation > 0;
+
+  /// Ce que l'acquéreur récupérerait en annulant maintenant.
+  double get remboursementSiAnnulation => (montantReservation * pourcentageRemboursement / 100).roundToDouble();
 
   /// Le bien a été vendu à un autre : l'acquéreur doit choisir remboursement ou report.
   bool get choixAttendu => suiteVente == SuiteVente.aChoisir;
@@ -185,6 +196,8 @@ class ReservationModel extends Equatable {
       referencePaiement: json['referencePaiement'] as String?,
       datePaiement: _date(json['datePaiement']),
       rembourse: json['rembourse'] as bool? ?? false,
+      pourcentageRemboursement: (json['pourcentageRemboursement'] as num?)?.toInt() ?? 0,
+      montantRembourse: (json['montantRembourse'] as num?)?.toDouble(),
       acquereurId: (json['acquereurId'] as num?)?.toInt(),
       acquereurNom: json['acquereurNom'] as String?,
       acquereurTelephone: json['acquereurTelephone'] as String?,
@@ -219,6 +232,8 @@ class ReservationModel extends Equatable {
         referencePaiement,
         datePaiement,
         rembourse,
+        pourcentageRemboursement,
+        montantRembourse,
         acquereurId,
         acquereurNom,
         acquereurTelephone,
@@ -249,6 +264,9 @@ class ConditionsReservation {
   final bool visitePossible;
   final String? motifVisiteImpossible;
 
+  /// Part du montant rendue si l'acquéreur annule lui-même (0 = rien, 100 = tout).
+  final int pourcentageRemboursement;
+
   const ConditionsReservation({
     required this.bienId,
     required this.montant,
@@ -264,6 +282,7 @@ class ConditionsReservation {
     this.vendu = false,
     this.visitePossible = true,
     this.motifVisiteImpossible,
+    this.pourcentageRemboursement = 0,
   });
 
   factory ConditionsReservation.fromJson(Map<String, dynamic> json) {
@@ -282,6 +301,7 @@ class ConditionsReservation {
       vendu: json['vendu'] as bool? ?? false,
       visitePossible: json['visitePossible'] as bool? ?? true,
       motifVisiteImpossible: json['motifVisiteImpossible'] as String?,
+      pourcentageRemboursement: (json['pourcentageRemboursement'] as num?)?.toInt() ?? 0,
     );
   }
 }

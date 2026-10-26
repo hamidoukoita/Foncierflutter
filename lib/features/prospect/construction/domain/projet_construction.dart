@@ -1,3 +1,6 @@
+import 'description_maison.dart';
+import 'echange_projet.dart';
+
 /// Types de pièces jointes acceptés par le backend.
 enum TypeFichierProjet {
   titreFoncier('TITRE_FONCIER', 'Titre Foncier'),
@@ -15,6 +18,7 @@ enum TypeFichierProjet {
 /// Statut d'un dossier côté acquéreur.
 enum StatutProjet {
   enEtude('EN_ETUDE'),
+  enDiscussion('EN_DISCUSSION'),
   accepte('ACCEPTER'),
   refuse('REFUSER');
 
@@ -61,11 +65,15 @@ class ProjetConstruction {
   final String? maisonReferenceTitre;
   final String? maisonReferenceImageUrl;
   final bool modelePersonnalise;
-  final String? descriptionModelePersonnalise;
-  final int? nombreChambresSouhaitees;
-  final int? nombreSallesBainSouhaitees;
-  final double? surfaceConstruiteSouhaitee;
+  /// Questionnaire rempli par l'acquéreur (modèle personnalisé).
+  final DescriptionMaison? maisonSouhaitee;
+
+  /// Proposition de la société acceptée : termes de l'accord.
+  final PropositionProjet? propositionRetenue;
   final List<FichierProjet> fichiers;
+
+  /// L'acquéreur peut encore répondre aux propositions.
+  bool get enCours => statut == StatutProjet.enEtude || statut == StatutProjet.enDiscussion;
 
   const ProjetConstruction({
     required this.id,
@@ -88,10 +96,8 @@ class ProjetConstruction {
     this.maisonReferenceTitre,
     this.maisonReferenceImageUrl,
     this.modelePersonnalise = false,
-    this.descriptionModelePersonnalise,
-    this.nombreChambresSouhaitees,
-    this.nombreSallesBainSouhaitees,
-    this.surfaceConstruiteSouhaitee,
+    this.maisonSouhaitee,
+    this.propositionRetenue,
     this.fichiers = const [],
   });
 
@@ -124,10 +130,12 @@ class ProjetConstruction {
       maisonReferenceTitre: json['maisonReferenceTitre'] as String?,
       maisonReferenceImageUrl: json['maisonReferenceImageUrl'] as String?,
       modelePersonnalise: json['modelePersonnalise'] as bool? ?? false,
-      descriptionModelePersonnalise: json['descriptionModelePersonnalise'] as String?,
-      nombreChambresSouhaitees: (json['nombreChambresSouhaitees'] as num?)?.toInt(),
-      nombreSallesBainSouhaitees: (json['nombreSallesBainSouhaitees'] as num?)?.toInt(),
-      surfaceConstruiteSouhaitee: (json['surfaceConstruiteSouhaitee'] as num?)?.toDouble(),
+      maisonSouhaitee: json['maisonSouhaitee'] is Map<String, dynamic>
+          ? DescriptionMaison.fromJson(json['maisonSouhaitee'] as Map<String, dynamic>)
+          : null,
+      propositionRetenue: json['propositionRetenue'] is Map<String, dynamic>
+          ? PropositionProjet.fromJson(json['propositionRetenue'] as Map<String, dynamic>)
+          : null,
       fichiers: ((json['fichiers'] as List?) ?? const [])
           .map((f) => FichierProjet.fromJson(f as Map<String, dynamic>))
           .toList(),

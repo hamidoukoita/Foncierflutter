@@ -1,3 +1,4 @@
+import 'package:flutter_mobile_prospect_agent/features/prospect/construction/domain/description_maison.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/cles_en_main/domain/maison_cle_en_main.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/construction/domain/soumission_projet.dart';
@@ -48,9 +49,9 @@ void main() {
       maisonId: 9,
       numeroTitreFoncier: 'TF 1',
       superficieTerrain: 450,
-      descriptionModelePersonnalise: 'ignorée',
+      maisonSouhaitee: DescriptionMaison(nombreChambres: 2),
     ).toJson();
     expect(json['maisonCleEnMainId'], 9);
-    expect(json.containsKey('descriptionModelePersonnalise'), isFalse);
+    expect(json.containsKey('maisonSouhaitee'), isFalse);
   });
 }

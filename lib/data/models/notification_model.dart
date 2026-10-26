@@ -9,6 +9,10 @@ class NotificationModel extends Equatable {
   final DateTime dateEnvoi;
   final String? typeNotificationLibelle;
 
+  /// Élément concerné (ex. PROJET_CONSTRUCTION, RESERVATION), ouvert depuis la notification.
+  final String? cibleType;
+  final int? cibleId;
+
   const NotificationModel({
     required this.id,
     required this.titre,
@@ -16,7 +20,20 @@ class NotificationModel extends Equatable {
     required this.lue,
     required this.dateEnvoi,
     this.typeNotificationLibelle,
+    this.cibleType,
+    this.cibleId,
   });
+
+  NotificationModel marqueeLue() => NotificationModel(
+        id: id,
+        titre: titre,
+        message: message,
+        lue: true,
+        dateEnvoi: dateEnvoi,
+        typeNotificationLibelle: typeNotificationLibelle,
+        cibleType: cibleType,
+        cibleId: cibleId,
+      );
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(
@@ -28,10 +45,12 @@ class NotificationModel extends Equatable {
           ? DateTime.parse(json['dateEnvoi'] as String)
           : DateTime.now(),
       typeNotificationLibelle: json['typeNotificationLibelle'] as String?,
+      cibleType: json['cibleType'] as String?,
+      cibleId: (json['cibleId'] as num?)?.toInt(),
     );
   }
 
   @override
   List<Object?> get props =>
-      [id, titre, message, lue, dateEnvoi, typeNotificationLibelle];
+      [id, titre, message, lue, dateEnvoi, typeNotificationLibelle, cibleType, cibleId];
 }

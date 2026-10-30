@@ -7,7 +7,7 @@ import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/currency_formatter.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/contact_launcher.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/date_formatter.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/reservation_model.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/regle_remboursement.dart';
 import 'package:flutter_mobile_prospect_agent/features/prospect/presentation/reservation_actions.dart';
@@ -282,7 +282,7 @@ class _VotreAgent extends StatelessWidget {
                 Text('VOTRE AGENT', style: AppTextStyles.overline),
                 Text(nom, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppTextStyles.cardTitle),
                 if (telephone != null)
-                  Text(TelephoneMali.formater(telephone!), style: AppTextStyles.bodySmall),
+                  Text(Telephone.afficher(telephone), style: AppTextStyles.bodySmall),
               ],
             ),
           ),

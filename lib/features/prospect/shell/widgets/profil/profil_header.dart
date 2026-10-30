@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -52,7 +53,7 @@ class ProfilHeader extends StatelessWidget {
               const Icon(Icons.phone_rounded,
                   size: 15, color: AppColors.primaryOcre),
               const SizedBox(width: AppSpacing.xs),
-              Text('+223 ${user!.telephone}', style: AppTextStyles.bodyMedium),
+              Text(Telephone.afficher(user!.telephone, avecIndicatif: true), style: AppTextStyles.bodyMedium),
             ],
           ),
         const SizedBox(height: AppSpacing.md - AppSpacing.xs),

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/telephone/champ_telephone.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/telephone/saisie_telephone.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_sizes.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -14,7 +15,6 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_carte.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_entete.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_error_banner.dart';
-import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/telephone_mali_prefixe.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_text_field.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/primary_button.dart';
 
@@ -27,13 +27,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneCtrl = TextEditingController();
+  final _telephone = SaisieTelephone();
   final _passwordCtrl = TextEditingController();
-  bool _rememberMe = false;
 
   @override
   void dispose() {
-    _phoneCtrl.dispose();
+    _telephone.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
@@ -41,7 +40,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final ok = await ref.read(authProvider.notifier).login(
-          TelephoneMali.chiffres(_phoneCtrl.text),
+          _telephone.e164,
           _passwordCtrl.text,
         );
     if (!mounted) return;
@@ -78,15 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   AuthCarte(
                     children: [
                       // Numéro de téléphone
-                      AppTextField(
-                        label: 'Numéro de téléphone',
-                        controller: _phoneCtrl,
-                        keyboardType: TextInputType.phone,
-                        hintText: '76 12 34 56',
-                        prefixIcon: const TelephoneMaliPrefixe(),
-                        // inputFormatters: [TelephoneMaliFormatter()],
-                        // validator: TelephoneMali.valider,
-                      ),
+                      ChampTelephone(saisie: _telephone),
 
                       const SizedBox(height: AppSpacing.md),
 
@@ -101,31 +92,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         validator: (v) => v == null || v.isEmpty
                             ? 'Mot de passe obligatoire'
                             : null,
-                      ),
-
-                      const SizedBox(height: AppSpacing.sm),
-
-                      // Se souvenir de moi & Mot de passe oublié
-                      Row(
-                        children: [
-                          SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: Checkbox(
-                              value: _rememberMe,
-                              onChanged: (val) {
-                                setState(() => _rememberMe = val ?? false);
-                              },
-                            ),
-                          ),
-                          AppSpacing.gapSm,
-                          Text(
-                            'Se souvenir de moi',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.grey700,
-                            ),
-                          ),
-                        ],
                       ),
 
                       if (auth.error != null) ...[
@@ -164,8 +130,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
-
-               
 
                   const SizedBox(height: AppSpacing.xl),
 

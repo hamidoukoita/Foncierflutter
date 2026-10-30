@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -67,7 +68,7 @@ class VisiteCard extends StatelessWidget {
           IconLabel(
             icon: Icons.phone_rounded,
             iconColor: AppColors.primaryBlueAnthracite,
-            text: visite.acquereurTelephone ?? '—',
+            text: visite.acquereurTelephone == null ? '—' : Telephone.afficher(visite.acquereurTelephone),
             style: AppTextStyles.mono,
           ),
           const Padding(

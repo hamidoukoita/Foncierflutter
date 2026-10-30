@@ -86,7 +86,7 @@ class VisiteResumeCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: AppActionButton(
-                  label: 'Localiser borne',
+                  label: 'Localisation',
                   icon: Icons.explore_outlined,
                   height: 44,
                   onPressed: onLocaliser,

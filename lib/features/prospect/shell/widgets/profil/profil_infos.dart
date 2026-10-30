@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
+import 'package:flutter_mobile_prospect_agent/core/utils/telephone.dart';
 import 'package:flutter_mobile_prospect_agent/data/models/auth_models.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_action_button.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_card.dart';
@@ -45,7 +45,7 @@ class ProfilInfos extends StatelessWidget {
             icone: Icons.phone_outlined,
             libelle: 'Téléphone',
             valeur: user?.telephone.isNotEmpty == true
-                ? '+223 ${TelephoneMali.formater(user!.telephone)}'
+                ? Telephone.afficher(user!.telephone, avecIndicatif: true)
                 : '—',
           ),
           const SizedBox(height: AppSpacing.md),

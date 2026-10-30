@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/notifications/notifications_systeme.dart';
 import 'package:flutter_mobile_prospect_agent/core/router/app_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_theme.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,9 @@ class FoncierApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      locale: const Locale('fr', 'FR'),
+      supportedLocales: const [Locale('fr', 'FR')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
     );
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_mobile_prospect_agent/core/network/error_handler.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/telephone/champ_telephone.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/telephone/saisie_telephone.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/controllers/auth_provider.dart';
-import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/telephone_mali_prefixe.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_text_field.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/compte/compte_dialog.dart';
@@ -23,7 +23,7 @@ class ModifierTelephoneDialog extends ConsumerStatefulWidget {
 class _ModifierTelephoneDialogState
     extends ConsumerState<ModifierTelephoneDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _telephone = TextEditingController();
+  final _telephone = SaisieTelephone();
   final _motDePasse = TextEditingController();
   bool _enCours = false;
 
@@ -34,21 +34,15 @@ class _ModifierTelephoneDialogState
     super.dispose();
   }
 
-  String? _validerTelephone(String? v) {
-    final erreur = TelephoneMali.valider(v);
-    if (erreur != null) return erreur;
-    final actuel = ref.read(authProvider).user?.telephone;
-    return TelephoneMali.chiffres(v!) == actuel
-        ? 'C’est déjà votre numéro'
-        : null;
-  }
+  String? _dejaLeMien(String e164) =>
+      e164 == ref.read(authProvider).user?.telephone ? 'C’est déjà votre numéro' : null;
 
   Future<void> _enregistrer() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _enCours = true);
     try {
       await ref.read(authProvider.notifier).changerTelephone(
-            nouveauTelephone: TelephoneMali.chiffres(_telephone.text),
+            nouveauTelephone: _telephone.e164,
             motDePasse: _motDePasse.text,
           );
       if (!mounted) return;
@@ -74,15 +68,7 @@ class _ModifierTelephoneDialogState
       enCours: _enCours,
       onValider: _enregistrer,
       champs: [
-        AppTextField(
-          label: 'Nouveau numéro',
-          controller: _telephone,
-          keyboardType: TextInputType.phone,
-          hintText: '76 12 34 56',
-          prefixIcon: const TelephoneMaliPrefixe(),
-          inputFormatters: [TelephoneMaliFormatter()],
-          validator: _validerTelephone,
-        ),
+        ChampTelephone(saisie: _telephone, label: 'Nouveau numéro', validationEnPlus: _dejaLeMien),
         AppTextField(
           label: 'Mot de passe actuel',
           controller: _motDePasse,

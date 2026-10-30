@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_colors.dart';
 import 'package:flutter_mobile_prospect_agent/core/utils/nom_personne.dart';
-import 'package:flutter_mobile_prospect_agent/core/utils/telephone_mali.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/telephone/champ_telephone.dart';
+import 'package:flutter_mobile_prospect_agent/shared/widgets/telephone/saisie_telephone.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_radius.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_spacing.dart';
 import 'package:flutter_mobile_prospect_agent/core/theme/app_text_styles.dart';
@@ -14,7 +15,6 @@ import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_carte.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_entete.dart';
 import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/auth_error_banner.dart';
-import 'package:flutter_mobile_prospect_agent/features/auth/presentation/widgets/telephone_mali_prefixe.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_snackbar.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/app_text_field.dart';
 import 'package:flutter_mobile_prospect_agent/shared/widgets/circle_icon_button.dart';
@@ -34,7 +34,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nom = TextEditingController();
   final _prenom = TextEditingController();
-  final _phone = TextEditingController();
+  final _phone = SaisieTelephone();
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   bool _acceptTerms = false;
@@ -51,7 +51,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   /// Numéro sans espaces ni séparateurs, tel qu'il sera utilisé pour se connecter.
-  String get _telephone => TelephoneMali.chiffres(_phone.text);
+  String get _telephone => _phone.e164;
 
   String? _validerMotDePasse(String? v) =>
       v == null || v.length < _longueurMinMotDePasse
@@ -151,15 +151,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ],
                       ),
                       const _Separateur(),
-                      AppTextField(
-                        label: 'Numéro de téléphone',
-                        controller: _phone,
-                        keyboardType: TextInputType.phone,
-                        hintText: '76 12 34 56',
-                        prefixIcon: const TelephoneMaliPrefixe(),
-                        inputFormatters: [TelephoneMaliFormatter()],
-                        validator: TelephoneMali.valider,
-                      ),
+                      ChampTelephone(saisie: _phone),
                       const SizedBox(height: AppSpacing.xs + AppSpacing.xxs),
                       Text(
                         'Il vous servira d’identifiant pour vous connecter.',
